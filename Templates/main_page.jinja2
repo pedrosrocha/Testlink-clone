@@ -1,0 +1,17 @@
+{% extends 'base.jinja2' %}
+
+{% block content %}
+
+<a href="{{url_for('MainPage')}}"> Home </a>
+<div></div>
+<a href="{{url_for('logout')}}"> Logout </a>
+<div></div>
+<a href="{{url_for('UsersManagement')}}"> Users Menagement </a>
+
+
+<h1>Welcome, {{ username }}!</h1>
+<p>You are authenticated.</p>
+
+
+
+{% endblock %}
