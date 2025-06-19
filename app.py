@@ -80,6 +80,25 @@ def AddUser():
     return redirect(next_page or url_for('login'))
 
 
+@app.route('/AddUserFromManager', methods=['GET', 'POST'])
+def AddUserFromManager():
+    if request.method == 'GET':
+        return render_template('add_user_from_manager.jinja2')
+
+    # if it is a POST
+    username = request.form['username']
+    password = request.form['password']
+    email = request.form['email']
+
+    # next_page = request.args.get('next')
+
+    # if not url_parser.is_safe_url(next_page):
+    #    next_page = url_for('MainPage')  # MainPage after login
+
+    Users_manipulation.add_user(username, password, email)
+    return redirect('UsersManagement')
+
+
 @app.route('/MainPage')
 @login_required
 def MainPage():
