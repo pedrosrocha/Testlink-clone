@@ -21,3 +21,23 @@ with engine.connect() as connection:
         );
         """))
     connection.commit()
+
+with engine.connect() as connection:
+    connection.execute(text("""
+
+    CREATE TABLE projects (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        
+        name VARCHAR(100) NOT NULL UNIQUE,              -- Name of the project
+        description TEXT,                               -- Optional longer description
+        status ENUM('active', 'inactive', 'archived') DEFAULT 'active',  -- Status of project
+
+        owner_id INT,                                   -- Optional link to user who owns the project
+        start_date DATE,                                -- When the project started
+        end_date DATE,                                  -- Optional planned end date
+
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,             -- Timestamp for creation
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP  -- Auto update on modification
+    );
+        """))
+    connection.commit()

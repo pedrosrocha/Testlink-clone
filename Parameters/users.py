@@ -44,11 +44,14 @@ class testclone_user_list():
 class testclone_user(UserMixin):
     """Flask-Login User wrapper."""
 
-    def __init__(self, id, username):
+    def __init__(self, id, username, user_level):
         self.id = id
         self.username = username
+        self.user_level = user_level
 
     @classmethod
     def from_dict(cls, user_data):
         return cls(id=user_data['id'],
-                   username=user_data['username'])
+                   username=user_data['username'],
+                   user_level=user_data['user_level']
+                   )

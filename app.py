@@ -1,8 +1,7 @@
 from flask import Flask, render_template, request, url_for, redirect, flash
 from flask_login import login_manager
-from Parameters.users import testclone_user
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
-from Parameters.users import testclone_user_list
+from Parameters.users import testclone_user_list, testclone_user
 from utils import url_parser
 
 app = Flask(__name__)
@@ -36,10 +35,9 @@ def login():
     username = request.form['username']
     password = request.form['password']
 
-    # return the user informartion necessary for the flask to work
-    user = testclone_user(username, password)
-
     if Users_manipulation.is_user_valid(username, password):
+        user_data = Users_manipulation.return_user_by_username(username)
+        user = testclone_user.from_dict(user_data)
         login_user(user)
 
         next_page = request.args.get('next')
@@ -54,8 +52,8 @@ def login():
 
 
 @login_manager.user_loader
-def load_user(username):
-    user_data = Users_manipulation.return_user_by_username(username)
+def load_user(user_id):
+    user_data = Users_manipulation.get_by_id(user_id)
     if user_data:
         return testclone_user.from_dict(user_data)
     return None
