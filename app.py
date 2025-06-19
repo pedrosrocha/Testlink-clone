@@ -91,22 +91,33 @@ def MainPage():
 def UsersManagement():
     if request.method == 'GET':
         return render_template('users_management.jinja2', users=Users_manipulation.return_users())
+
     # if it is a POST
     user_id = request.form['id']
     users_ = Users_manipulation.return_users()
     if request.form['action'] == "deletion":
         Users_manipulation.delete_user(user_id)
         return render_template('users_management.jinja2', users=users_)
+    if request.form['action'] == "reseting":
+        return redirect(url_for('ResetUserPassword'))
 
-    # render_template('reset_user_password.jinja2', username=users_[user_id]["username"])
-    return "in production"
+    # In case a non mapped post is sent
+    return render_template('404.jinja2')
 
 
-# @app.route('/ResetUserPassword', methods=['GET', 'POST'])
-# @login_required
-# def ResetUserPassword():
-#    if request.method == 'GET':
-#        return render_template('reset_user_password.jinja2')
+@app.route('/ResetUserPassword/<string:username>', methods=['GET', 'POST'])
+@login_required
+def ResetUserPassword(username):
+    if request.method == 'GET':
+        return render_template('reset_password.jinja2', username=username)
+
+    if request.form['action'] == "reseter":
+        password = request.form['newPassword']
+        Users_manipulation.change_user_password(username, password)
+        return redirect(url_for('UsersManagement'))
+
+    # In case a non mapped post is sent
+    return render_template('404.jinja2')
 
 
 @app.route('/logout')

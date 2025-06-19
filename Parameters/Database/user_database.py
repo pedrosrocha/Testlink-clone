@@ -57,3 +57,9 @@ class DatabaseConnector:
                 return user
 
         return None
+
+    @classmethod
+    def change_user_password(self, username, passoword_hash):
+        for i in range(len(self.users)):
+            if self.users[i]["username"] == username:
+                self.users[i]["password_hash"] = passoword_hash

@@ -1,6 +1,6 @@
 from flask_login import UserMixin
 from flask_bcrypt import Bcrypt
-from .user_database import DatabaseConnector
+from .Database.user_database import DatabaseConnector
 
 
 class testclone_user_list():
@@ -22,7 +22,7 @@ class testclone_user_list():
         return DatabaseConnector.return_user_info(username)
 
     def get_by_id(self, id):
-        return DatabaseConnector.get_by_id(id)
+        return DatabaseConnector.get_by_id(int(id))
 
     def is_user_valid(self, username, password):
         user_found_in_database = self.return_user_by_username(username)
@@ -34,6 +34,11 @@ class testclone_user_list():
             return True
 
         return False
+
+    def change_user_password(self, username, password):
+        password_hash = self.bcrypt.generate_password_hash(
+            password).decode('utf-8')
+        DatabaseConnector.change_user_password(username, password_hash)
 
 
 class testclone_user(UserMixin):

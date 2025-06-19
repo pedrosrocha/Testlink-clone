@@ -3,6 +3,7 @@
 {% block content %}
 <a href="{{url_for('MainPage')}}"> Home </a>
 
+
 <h1>User management system</h1>
 
 <button onclick="location.href='/AddUser'">
@@ -18,7 +19,7 @@
             <input type="hidden" name="id" value="{{user['id']}}">
             <input type="submit" value="delete">
         </form>
-        <form method="POST" style="display: inline">
+        <form method="GET" style="display: inline" action="{{url_for('ResetUserPassword', username=user['username'])}}">
             <input type="hidden" name="action" value="reseting">
             <input type="hidden" name="id" value="{{user['id']}}">
             <input type="submit" value="reset password">
