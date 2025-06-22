@@ -1,0 +1,44 @@
+{% extends 'base.jinja2' %}
+
+{% block content %}
+
+<div>
+    <a href="{{url_for('MainPage')}}">Home</a>
+    <div></div>
+    <a href="{{url_for('ProjectManagement')}}">Projects Management</a>
+</div>
+
+<h1>Project Information</h1>
+<p>Name: {{project['name']}}</p>
+<p>Id: {{project['id']}}</p>
+<p>Status: {{project['status']}}</p>
+<p>Created by: {{project['owner_name']}}</p>
+<p>Start Date: {{project['start_date']}}</p>
+<p>End Date: {{project['end_date']}}</p>
+<p>Created at: {{project['created_at']}}</p>
+<p>Last updated at: {{project['updated_at']}}</p>
+
+<form method="GET" style="display: inline" action="{{url_for('EditProject', project_id=project['id'])}}">
+    <input type="hidden" name="action" value="editing">
+    <input type="hidden" name="id" value="{{project['id']}}">
+    <input type="submit" value="Edit project">
+</form>
+
+{% with messages = get_flashed_messages() %}
+{% for message in messages %}
+<p>{{ message }}</p>
+{% endfor %}
+{% endwith %}
+
+<script>
+
+</script>
+
+<style>
+    .Mydiv {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+</style>
+{% endblock %}

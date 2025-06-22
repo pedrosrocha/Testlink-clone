@@ -1,10 +1,13 @@
 {% extends 'base.jinja2' %}
 
 {% block content %}
+
+
 <a href="{{url_for('MainPage')}}"> Home </a>
+<h1>User management system!</h1>
 
 
-<h1>User management system</h1>
+
 
 <button onclick="location.href='/AddUserFromManager'">
     New user
@@ -46,11 +49,27 @@
     {% endfor %}
 
 </ul>
-
 {% if error_message %}
 <script>
     alert("{{ error_message }}");
 </script>
 {% endif %}
+
+<!-- style-->
+<style>
+    .HeaderDiv {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background-color: rgb(163, 56, 56);
+    }
+
+    .RestDiv {
+        display: flex;
+        align-items: left;
+        background-color: rgb(233, 231, 231);
+    }
+</style>
+
 
 {% endblock %}

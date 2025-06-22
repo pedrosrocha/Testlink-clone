@@ -4,6 +4,7 @@ from flask_login import LoginManager, login_user, logout_user, login_required, c
 from Parameters.users import testclone_user_list, testclone_user
 from utils import url_parser, roles_controllers
 from utils.roles_controllers import role_required
+from Parameters.projects import projects
 
 app = Flask(__name__)
 
@@ -75,7 +76,9 @@ def AddUser():
     if not url_parser.is_safe_url(next_page):
         next_page = url_for('MainPage')  # MainPage after login
 
-    Users_manipulation.add_user(username, password, email)
+    if not Users_manipulation.add_user(username, password, email):
+        return render_template('add_user.jinja2', error_message=f"The user {username} already exists'.")
+
     return redirect(next_page or url_for('login'))
 
 
@@ -89,14 +92,16 @@ def AddUserFromManager():
     password = request.form['password']
     email = request.form['email']
 
-    Users_manipulation.add_user(username, password, email)
+    if not Users_manipulation.add_user(username, password, email):
+        return render_template('add_user.jinja2', error_message=f"The user {username} already exists'.")
+
     return redirect('UsersManagement')
 
 
 @app.route('/MainPage')
 @login_required
 def MainPage():
-    return render_template('main_page.jinja2', username=current_user.username)
+    return render_template('main_page.jinja2', username=current_user.username, projects=projects.return_all_projects_names())
 
 
 @app.route('/UsersManagement', methods=['GET', 'POST'])
@@ -107,7 +112,6 @@ def UsersManagement():
 
     # if it is a POST
     user_id = request.form['id']
-    # users_ = Users_manipulation.return_users()
     if request.form['action'] == "deletion":
 
         Users_manipulation.delete_user(user_id)
@@ -133,11 +137,14 @@ def UsersManagement():
 
 
 @app.route('/ResetUserPassword/<string:username>', methods=['GET', 'POST'])
+@role_required('admin')
 @login_required
 def ResetUserPassword(username):
     if request.method == 'GET':
         return render_template('reset_password.jinja2', username=username)
 
+    if current_user.user_level != 'admin':
+        abort(403)
     if request.form['action'] == "reseter":
         password = request.form['newPassword']
         Users_manipulation.change_user_password(username, password)
@@ -145,6 +152,79 @@ def ResetUserPassword(username):
 
     # In case a non mapped post is sent
     return render_template('404.jinja2')
+
+
+@app.route('/Projects', methods=['GET', 'POST'])
+@role_required('admin')
+@login_required
+def ProjectManagement():
+    if request.method == 'GET':
+        return render_template('projects_management.jinja2', projects=projects.return_all_projects())
+
+    # if it is a POST
+    if current_user.user_level != 'admin':
+        abort(403)
+
+    project_id = request.form['id']
+    if request.form['action'] == "deletion":
+
+        projects.delete_project(project_id)
+        return render_template('projects_management.jinja2', projects=projects.return_all_projects())
+
+    if request.form['action'] == "edition":
+        # project_ = projects.return_project_by_id(project_id)
+        # render_template('edit_project.jinja2', project=project_)
+        return "test "  # redirect(url_for('EditProject'))
+
+    # if it is deletion
+
+    return "UiiiiHooo"
+
+
+@app.route('/OpenProject/<int:project_id>', methods=['GET', 'POST'])
+@role_required('admin')
+@login_required
+def OpenProject(project_id):
+    if request.method == 'GET':
+        project = projects.return_project_by_id(project_id)
+        return render_template('open_project.jinja2', project=project)
+
+    # if it is a POST
+    if current_user.user_level != 'admin':
+        abort(403)
+    return "test"
+
+
+@app.route('/EditProject/<int:project_id>', methods=['GET', 'POST'])
+@role_required('admin')
+@login_required
+def EditProject(project_id):
+    if request.method == 'GET':
+        project_ = projects.return_project_by_id(project_id)
+        return render_template('edit_project.jinja2', project=project_)
+
+
+@app.route('/AddProject', methods=['GET', 'POST'])
+@role_required('admin')
+@login_required
+def AddProject():
+    if request.method == 'GET':
+        return render_template('add_project.jinja2')
+
+    # currently, there is not post allowed for non admin users.
+    if current_user.user_level != 'admin':
+        abort(403)
+
+    # if it is a POST
+
+    projectName = request.form['project_name']
+    StartDate = request.form['start_date']
+    EndDate = request.form['end_date']
+    Description = request.form['description']
+
+    projects.add_project(projectName, StartDate, EndDate,
+                         Description, current_user.username)
+    return redirect('Projects')
 
 
 @app.route('/logout')

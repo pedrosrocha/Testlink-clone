@@ -36,15 +36,6 @@ class DatabaseConnector:
             print("Database error:", str(e))
 
     @classmethod
-    def return_next_id(cls) -> int:
-        # returns the last added id and then sums 1. This is used to insert a unique id to the dictionary/database.
-        # If the list is empty, 1 will be returned
-        # if cls.users:
-        #    return cls.users[-1]["id"] + 1
-        # return 1
-        pass
-
-    @classmethod
     def delete_user_from_database(cls, user_id: int) -> List[dict]:
 
         # engine.begin() commits the transaction automatically. It also rollsback in a case of an error

@@ -1,0 +1,77 @@
+{% extends 'base.jinja2' %}
+
+{% block content %}
+
+<a href="{{url_for('MainPage')}}"> Home </a>
+
+<h1>Add new project</h1>
+
+<form id="add-user-form" method="POST">
+    <input id="project_name" name="project_name" placeholder="Project Name">
+    <span id="project-name-error" style="color:red; display:none;"></span>
+
+    <br><br>
+
+    <!-- Start Date -->
+    <label for="start_date">Start Date:</label>
+    <input type="date" id="start_date" name="start_date" required>
+
+    <br><br>
+
+    <!-- End Date -->
+    <label for="end_date">End Date:</label>
+    <input type="date" id="end_date" name="end_date" required>
+
+    <br><br>
+
+    <label for="description">Description:</label><br>
+    <textarea id="description" name="description" rows="5" cols="40" placeholder="Enter project description...">
+    </textarea>
+
+    <br><br>
+
+    <input type="submit" value="Add">
+</form>
+
+{% with messages = get_flashed_messages() %}
+{% for message in messages %}
+<p>{{ message }}</p>
+{% endfor %}
+{% endwith %}
+
+<script>
+    document.getElementById('add-user-form').addEventListener('submit', function (e) {
+        let isValid = true;
+
+        // Clear previous messages first
+        document.querySelectorAll('span[id$="-error"]').forEach(el => {
+            el.style.display = 'none';
+            el.textContent = '';
+        });
+
+        const startDate = document.getElementById('start_date').value;
+        const endDate = document.getElementById('end_date').value;
+
+        // Validate fields
+        if (document.getElementById('project_name').value.trim() === '') {
+            document.getElementById('project-name-error').textContent = "Project name cannot be empty.";
+            document.getElementById('project-name-error').style.display = "inline";
+            isValid = false;
+        }
+
+        // Date validation (if both dates are filled)
+        if (startDate && endDate) {
+            if (new Date(startDate) > new Date(endDate)) {
+                alert("End date must be after or equal to start date.");
+                isValid = false;
+            }
+        }
+
+
+        if (!isValid) {
+            e.preventDefault();
+        }
+    });
+</script>
+
+{% endblock %}

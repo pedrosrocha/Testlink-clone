@@ -32,7 +32,7 @@ with engine.connect() as connection:
         description TEXT,                               -- Optional longer description
         status ENUM('active', 'inactive', 'archived') DEFAULT 'active',  -- Status of project
 
-        owner_id INT,                                   -- Optional link to user who owns the project
+        owner_name VARCHAR(100),                        -- Optional link to user who owns the project
         start_date DATE,                                -- When the project started
         end_date DATE,                                  -- Optional planned end date
 

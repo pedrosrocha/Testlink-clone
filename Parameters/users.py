@@ -8,9 +8,15 @@ class testclone_user_list():
         self.bcrypt = Bcrypt(app)
 
     def add_user(self, username, password, email):
+        for user in self.return_users():
+            # If the user already exists, another username mus be chosen
+            if user['username'] == username:
+                return False
+
         encrypted_password = self.bcrypt.generate_password_hash(
             password).decode('utf-8')
         DatabaseConnector.add_user(username, encrypted_password, email)
+        return True
 
     def return_users(self):
         return DatabaseConnector.return_all_users()
