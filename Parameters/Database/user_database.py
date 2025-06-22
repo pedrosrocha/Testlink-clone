@@ -82,3 +82,12 @@ class DatabaseConnector:
                                {"password_hash": password_hash,
                                 "username": username
                                 })
+
+    @classmethod
+    def change_user_level(cls, user_id, user_level):
+        # engine.begin() commits the transaction automatically. It also rollsback in a case of an error
+        with engine.begin() as connection:
+            connection.execute(text("UPDATE users SET user_level = :user_level WHERE id = :id"),
+                               {"id": user_id,
+                                "user_level": user_level
+                                })

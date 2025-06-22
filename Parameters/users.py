@@ -40,6 +40,19 @@ class testclone_user_list():
             password).decode('utf-8')
         DatabaseConnector.change_user_password(username, password_hash)
 
+    def change_user_level(self, user_id, user_level):
+        users = self.return_users()
+        admin_users = [user for user in users if user['user_level'] == 'admin']
+
+        user_id = int(user_id)
+        # If the current user being changed from admin to another user level is the last admin, the change will be forbidden.
+        # As there are changes that one the admin can make, this will be forbidden by the software
+        if len(admin_users) == 1 and admin_users[0]['id'] == user_id and user_level != 'admin':
+            return False
+
+        DatabaseConnector.change_user_level(user_id, user_level)
+        return True
+
 
 class testclone_user(UserMixin):
     """Flask-Login User wrapper."""

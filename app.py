@@ -1,8 +1,9 @@
-from flask import Flask, render_template, request, url_for, redirect, flash
+from flask import Flask, render_template, request, url_for, redirect, flash, abort
 from flask_login import login_manager
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from Parameters.users import testclone_user_list, testclone_user
-from utils import url_parser
+from utils import url_parser, roles_controllers
+from utils.roles_controllers import role_required
 
 app = Flask(__name__)
 
@@ -88,11 +89,6 @@ def AddUserFromManager():
     password = request.form['password']
     email = request.form['email']
 
-    # next_page = request.args.get('next')
-
-    # if not url_parser.is_safe_url(next_page):
-    #    next_page = url_for('MainPage')  # MainPage after login
-
     Users_manipulation.add_user(username, password, email)
     return redirect('UsersManagement')
 
@@ -111,12 +107,26 @@ def UsersManagement():
 
     # if it is a POST
     user_id = request.form['id']
-    users_ = Users_manipulation.return_users()
+    # users_ = Users_manipulation.return_users()
     if request.form['action'] == "deletion":
+
         Users_manipulation.delete_user(user_id)
-        return render_template('users_management.jinja2', users=users_)
+        return redirect(url_for('UsersManagement'))
+
     if request.form['action'] == "reseting":
         return redirect(url_for('ResetUserPassword'))
+
+    if request.form['action'] == "change_level":
+        user_id = request.form['id']
+        user_level = request.form['new_level']
+        if not Users_manipulation.change_user_level(user_id, user_level):
+            return render_template("users_management.jinja2", users=Users_manipulation.return_users(), error_message="There must be at least 1 Admin user'.")
+
+        return redirect(url_for('UsersManagement'))
+
+    # currently, there is not post allowed for non admin users.
+    if current_user.user_level != 'admin':
+        abort(403)
 
     # In case a non mapped post is sent
     return render_template('404.jinja2')
@@ -142,6 +152,11 @@ def ResetUserPassword(username):
 def logout():
     logout_user()
     return redirect(url_for('login'))
+
+
+@app.errorhandler(403)
+def forbidden(e):
+    return render_template('403.jinja2'), 403
 
 
 if __name__ == '__main__':
