@@ -83,6 +83,7 @@ def AddUser():
 
 
 @app.route('/AddUserFromManager', methods=['GET', 'POST'])
+@login_required
 def AddUserFromManager():
     if request.method == 'GET':
         return render_template('add_user_from_manager.jinja2')
@@ -171,11 +172,6 @@ def ProjectManagement():
         projects.delete_project(project_id)
         return render_template('projects_management.jinja2', projects=projects.return_all_projects())
 
-    if request.form['action'] == "edition":
-        # project_ = projects.return_project_by_id(project_id)
-        # render_template('edit_project.jinja2', project=project_)
-        return "test "  # redirect(url_for('EditProject'))
-
     # if it is deletion
 
     return "UiiiiHooo"
@@ -192,7 +188,7 @@ def OpenProject(project_id):
     # if it is a POST
     if current_user.user_level != 'admin':
         abort(403)
-    return "test"
+    return render_template('404.jinja2')
 
 
 @app.route('/EditProject/<int:project_id>', methods=['GET', 'POST'])
@@ -202,6 +198,21 @@ def EditProject(project_id):
     if request.method == 'GET':
         project_ = projects.return_project_by_id(project_id)
         return render_template('edit_project.jinja2', project=project_)
+    # if post
+
+    if current_user.user_level != 'admin':
+        return render_template('projects_management.jinja2', projects=projects.return_all_projects())
+
+    if request.form['action'] == "editing":
+        projectName = request.form['project_name']
+        Description = request.form['description']
+        Status = request.form['status']
+
+        projects.update_project_data(
+            projectName, Description, Status, current_user)
+        # add later: function to update all the project name in the tests and suites
+        return render_template('projects_management.jinja2', projects=projects.return_all_projects())
+    return render_template('404.jinja2')
 
 
 @app.route('/AddProject', methods=['GET', 'POST'])

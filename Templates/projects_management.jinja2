@@ -43,13 +43,14 @@
             <td>{{ project['updated_at'] }}</td>
             {% if current_user.user_level == 'admin' %}
             <td>
-                <form method="POST" style="display:inline;">
+
+                <form method="POST" style="display:inline;"
+                    onsubmit="return confirmDeletion('are you sure that you want to delete {{project['name']}}?');">
                     <input type="hidden" name="action" value="deletion">
                     <input type="hidden" name="id" value="{{ project['id'] }}">
                     <input type="submit" value="Delete">
+
                 </form>
-
-
 
             </td>
             {% endif %}
@@ -59,15 +60,18 @@
 </table>
 
 </ul>
+
+<script src="{{ url_for('static', filename='Scripts/projects_management.js') }}"></script>
+
 {% if error_message %}
 <script>
     alert("{{ error_message }}");
 </script>
+{% endif %}
 
 <!-- style-->
-<style>
+<link rel="stylesheet" href="{{ url_for('static', filename='Styles/project_management.css') }}">
 
-</style>
-{% endif %}
+
 
 {% endblock %}

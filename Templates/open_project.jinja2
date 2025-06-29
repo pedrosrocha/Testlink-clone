@@ -9,14 +9,18 @@
 </div>
 
 <h1>Project Information</h1>
-<p>Name: {{project['name']}}</p>
-<p>Id: {{project['id']}}</p>
-<p>Status: {{project['status']}}</p>
-<p>Created by: {{project['owner_name']}}</p>
-<p>Start Date: {{project['start_date']}}</p>
-<p>End Date: {{project['end_date']}}</p>
-<p>Created at: {{project['created_at']}}</p>
-<p>Last updated at: {{project['updated_at']}}</p>
+
+<ul>
+    <li>Name: {{project['name']}}</li>
+    <li>Id: {{project['id']}}</li>
+    <li>Status: {{project['status']}}</li>
+    <li>Created by: {{project['owner_name']}}</li>
+    <li>Start Date: {{project['start_date']}}</li>
+    <li>End Date: {{project['end_date']}}</li>
+    <li>Created at: {{project['created_at']}}</li>
+    <li>Last updated at: {{project['updated_at']}}</li>
+    <li>Description: {{project['description']}}</li>
+</ul>
 
 <form method="GET" style="display: inline" action="{{url_for('EditProject', project_id=project['id'])}}">
     <input type="hidden" name="action" value="editing">
@@ -30,15 +34,8 @@
 {% endfor %}
 {% endwith %}
 
-<script>
+<script></script>
 
-</script>
+<link rel="stylesheet" href="{{ url_for('static', filename='Styles/open_project.css') }}">
 
-<style>
-    .Mydiv {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-</style>
 {% endblock %}

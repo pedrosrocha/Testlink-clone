@@ -26,3 +26,16 @@ class projects:
     @classmethod
     def return_project_by_id(cls, project_id):
         return DatabaseConnector.return_project_by_id(int(project_id))
+
+    @classmethod
+    def update_project_data(cls, name, description, status, user):
+        if status.lower() == 'inactive':
+            status = 2
+        elif status.lower() == 'archived':
+            status = 3
+        else:
+            status = 1
+
+        if DatabaseConnector.update_project_data(name, description, int(status), user.username):
+            return True
+        return False

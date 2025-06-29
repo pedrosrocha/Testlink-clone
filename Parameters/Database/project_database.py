@@ -43,12 +43,13 @@ class DatabaseConnector:
         # engine.begin() commits the transaction automatically. It also rollsback in a case of an error
         try:
             with engine.begin() as connection:
-                connection.execute(text("INSERT INTO projects(name, description, owner_name, start_date, end_date) VALUES (:ProjectName, :description, :owner_name, :start_date, :end_date)"),
+                connection.execute(text("INSERT INTO projects(name, description, owner_name, start_date, end_date, updated_by) VALUES (:ProjectName, :description, :owner_name, :start_date, :end_date,:updated_by)"),
                                    {"ProjectName": ProjectName,
                                     "description": Description,
                                     "owner_name": Creator,
                                     "start_date": StartDate,
-                                    "end_date": EndDate}
+                                    "end_date": EndDate,
+                                    "updated_by": Creator}
                                    )
         except SQLAlchemyError as e:
             print("Database error:", str(e))
@@ -70,3 +71,22 @@ class DatabaseConnector:
                                         {"id": id})
 
             return result.mappings().all()[0]
+
+    @classmethod
+    def update_project_data(cls, name: str, description: str, status: int, user: str) -> bool:
+        try:
+            with engine.begin() as connection:
+                connection.execute(text("UPDATE projects SET status=:status, description=:description, updated_by=:updated_by WHERE name =:project;"),
+                                   {
+                    "status": status,
+                    "project": name,
+                    "description": description,
+                    "updated_by": user
+                })
+
+            return True
+
+        except SQLAlchemyError as e:
+            print("Database error:", str(e))
+
+        return False

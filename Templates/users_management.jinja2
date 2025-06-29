@@ -7,8 +7,6 @@
 <h1>User management system!</h1>
 
 
-
-
 <button onclick="location.href='/AddUserFromManager'">
     New user
 </button>
@@ -18,7 +16,8 @@
     {% for user in users %}
     <li>id[{{user['id']}}]: {{user['username']}}, email: {{user['email']}}
         {% if current_user.user_level == 'admin' %}
-        <form method="POST" style="display: inline">
+        <form method="POST" style="display: inline"
+            onsubmit="return confirmDeletion('Do you really want to delete the user {{user['username']}}?')">
             <input type="hidden" name="action" value="deletion">
             <input type="hidden" name="id" value="{{user['id']}}">
             <input type="submit" value="delete">
@@ -55,21 +54,13 @@
 </script>
 {% endif %}
 
-<!-- style-->
-<style>
-    .HeaderDiv {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        background-color: rgb(163, 56, 56);
-    }
 
-    .RestDiv {
-        display: flex;
-        align-items: left;
-        background-color: rgb(233, 231, 231);
-    }
-</style>
+<!-- script -->
+<script src="{{ url_for('static', filename='Scripts/users_management.js') }}"></script>
+
+<!-- style-->
+<link rel="stylesheet" href="{{ url_for('static', filename='Styles/users_management.css') }}">
+
 
 
 {% endblock %}
