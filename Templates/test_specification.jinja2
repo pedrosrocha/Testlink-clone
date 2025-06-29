@@ -1,0 +1,41 @@
+{% extends 'base.jinja2' %}
+
+{% block content %}
+
+<!-- Container to hold top bar elements -->
+<link rel="stylesheet" href="{{ url_for('static', filename='Styles/test_specification.css') }}">
+
+<div class="Mydiv">
+
+    <!-- Left links -->
+    <div>
+        <ul style="list-style-type:none; padding: 0; margin: 0;">
+            <li><a href="{{url_for('MainPage')}}">Home</a></li>
+        </ul>
+
+    </div>
+
+
+    <!-- Right dropdown -->
+    <div>
+        <select name="project" id="project-selector-form">
+            {% for project in projects %}
+            <option value="{{project['id']}}" {%if project['id']==current_project_id %} selected {% endif %}>
+                {{ project['name'] }}
+            </option>
+            {% endfor %}
+        </select>
+
+        <p id="feedback" style="color: green;"></p>
+    </div>
+
+</div>
+
+<hr>
+
+<h1>Test Specification</h1>
+
+
+<script src="{{ url_for('static', filename='Scripts/project_selector.js') }}"></script>
+
+{% endblock %}

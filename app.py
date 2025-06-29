@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, url_for, redirect, flash, abort
+from flask import Flask, render_template, request, url_for, redirect, flash, abort, session, jsonify
 from flask_login import login_manager
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from Parameters.users import testclone_user_list, testclone_user
@@ -46,6 +46,8 @@ def login():
 
         if not url_parser.is_safe_url(next_page):
             next_page = url_for('MainPage')  # MainPage after login
+
+        session['current_project_id'] = 0  # Initializes the project id as null
 
         return redirect(next_page or url_for('MainPage'))
 
@@ -102,7 +104,12 @@ def AddUserFromManager():
 @app.route('/MainPage')
 @login_required
 def MainPage():
-    return render_template('main_page.jinja2', username=current_user.username, projects=projects.return_all_projects_names())
+    # current_project_id = session.get('current_project_id')
+    _projects = projects.return_all_projects()
+    _current_id = int(session.get('current_project_id'))
+    if not _current_id:
+        session['current_project_id'] = int(_projects[0]['id'])
+    return render_template('main_page.jinja2', username=current_user.username, projects=_projects, current_project_id=_current_id)
 
 
 @app.route('/UsersManagement', methods=['GET', 'POST'])
@@ -238,11 +245,31 @@ def AddProject():
     return redirect('Projects')
 
 
+@app.route('/TestSpecification', methods=['GET', 'POST'])
+@role_required('admin')
+@login_required
+def TestSpecification():
+    if request.method == 'GET':
+        _current_project_id = session.get('current_project_id')
+        return render_template('test_specification.jinja2', projects=projects.return_all_projects(), current_project_id=int(_current_project_id))
+
+
 @app.route('/logout')
 @login_required
 def logout():
     logout_user()
     return redirect(url_for('login'))
+
+
+@app.route('/SelectProject', methods=['POST'])
+@login_required
+def SelectProject():
+    # print("Data as JSON:", request.get_json())  # print json request
+
+    project_id = request.json.get('project_id')
+    # print("project_id: ", project_id)
+    session['current_project_id'] = project_id
+    return jsonify(success=True, message="Project updated successfully")
 
 
 @app.errorhandler(403)

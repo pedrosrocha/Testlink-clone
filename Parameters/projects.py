@@ -21,7 +21,9 @@ class projects:
 
     @classmethod
     def return_project_by_name(cls, project_name):
-        return DatabaseConnector.return_project_by_name(project_name)
+        if project_name:
+            return DatabaseConnector.return_project_by_name(project_name)
+        return False
 
     @classmethod
     def return_project_by_id(cls, project_id):
