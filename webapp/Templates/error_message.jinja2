@@ -1,0 +1,16 @@
+{% extends 'base.jinja2' %}
+
+{% block content %}
+
+<!-- Container to hold top bar elements -->
+<link rel="stylesheet" href="{{ url_for('static', filename='Styles/error_message.css') }}">
+
+
+<hr>
+
+<h1>Error: </h1>
+<p> {{error_message}} </p>
+<p> Go back to <a href="{{url_for(page_url)}}">{{page_name}}.</a></p>
+
+
+{% endblock %}
