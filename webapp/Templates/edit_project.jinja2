@@ -1,0 +1,37 @@
+{% extends 'base.jinja2' %}
+
+{% block content %}
+
+
+
+<h1>Edit project</h1>
+
+
+<form id="edit-project-form" method="POST" style="display: inline;padding:0">
+    <input id="project_name" name="project_name" value="{{project['name']}}">
+    <span id="project-name-error" style="color:red; display:none;"></span>
+
+    <br><br>
+
+    <label for="description">Description:</label><br>
+    <textarea id="description" name="description" rows="5" cols="40">
+    {{project['description']}}
+    </textarea>
+
+    <select name="status" value="Inactive">
+        <option value="active" {% if project['status']=='active' %} selected {%endif%}>Active</option>
+        <option value="inactive" {% if project['status']=='inactive' %} selected {%endif%}>Inactive</option>
+        <option value="archived" {% if project['status']=='archived' %} selected {%endif%}>Archived</option>
+    </select>
+
+    <br><br>
+    <input type="hidden" name="action" value="editing">
+    <input type="submit" value="Edit">
+
+</form>
+
+<button onclick="history.back()">Cancel</button>
+
+
+
+{% endblock %}

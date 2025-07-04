@@ -1,0 +1,12 @@
+{% extends 'base.jinja2' %}
+
+{% block content %}
+
+{% if error_message %}
+<script>
+    alert("{{ error_message }}");
+</script>
+{% endif %}
+
+
+{% endblock %}

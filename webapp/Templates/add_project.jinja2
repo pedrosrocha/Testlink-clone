@@ -1,0 +1,43 @@
+{% extends 'base.jinja2' %}
+
+{% block content %}
+
+<h1>Add new project</h1>
+
+<form id="add-user-form" method="POST">
+    <input id="project_name" name="project_name" placeholder="Project Name">
+    <span id="project-name-error" style="color:red; display:none;"></span>
+
+    <br><br>
+
+    <!-- Start Date -->
+    <label for="start_date">Start Date:</label>
+    <input type="date" id="start_date" name="start_date" required>
+
+    <br><br>
+
+    <!-- End Date -->
+    <label for="end_date">End Date:</label>
+    <input type="date" id="end_date" name="end_date" required>
+
+    <br><br>
+
+    <label for="description">Description:</label><br>
+    <textarea id="description" name="description" rows="5" cols="40" placeholder="Enter project description...">
+    </textarea>
+
+    <br><br>
+
+    <input type="submit" value="Add">
+</form>
+
+{% with messages = get_flashed_messages() %}
+{% for message in messages %}
+<p>{{ message }}</p>
+{% endfor %}
+{% endwith %}
+
+<script src="{{ url_for('static', filename='Scripts/main_page.js') }}"></script>
+
+
+{% endblock %}
