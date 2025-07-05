@@ -10,7 +10,27 @@
 
 <h1>Test Specification</h1>
 
+<div class="container-tree">
+    <div class="left-pane">
+        <div class="filter-pane">
+            <h4>Filters</h4>
 
-<script src="{{ url_for('static', filename='Scripts/project_selector.js') }}"></script>
+        </div>
+        <div class="tree-pane">
+            <div id="testTree"></div>
+        </div>
+    </div>
+
+    <div class="divider" id="divider"></div>
+
+    <div class="right-pane">
+        <!-- Your main content goes here -->
+        <h2>Project Details</h2>
+        <p>Content will go here.</p>
+    </div>
+</div>
+
+
+<script src="{{ url_for('static', filename='Scripts/test_specification.js') }}"></script>
 
 {% endblock %}

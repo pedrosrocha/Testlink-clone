@@ -1,7 +1,8 @@
-from flask import Blueprint, render_template, request, redirect,   session, abort, jsonify, current_app
+from flask import Blueprint, render_template, request, redirect,  session, abort, jsonify, url_for
 from flask_login import login_required, current_user
 from webapp.utils.roles_controllers import role_required
 from webapp.Parameters.projects import projects
+from webapp.Parameters.TestSuites import TestSuits
 
 
 projects_views = Blueprint('projects_views', __name__)
@@ -25,10 +26,7 @@ def ProjectManagement():
     if request.form['action'] == "deletion":
 
         projects.delete_project(project_id)
-        return render_template('projects_management.jinja2',
-                               projects=projects.return_all_projects(),
-                               user=current_user,
-                               current_project_id=int(session.get('current_project_id')))
+        return redirect(url_for('projects_views.ProjectManagement'))
 
     # if it is deletion
 
@@ -86,7 +84,9 @@ def AddProject():
     if request.method == 'GET':
         return render_template('add_project.jinja2',
                                projects=projects.return_all_projects(),
-                               current_project_id=int(session.get('current_project_id')))
+                               current_project_id=int(
+                                   session.get('current_project_id')),
+                               user=current_user)
 
     # currently, there is not post allowed for non admin users.
     if current_user.user_level != 'admin':
@@ -99,16 +99,33 @@ def AddProject():
     EndDate = request.form['end_date']
     Description = request.form['description']
 
-    projects.add_project(projectName,
-                         StartDate,
-                         EndDate,
-                         Description,
-                         current_user.username)
+    executionFlag = projects.add_project(projectName,
+                                         StartDate,
+                                         EndDate,
+                                         Description,
+                                         current_user.username
+                                         )
 
-    return redirect('projects_views.Projects',
-                    user=current_user,
-                    projects=projects.return_all_projects(),
-                    current_project_id=int(session.get('current_project_id')))
+    if not executionFlag:
+        return render_template("error_message.jinja2",
+                               error_message="The project name must be unique!",
+                               page_url="projects_views.AddProject",
+                               page_name="Add project",
+                               user=current_user,
+                               projects=projects.return_all_projects(),
+                               current_project_id=int(
+                                   session.get('current_project_id'))
+                               )
+
+    current_project = projects.return_project_by_name(projectName)
+
+    TestSuits.add_suite(projectName,
+                        f"Root suite for the project {projectName}",
+                        None,
+                        current_project['id'],
+                        current_user.username)
+
+    return redirect(url_for('projects_views.ProjectManagement'))
 
 
 @projects_views.route('/SelectProject', methods=['POST'])

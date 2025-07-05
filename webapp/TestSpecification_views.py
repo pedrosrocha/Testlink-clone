@@ -9,9 +9,20 @@ TestSpecification_views = Blueprint('TestSpecification_views', __name__)
 
 
 @TestSpecification_views.route('/TestSpecification', methods=['GET', 'POST'])
-@role_required('admin')
 @login_required
 def TestSpecification():
     if request.method == 'GET':
         _current_project_id = session.get('current_project_id')
-        return render_template('test_specification.jinja2', projects=projects.return_all_projects(), current_project_id=int(_current_project_id), user=current_user)
+        return render_template('test_specification.jinja2',
+                               projects=projects.return_all_projects(),
+                               current_project_id=int(_current_project_id),
+                               user=current_user)
+
+
+@TestSpecification_views.route('/Get_tree_data', methods=['GET'])
+@login_required
+def test():
+    pass
+
+    # return all testcases
+    # return all testsuites

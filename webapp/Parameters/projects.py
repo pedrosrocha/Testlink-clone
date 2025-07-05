@@ -17,7 +17,15 @@ class projects:
 
     @classmethod
     def add_project(cls, projectName, StartDate, EndDate, Description, username):
-        return DatabaseConnector.add_project_to_database(projectName, Description, username, StartDate, EndDate)
+        projects = cls.return_all_projects()
+
+        for project in projects:
+            if project['name'].lower() == projectName.lower():
+                return False
+
+        DatabaseConnector.add_project_to_database(
+            projectName, Description, username, StartDate, EndDate)
+        return True
 
     @classmethod
     def return_project_by_name(cls, project_name):
