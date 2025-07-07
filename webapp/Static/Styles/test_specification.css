@@ -42,3 +42,38 @@
     padding: 10px;
     overflow: auto;
 }
+
+
+/* Base class for suite (fallback/default) */
+.custom-suite-icon {
+    background-size: 16px 16px;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+/* Test case icon */
+.custom-test-icon {
+    background-image: url("/static/icons/custom-test-icon.png") !important;
+    background-size: 16px 16px !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+}
+
+
+.jstree-node>.jstree-anchor>.custom-suite-icon {
+    background-image: url("/static/icons/custom-suite-empty.png");
+    background-size: 16px 16px;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+/* Closed folder icon */
+.jstree-closed>.jstree-anchor>.custom-suite-icon {
+    background-image: url("/static/icons/custom-suite-closed.png");
+
+}
+
+/* Open folder icon */
+.jstree-open>.jstree-anchor>.custom-suite-icon {
+    background-image: url("/static/icons/custom-suite-opened.png");
+}

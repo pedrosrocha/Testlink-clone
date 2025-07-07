@@ -28,7 +28,8 @@ def login():
         if not url_parser.is_safe_url(next_page):
             next_page = url_for('auth.MainPage')  # MainPage after login
 
-        session['current_project_id'] = 0  # Initializes the project id as null
+        # Initializes the project id as null
+        session['current_project_id'] = None
 
         return redirect(next_page or url_for('auth.MainPage'))
 
@@ -55,9 +56,12 @@ def logout():
 @auth.route('/MainPage')
 @login_required
 def MainPage():
-    # current_project_id = session.get('current_project_id')
     _projects = projects.return_all_projects()
-    _current_id = int(session.get('current_project_id'))
+    _current_id = 0
+
+    if session.get('current_project_id'):
+        _current_id = int(session.get('current_project_id'))
+
     if not _current_id:
         session['current_project_id'] = int(_projects[0]['id'])
     return render_template('main_page.jinja2',

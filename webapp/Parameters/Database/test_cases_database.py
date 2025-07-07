@@ -12,28 +12,15 @@ engine = create_engine(
 
 class DatabaseConnector:
     @classmethod
-    def return_all_suites_from_project(cls, projectID) -> list[UserDict]:
-        with engine.connect() as connection:
-            result = connection.execute(text("SELECT * FROM test_suites WHERE project_id = :id"),
-                                        {"id": projectID})
-
-            # this returns the list of users as a list of dictionaries
-            return result.mappings().all()
+    def return_all_cases_from_project(cls, projectID) -> list[UserDict]:
+        # FAKE
+        pass
 
     @classmethod
-    def return_all_suites_names_ids(cls, projectID: int, parentID: int) -> list[UserDict]:
-        if parentID:
-            with engine.connect() as connection:
-                result = connection.execute(text("SELECT id, name FROM test_suites WHERE project_id = :id AND parent_suite_id = :parentID"),
-                                            {"id": projectID,
-                                            "parentID": parentID})
-
-                # this returns the list of users as a list of dictionaries
-                return result.mappings().all()
-
+    def return_all_cases_names_ids(cls, parentID: int) -> list[UserDict]:
         with engine.connect() as connection:
-            result = connection.execute(text("SELECT id, name FROM test_suites WHERE project_id = :id AND parent_suite_id IS null"),
-                                        {"id": projectID})
+            result = connection.execute(text("SELECT id, name FROM test_cases WHERE suite_id = :parentID"),
+                                        {"parentID": parentID})
 
             # this returns the list of users as a list of dictionaries
             return result.mappings().all()
@@ -50,6 +37,7 @@ class DatabaseConnector:
 
     @classmethod
     def add_suite_to_database(cls, SuiteName: str, Description: str, Creator: str, Project_id: int, ParentID: str) -> List[dict]:
+        # FAKE
         # engine.begin() commits the transaction automatically. It also rollsback in a case of an error
         try:
             with engine.begin() as connection:

@@ -4,7 +4,7 @@
 
 <!-- Container to hold top bar elements -->
 <link rel="stylesheet" href="{{ url_for('static', filename='Styles/test_specification.css') }}">
-
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jstree/dist/themes/default/style.min.css" />
 
 
 
@@ -31,6 +31,8 @@
 </div>
 
 
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.6.4/dist/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jstree@3.3.12/dist/jstree.min.js"></script>
 <script src="{{ url_for('static', filename='Scripts/test_specification.js') }}"></script>
 
 {% endblock %}

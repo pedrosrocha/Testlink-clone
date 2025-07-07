@@ -10,3 +10,20 @@ html {
     height: 99%;
     overflow: hidden;
 }
+
+footer.attribution {
+    text-align: end;
+    font-size: 10px;
+    color: #888;
+    margin-top: 20px;
+    padding: 10px 0;
+}
+
+footer.attribution a {
+    color: #888;
+    text-decoration: none;
+}
+
+footer.attribution a:hover {
+    text-decoration: underline;
+}

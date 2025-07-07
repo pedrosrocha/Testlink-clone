@@ -1,10 +1,7 @@
-from flask import Flask, render_template, request, url_for, redirect, flash, abort, session, jsonify
-from flask_login import LoginManager, login_user, logout_user, login_required, current_user
+from flask import Flask
+from flask_login import LoginManager
 from flask_bcrypt import Bcrypt
 from webapp.Parameters.users import testclone_user_list
-from webapp.utils import url_parser, roles_controllers
-from webapp.utils.roles_controllers import role_required
-from webapp.Parameters.projects import projects
 
 
 def create_app():

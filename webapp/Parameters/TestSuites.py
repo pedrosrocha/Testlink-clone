@@ -16,3 +16,10 @@ class TestSuits():
         else:
             DatabaseConnector.add_suite_to_database(
                 SuiteName, Description, created_by, int(project_id), None)
+
+    @classmethod
+    def return_testsuits_from_project(cls, projectID, parentID):
+        if parentID:
+            return DatabaseConnector.return_all_suites_names_ids(int(projectID), int(parentID))
+
+        return DatabaseConnector.return_all_suites_names_ids(int(projectID), None)
