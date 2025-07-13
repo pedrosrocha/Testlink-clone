@@ -15,10 +15,14 @@ TestSpecification_views = Blueprint('TestSpecification_views', __name__)
 @login_required
 def TestSpecification():
     if request.method == 'GET':
+        if (not session.get('current_project_id')):
+            _current_project_id = int(projects.return_oldest_project()["id"])
+            session["current_project_id"] = _current_project_id
+
         _current_project_id = session.get('current_project_id')
         return render_template('test_specification.jinja2',
                                projects=projects.return_all_projects(),
-                               current_project_id=int(_current_project_id),
+                               current_project_id=_current_project_id,
                                user=current_user)
 
 
@@ -82,7 +86,25 @@ def delete_node():
 
 @TestSpecification_views.route('/rename_node', methods=['POST'])
 def rename_node():
-    return jsonify(success=True, message="Project updated successfully")
+    data = request.get_json()
+    id = data.get('id')
+    new_name = data.get('new_name')
+    type = data.get('type')
+
+    if (type == "suite"):
+        if TestSuits.update_testcase_data(id, name=new_name):
+            return jsonify(success=True, message="Project updated successfully")
+
+        return jsonify(success=False, error="Error while renaming the suite")
+
+    # else: type == test
+    current_user_name = current_user.username
+    id = id[2:]
+    if TestCases.update_testcase_data(id, name=new_name, last_updated_by=current_user_name):
+
+        return jsonify(success=True, message="Project updated successfully")
+
+    return jsonify(success=False, error="Error while renaming the testcase")
 
 
 @TestSpecification_views.route('/paste_node', methods=['POST'])
@@ -92,9 +114,28 @@ def paste_node():
 
 @TestSpecification_views.route('/add_test_case', methods=['POST'])
 def add_test_case():
-    return jsonify(success=True, message="Project updated successfully")
+    data = request.get_json()
+    node_name = data.get('name')
+    parent_id = data.get('parent_id')
+
+    current_user_id = current_user.username
+    new_id = TestCases.add_testcase(
+        node_name, "", "", "", "draft", "high", parent_id, current_user_id, current_user_id)
+
+    return jsonify(success=True, message="Project updated successfully", name=node_name, id=new_id)
 
 
 @TestSpecification_views.route('/add_suite', methods=['POST'])
 def add_suite():
-    return jsonify(success=True, message="Project updated successfully")
+    data = request.get_json()
+    node_name = data.get('name')
+    parent_id = data.get('parent_id')
+
+    _current_project_id = session.get('current_project_id')
+    current_user.username
+    new_id = TestSuits.add_suite(node_name,
+                                 "",
+                                 parent_id,
+                                 _current_project_id,
+                                 current_user.username)
+    return jsonify(success=True, message="Project updated successfully", name=node_name, id=new_id)

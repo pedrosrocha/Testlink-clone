@@ -90,3 +90,13 @@ class DatabaseConnector:
             print("Database error:", str(e))
 
         return False
+
+    @classmethod
+    def return_first_project(cls) -> list[UserDict]:
+
+        with engine.connect() as connection:
+            result = connection.execute(
+                text("SELECT * FROM projects ORDER BY created_at LIMIT 1"))
+
+            # this returns the list of users as a list of dictionaries
+            return result.mappings().all()[0]

@@ -21,7 +21,7 @@ def AddUser():
     next_page = request.args.get('next')
 
     if not url_parser.is_safe_url(next_page):
-        next_page = url_for('MainPage')  # MainPage after login
+        next_page = url_for('auth.MainPage')  # MainPage after login
 
     if not current_app.Users_manipulation.add_user(username, password, email):
         return render_template('add_user.jinja2',

@@ -1,7 +1,11 @@
+
+
+
 const divider = document.getElementById('divider');
 const leftPane = document.querySelector('.left-pane');
 
 let isResizing = false;
+
 
 divider.addEventListener('mousedown', (e) => {
     isResizing = true;
@@ -25,7 +29,7 @@ $('#testTree').jstree({
     'core': {
         'data': {
             'url': function (node) {
-                // If root node, request top-level items
+                // If root node, request toplevel items
                 return node.id === '#' ? '/get_test_tree_root' : '/get_test_tree_children';
             },
             'data': function (node) {
@@ -58,9 +62,9 @@ let clipboard = {
     action: null // 'copy' or 'cut'
 };
 
-function handleCopy(tree, node) {
-    clipboard.data = tree.get_json(node, { flat: true }); // Full nested structure
-    clipboard.action = 'copy';
+function handleCopy(tree, node, action) {
+    clipboard.data = tree.get_json(node, { flat: false }); // Full nested structure
+    clipboard.action = action;
 }
 
 
@@ -71,8 +75,8 @@ function handleRename(tree, node) {
     }
 
     tree.edit(node, null, function (new_node) {
-
-        if (new_node.text && new_node.text.trim() !== '') {
+        is_new_node_name_unique = validate_new_node_name(new_node.text, node.parent, tree)
+        if (new_node.text && new_node.text.trim() !== '' && is_new_node_name_unique) {
             fetch('/rename_node', {
                 method: 'POST',
                 headers: {
@@ -132,127 +136,89 @@ function handleDelete(tree, node) {
         });
 }
 
-function handleAddNode(tree, parentNode, type) {
-    const newNode = tree.create_node(parentNode, {
-        text: type === 'suite' ? 'New suite' : 'New testcase',
-        type: type
+function handleAddNode(tree, parentNode, Filetype) {
+
+
+    //Prevent adding suite to a test case
+    if (parentNode.type === "test") {
+        return;
+    }
+
+    let route = "/add_suite"
+    // Create temporary node
+    const tempId = tree.create_node(parentNode, {
+        text: Filetype == "suite" ? "New suite" : "New testcase",
+        type: Filetype
     });
 
-    if (parentNode.type == "test") {
+    if (!tempId) {
+        alert("Failed to create temporary node.");
         return;
     }
-    if (newNode.type == "suite") {
-        tree.edit(newNode, null, function (new_name) {
-            if (new_name.text && new_name.text.trim() !== '') {
-                fetch('/add_suite', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest'
-                    },
-                    body: JSON.stringify({
-                        parent_id: parentNode.id,
-                        name: new_name.text.trim(),
-                    })
-                });
-            }
-        });
-        return;
+
+    const tempNode = tree.get_node(tempId);
+
+
+    if (Filetype == "suite") {
+        route = "/add_suite"
+    } else {
+        route = "/add_test_case"
     }
-    tree.edit(newNode, null, function (new_name) {
-        if (new_name.text && new_name.text.trim() !== '') {
-            fetch('/add_test_case', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                body: JSON.stringify({
-                    parent_id: parentNode.id,
-                    name: new_name.text.trim(),
-                    type: type
-                })
-            });
+
+    tree.edit(tempNode, null, function (newName) {
+        // Handle cancel or empty input
+        if (!newName.text || newName.text.trim() === "") {
+            tree.delete_node(tempNode);  // Clean up if name invalid
+            return;
         }
+
+        //Send to backend
+        fetch(route, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-Requested-With": "XMLHttpRequest"
+            },
+            body: JSON.stringify({
+                parent_id: parentNode.id,
+                name: newName.text.trim()
+            })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (!data.success) {
+                    alert("Backend rejected the creation: " + data.error);
+                    tree.delete_node(tempNode);  // rollback
+                } else {
+                    // Step 6: Delete temp node and insert with correct ID and name
+                    tree.delete_node(tempNode);
+                    tree.create_node(parentNode, {
+                        id: data.id,           // ID returned from backend
+                        text: data.name,       // Confirmed name from backend
+                        type: Filetype         //test or suite
+                    });
+                }
+            })
+            .catch(error => {
+                console.error("Error contacting backend:", error);
+                alert("Error contacting the server.");
+                tree.delete_node(tempNode);  // cleanup on error
+            });
     });
-    return;
+
+
 
 }
+
+
 
 
 function handlePaste(tree, targetNode) {
     if (!clipboard.data) return;
 
-    function pasteRecursive(targetId, flatData) {
-        // Mapping from old ID to new ID
-        const idMap = {};
+    copied_nodes = clipboard.data;
 
-        // Find the root node (the one that was copied or cut)
-        const root = flatData.find(n => n.parent === '#');
-        if (!root) return;
-
-        // Create root under target
-        const newRootId = $('#testTree').jstree().create_node(targetId, {
-            text: root.text + ' (copy)',
-            type: root.type
-        });
-
-        idMap[root.id] = newRootId;
-
-        // Process all other nodes
-        function createChildrenRecursive(parentOldId, parentNewId) {
-            flatData.forEach(node => {
-                if (node.parent === parentOldId) {
-                    const newId = $('#testTree').jstree().create_node(parentNewId, {
-                        text: node.text,
-                        type: node.type
-                    });
-
-                    idMap[node.id] = newId;
-
-                    // Recursively process this node’s children
-                    createChildrenRecursive(node.id, newId);
-                }
-            });
-        }
-
-        createChildrenRecursive(root.id, newRootId);
-    }
-
-
-
-    //  Start recursive paste
-    pasteRecursive(targetNode.id, clipboard.data);
-
-
-    //  If cut, delete original node after pasting
-    if (clipboard.action === 'cut') {
-        tree.delete_node(clipboard.node);
-    }
-
-    var id_list = [];
-
-    clipboard.data.forEach(function (cur_node) {
-        id_list.push({
-            "id": cur_node.id,
-            "type": cur_node.type
-        })
-
-    });
-
-
-    //  Send to backend for persistence
-    fetch('/paste_node', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest'
-        },
-        body: JSON.stringify({
-            target_id: targetNode.id,
-            list_suites_tests: id_list
-        })
-    });
+    //else: it is a suite node
 
     //  Clear clipboard
     clipboard.node = null;
@@ -287,12 +253,12 @@ function getContextMenuItems(node) {
         copy: {
             label: "Copy",
             _disabled: isRoot,
-            action: () => handleCopy(tree, node)
+            action: () => handleCopy(tree, node, action = "copy")
         },
         cut: {
             label: "Cut",
             _disabled: isRoot,
-            action: () => handleCopy(tree, node)
+            action: () => handleCopy(tree, node, action = "cut")
         },
         paste: {
             label: "Paste",
@@ -305,4 +271,15 @@ function getContextMenuItems(node) {
             action: () => handleDelete(tree, node)
         }
     };
+}
+
+function validate_new_node_name(node_name, parent_id, tree) {
+    const parentNode = tree.get_node(parent_id);
+
+    parentNode.children.forEach((child) => {
+        if (tree.get_node(child).text == node_name) return false;
+    });
+
+
+    return true;
 }

@@ -49,3 +49,11 @@ class projects:
         if DatabaseConnector.update_project_data(name, description, int(status), user.username):
             return True
         return False
+
+    @classmethod
+    def return_oldest_project(cls):
+        first_project = DatabaseConnector.return_first_project()
+        if first_project:
+            return first_project
+
+        return {id: 1}

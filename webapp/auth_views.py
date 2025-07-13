@@ -42,8 +42,7 @@ def login():
 def index():
     if current_user.is_authenticated:
         return redirect(url_for("auth.MainPage"))
-    else:
-        return redirect(url_for("auth.login"))
+    return redirect(url_for("auth.login"))
 
 
 @auth.route('/logout')

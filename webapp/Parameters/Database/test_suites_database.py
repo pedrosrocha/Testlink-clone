@@ -53,14 +53,16 @@ class DatabaseConnector:
         # engine.begin() commits the transaction automatically. It also rollsback in a case of an error
         try:
             with engine.begin() as connection:
-                connection.execute(text("INSERT INTO test_suites (project_id, parent_suite_id, name, description, created_by) VALUES (:Project_id, :ParentID,:SuiteName,:description,:owner_name)"),
-                                   {"SuiteName": SuiteName,
-                                    "description": Description,
-                                    "owner_name": Creator,
-                                    "Project_id": Project_id,
-                                    "ParentID": ParentID,
-                                    "updated_by": Creator}
-                                   )
+                result = connection.execute(text("INSERT INTO test_suites (project_id, parent_suite_id, name, description, created_by) VALUES (:Project_id, :ParentID,:SuiteName,:description,:owner_name)"),
+                                            {"SuiteName": SuiteName,
+                                             "description": Description,
+                                             "owner_name": Creator,
+                                             "Project_id": Project_id,
+                                             "ParentID": ParentID,
+                                             "updated_by": Creator}
+                                            )
+                # gets the first colomn of the first row (new id)
+                return result.lastrowid
         except SQLAlchemyError as e:
             print("Database error:", str(e))
 
@@ -85,17 +87,11 @@ class DatabaseConnector:
             return result.mappings().all()[0]
 
     @classmethod
-    def update_project_data(cls, name: str, description: str, status: int, user: str) -> bool:
-        # FAKE
+    def update_suite_data(cls, id: int, updatableItems: str, ItemsValues: UserDict) -> bool:
         try:
+            query = "UPDATE test_suites SET " + updatableItems + " WHERE id = " + id + ";"
             with engine.begin() as connection:
-                connection.execute(text("UPDATE projects SET status=:status, description=:description, updated_by=:updated_by WHERE name =:project;"),
-                                   {
-                    "status": status,
-                    "project": name,
-                    "description": description,
-                    "updated_by": user
-                })
+                connection.execute(text(query), ItemsValues)
 
             return True
 
