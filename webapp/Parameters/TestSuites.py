@@ -49,3 +49,38 @@ class TestSuits():
         if (UpdatableItems):
             return DatabaseConnector.update_suite_data(str(id), UpdatableItems, ItemsValues)
         return False
+
+    @classmethod
+    def delete_suite(cls, id):
+        return DatabaseConnector.delete_suite_from_database(int(id))
+
+    @classmethod
+    def return_suite_by_id(cls, suite_id):
+        return DatabaseConnector.return_suite_by_id(int(suite_id))
+
+    @classmethod
+    def copy_suite(cls, parent_id, suite_id, current_user, project_id):
+        copied_suite = cls.return_suite_by_id(int(suite_id))
+        testcases_inside_parent = DatabaseConnector.return_all_suites_names_ids(
+            int(parent_id),
+            int(project_id))
+
+        if not copied_suite:
+            return False
+
+        newName = copied_suite["name"]
+
+        for test in testcases_inside_parent:
+            if test["name"] == copied_suite["name"]:
+                newName = newName + "(copy)"
+
+        suite_id = cls.add_suite(copied_suite["name"],
+                                 copied_suite["description"],
+                                 parent_id,
+                                 copied_suite["project_id"],
+                                 current_user)
+
+        if suite_id:
+            return suite_id
+
+        return False

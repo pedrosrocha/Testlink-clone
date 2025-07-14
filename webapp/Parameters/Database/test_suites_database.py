@@ -39,14 +39,17 @@ class DatabaseConnector:
             return result.mappings().all()
 
     @classmethod
-    # FAKE
-    def delete_project_from_database(cls, project_id: int) -> List[dict]:
-
-        # engine.begin() commits the transaction automatically. It also rollsback in a case of an error
-        with engine.begin() as connection:
-            connection.execute(text("DELETE FROM projects WHERE id=:id"),
-                               {"id": project_id}
-                               )
+    def delete_suite_from_database(cls, suite_id: int) -> List[dict]:
+        try:
+            # engine.begin() commits the transaction automatically. It also rollsback in a case of an error
+            with engine.begin() as connection:
+                connection.execute(text("DELETE FROM test_suites WHERE id=:id"),
+                                   {"id": suite_id}
+                                   )
+            return True
+        except SQLAlchemyError as e:
+            print("Database error:", str(e))
+            return False
 
     @classmethod
     def add_suite_to_database(cls, SuiteName: str, Description: str, Creator: str, Project_id: int, ParentID: str) -> List[dict]:
@@ -71,17 +74,15 @@ class DatabaseConnector:
         # FAKE
 
         with engine.connect() as connection:
-            result = connection.execute(text("SELECT * FROM projects WHERE name = :name"),
+            result = connection.execute(text("SELECT * FROM test_suites WHERE name = :name"),
                                         {"name": project_name})
 
             return result.mappings().all()[0]
 
     @classmethod
-    def return_project_by_id(cls, id: int) -> UserDict:
-        # FAKE
-
+    def return_suite_by_id(cls, id: int) -> UserDict:
         with engine.connect() as connection:
-            result = connection.execute(text("SELECT * FROM projects WHERE id = :id"),
+            result = connection.execute(text("SELECT * FROM test_suites WHERE id = :id"),
                                         {"id": id})
 
             return result.mappings().all()[0]

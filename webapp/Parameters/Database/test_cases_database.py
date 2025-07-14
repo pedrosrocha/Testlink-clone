@@ -11,10 +11,6 @@ engine = create_engine(
 
 
 class DatabaseConnector:
-    @classmethod
-    def return_all_cases_from_project(cls, projectID) -> list[UserDict]:
-        # FAKE
-        pass
 
     @classmethod
     def return_all_cases_names_ids(cls, parentID: int) -> list[UserDict]:
@@ -26,14 +22,18 @@ class DatabaseConnector:
             return result.mappings().all()
 
     @classmethod
-    # FAKE
-    def delete_project_from_database(cls, project_id: int) -> List[dict]:
-
+    def delete_test_case_from_database(cls, test_id: int) -> List[dict]:
         # engine.begin() commits the transaction automatically. It also rollsback in a case of an error
-        with engine.begin() as connection:
-            connection.execute(text("DELETE FROM projects WHERE id=:id"),
-                               {"id": project_id}
-                               )
+        try:
+            with engine.begin() as connection:
+                connection.execute(text("DELETE FROM test_cases WHERE id=:id"),
+                                   {"id": test_id}
+                                   )
+
+            return True
+        except SQLAlchemyError as e:
+            print("Database error:", str(e))
+            return False
 
     @classmethod
     def add_test_case_to_database(cls, suite_id: int, name: str, description: str, preconditions: str, expected_result: str, priority: str, status: str, created_by: str, last_updated_by: str) -> str:
@@ -52,7 +52,6 @@ class DatabaseConnector:
                                                  :created_by, 
                                                  :last_updated_by)
                         """
-                print(text(query))
                 result = connection.execute(text(query),
                                             {"suite_id": suite_id,
                                              "name": name,
@@ -80,11 +79,9 @@ class DatabaseConnector:
             return result.mappings().all()[0]
 
     @classmethod
-    def return_project_by_id(cls, id: int) -> UserDict:
-        # FAKE
-
+    def return_testcase_by_id(cls, id: int) -> UserDict:
         with engine.connect() as connection:
-            result = connection.execute(text("SELECT * FROM projects WHERE id = :id"),
+            result = connection.execute(text("SELECT * FROM test_cases WHERE id = :id"),
                                         {"id": id})
 
             return result.mappings().all()[0]

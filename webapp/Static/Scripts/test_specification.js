@@ -63,7 +63,7 @@ let clipboard = {
 };
 
 function handleCopy(tree, node, action) {
-    clipboard.data = tree.get_json(node, { flat: false }); // Full nested structure
+    clipboard.data = tree.get_json(node, { flat: true }); // Full nested structure
     clipboard.action = action;
 }
 
@@ -93,6 +93,8 @@ function handleRename(tree, node) {
                 .then(data => {
                     if (!data.success) {
                         alert("Rename failed: " + data.error);
+                    } else {
+                        tree.refresh_node(node.parent_id)
                     }
                 })
                 .catch(err => {
@@ -190,13 +192,7 @@ function handleAddNode(tree, parentNode, Filetype) {
                     alert("Backend rejected the creation: " + data.error);
                     tree.delete_node(tempNode);  // rollback
                 } else {
-                    // Step 6: Delete temp node and insert with correct ID and name
-                    tree.delete_node(tempNode);
-                    tree.create_node(parentNode, {
-                        id: data.id,           // ID returned from backend
-                        text: data.name,       // Confirmed name from backend
-                        type: Filetype         //test or suite
-                    });
+                    tree.refresh_node(parentNode)
                 }
             })
             .catch(error => {
@@ -212,13 +208,25 @@ function handleAddNode(tree, parentNode, Filetype) {
 
 
 
-
 function handlePaste(tree, targetNode) {
     if (!clipboard.data) return;
 
     copied_nodes = clipboard.data;
 
-    //else: it is a suite node
+    success = false;
+
+    if (copied_nodes.type == "test") {
+
+        success = handlecopytest(tree, targetNode, copied_nodes[0].id)
+        return;
+    }
+
+    // else: suite
+    success = handlecopysuite(tree, targetNode, copied_nodes[0])
+
+    if (clipboard.action == "cut" && success) {
+        handleDelete(tree, copied_nodes)
+    }
 
     //  Clear clipboard
     clipboard.node = null;
@@ -282,4 +290,98 @@ function validate_new_node_name(node_name, parent_id, tree) {
 
 
     return true;
+}
+
+function handlecopytest(tree, parentNode, test2copyID) {
+    fetch('/paste_test_case', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({
+            parent_id: parentNode.id,
+            test_id: test2copyID
+        })
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+
+                tree.refresh_node(parentNode)
+                return true;
+
+            } else {
+                alert("Copy failed: " + data.error);
+                return false;
+            }
+        })
+        .catch(err => {
+            console.error('Copy error:', err);
+            alert("Error contacting server.");
+        });
+}
+
+
+function handlecopysuite(tree, parentNode, suiteNode) {
+    openAllLazyNodes(tree, suiteNode.id, function () {
+        // After all children are loaded and opened
+        const allNodes = tree.get_json(suiteNode, { flat: true });  // Gets suite + descendants as flat array
+
+        // Optional: Sort so that parents come before their children
+        allNodes.sort((a, b) => a.parent.localeCompare(b.parent));
+
+        const childIds = allNodes
+            .filter(n => n.id !== suiteNode.id) // return only the childs id
+            .map(n => ({ id: n.id, parent: n.parent }));
+
+        fetch('/paste_suite', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                parent_id: parentNode.id,
+                suite_id: suiteNode.id,
+                children: childIds
+            })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    tree.close_all(suiteNode)
+                    tree.refresh_node(parentNode);
+
+                } else {
+                    alert("Copy failed: " + data.error);
+                }
+            })
+            .catch(err => {
+                console.error('Copy error:', err);
+                alert("Error contacting server.");
+            });
+    });
+}
+
+
+function openAllLazyNodes(tree, nodeId, onComplete) {
+    tree.open_node(nodeId, function (openedNode) {
+        const children = openedNode.children;
+
+        if (!children || children.length === 0) {
+            return onComplete(); // No children to process
+        }
+
+        let remaining = children.length;
+
+        children.forEach(childId => {
+            openAllLazyNodes(tree, childId, function () {
+                remaining--;
+                if (remaining === 0) {
+                    onComplete(); // All children processed
+                }
+            });
+        });
+    }, true); // true forces loading if necessary
 }

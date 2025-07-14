@@ -81,7 +81,22 @@ def get_test_tree_children():
 
 @TestSpecification_views.route('/delete_node', methods=['POST'])
 def delete_node():
-    return jsonify(success=True, message="Project updated successfully")
+    data = request.get_json()
+    id = data.get('id')
+    type = data.get('type')
+
+    if (type == "suite"):
+        if TestSuits.delete_suite(id):
+            return jsonify(success=True, message="suite deleted successfully")
+
+        return jsonify(success=False, error="Error while deleting the suite")
+
+    # else: type == test
+    id = id[2:]
+    if TestCases.delete_test_case(id):
+        return jsonify(success=True, message="test case deleted successfully")
+
+    return jsonify(success=False, error="Error while deelting the testcase")
 
 
 @TestSpecification_views.route('/rename_node', methods=['POST'])
@@ -118,9 +133,9 @@ def add_test_case():
     node_name = data.get('name')
     parent_id = data.get('parent_id')
 
-    current_user_id = current_user.username
+    current_user_name = current_user.username
     new_id = TestCases.add_testcase(
-        node_name, "", "", "", "draft", "high", parent_id, current_user_id, current_user_id)
+        node_name, "", "", "", "draft", "high", parent_id, current_user_name, current_user_name)
 
     return jsonify(success=True, message="Project updated successfully", name=node_name, id=new_id)
 
@@ -139,3 +154,126 @@ def add_suite():
                                  _current_project_id,
                                  current_user.username)
     return jsonify(success=True, message="Project updated successfully", name=node_name, id=new_id)
+
+
+@TestSpecification_views.route('/paste_test_case', methods=['POST'])
+def paste_test_case():
+    data = request.get_json()
+    test_case_id = data.get('test_id')
+    parent_id = data.get('parent_id')
+
+    # removes the "c_" from the string and transforms to integer
+    test_case_id = int(test_case_id[2:])
+    parent_id = int(parent_id)
+
+    if TestCases.copy_test_case(parent_id, test_case_id, current_user.username):
+        return jsonify(success=True, message="Project updated successfully")
+
+    return jsonify(success=False, error="Could not copy test case")
+
+
+# @TestSpecification_views.route('/paste_suite', methods=['POST'])
+# def paste_suite():
+#    data = request.get_json()
+#    suite_id = data.get('suite_id')
+#    parent_id = data.get('parent_id')
+#    children = data.get("children")
+#
+#    # creates the first suite
+#    current_suite_id = TestSuits.copy_suite(
+#        parent_id,
+#        suite_id,
+#        current_user.username,
+#        session.get('current_project_id'))
+#
+#    if (not current_suite_id):
+#        return jsonify(success=False, error="Could not create the first suite")
+#
+#    # make a list of unique items
+#    list_previous_parent_ids = list(
+#        set([child["parent"] for child in children]))
+#
+#    list_new_parent_ids = [current_suite_id]
+#    current_parent_previous_suite = 0
+#
+#    for child in children:
+#        current_parent_previous_suite = list_previous_parent_ids.index(
+#            child["parent"]) - 1
+#
+#        if (child["id"][:1] == 'c'):  # it is a test case
+#            if (not TestCases.copy_test_case(
+#                list_new_parent_ids[current_parent_previous_suite],
+#                child["id"][2:],
+#                    current_user.username)):
+#
+#                return jsonify(success=False, error="Could not create the testcase: "+child["id"])
+#
+#        else:  # it is a suite
+#            newly_created_suite_id = TestSuits.copy_suite(
+#                list_new_parent_ids[current_parent_previous_suite],
+#                child["id"],
+#                current_user.username,
+#                session.get('current_project_id'))
+#
+#            if (not newly_created_suite_id):
+#                return jsonify(success=False, error="Could not create the suite: " + child["id"])
+#
+#            list_new_parent_ids.append(newly_created_suite_id)
+#            list_new_parent_ids = list(set(list_new_parent_ids))
+#
+#    return jsonify(success=True, message="Project updated successfully")
+#
+
+@TestSpecification_views.route('/paste_suite', methods=['POST'])
+def paste_suite():
+    data = request.get_json()
+    suite_id = data.get('suite_id')              # root suite being copied
+    parent_id = data.get('parent_id')            # new parent node
+    # flat list of all child nodes (suites & tests)
+    children = data.get("children")
+
+    # Map old IDs to new ones
+    id_map = {}
+
+    # Create the root suite first
+    new_root_id = TestSuits.copy_suite(
+        parent_id,
+        suite_id,
+        current_user.username,
+        session.get('current_project_id'))
+
+    if not new_root_id:
+        return jsonify(success=False, error="Could not create root suite")
+
+    id_map[suite_id] = new_root_id  # link old to new
+
+    for child in children:
+        old_parent_id = child["parent"]
+        old_id = child["id"]
+
+        new_parent_id = id_map.get(old_parent_id)
+        if not new_parent_id:
+            return jsonify(success=False, error=f"Missing parent mapping for {old_parent_id}")
+
+        if old_id.startswith('c_'):  # test case
+            result = TestCases.copy_test_case(
+                new_parent_id,
+                old_id[2:],  # remove prefix 'c_'
+                current_user.username
+            )
+            if not result:
+                return jsonify(success=False, error=f"Could not create test case {old_id}")
+
+        else:  # suite
+            new_suite_id = TestSuits.copy_suite(
+                new_parent_id,
+                old_id,
+                current_user.username,
+                session.get('current_project_id'))
+
+            if not new_suite_id:
+                return jsonify(success=False, error=f"Could not create suite {old_id}")
+
+            id_map[old_id] = new_suite_id  # store mapping
+
+    return jsonify(success=True, message="Project updated successfully")
