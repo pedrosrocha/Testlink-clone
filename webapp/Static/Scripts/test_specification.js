@@ -477,3 +477,31 @@ document.addEventListener('keydown', function (e) {
         handlePaste(tree, selectedNode);
     }
 });
+
+
+$('#testTree').on("select_node.jstree", function (e, data) {
+    if (data.node.type === "test") {
+        const testcaseId = data.node.id.replace("c_", "");
+        ShowTestCase(testcaseId);
+        return;
+    }
+    const suiteID = data.node.id;
+    ShowSuite(suiteID);
+});
+
+
+function ShowTestCase(testcaseId) {
+    fetch(`/get_testcase_html/${testcaseId}`)
+        .then(response => response.text())
+        .then(html => {
+            document.getElementById("details-pane").innerHTML = html;
+        });
+}
+
+function ShowSuite(suiteID) {
+    fetch(`/get_suite_html/${suiteID}`)
+        .then(response => response.text())
+        .then(html => {
+            document.getElementById("details-pane").innerHTML = html;
+        });
+}

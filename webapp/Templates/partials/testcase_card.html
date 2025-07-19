@@ -1,0 +1,51 @@
+<div class="card my-3 shadow-sm" style="max-width: auto;" id="testcase-info-panel">
+    <div class="card-body bg-light">
+        <h5 class="card-title">
+            Test case: <span id="testcase-name">{{ testcase.name }}</span>
+        </h5>
+
+        <div class="form-group mb-3">
+            <label class="font-weight-bold">Description:</label>
+            <div class="border p-3 rounded bg-white" id="testcase-description">
+                {{ testcase.description }}
+            </div>
+        </div>
+        <div class="form-group mb-3">
+            <label class="font-weight-bold">Precondition:</label>
+            <div class="border p-3 rounded bg-white" id="testcase-precondition">
+                {{ testcase.preconditions }}
+            </div>
+        </div>
+        <div class="form-group mb-3">
+            <label class="font-weight-bold">Expected results:</label>
+            <div class="border p-3 rounded bg-white" id="testcase-expected-results">
+                {{ testcase.expected_results }}
+            </div>
+        </div>
+
+
+        <button class="btn btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#meta-info">
+            More Info
+        </button>
+
+        <div class="collapse mt-3 " id="meta-info">
+            <ul class="list-group list-group-flush small">
+                <li class="list-group-item">
+                    <strong>Created by:</strong> <span id="testcase-owner">{{ testcase.created_by }}</span>
+                </li>
+                <li class="list-group-item">
+                    <strong>Last updated by:</strong> <span id="testcase-updater">testcase.last_updated_by </span>
+                </li>
+                <li class="list-group-item">
+                    <strong>Last updated in:</strong> <span id="testcase-updated">{{ testcase.updated_at }}</span>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <div id="test-list-pane"></div>
+
+    <div class="form-group mb-3">
+
+    </div>
+</div>

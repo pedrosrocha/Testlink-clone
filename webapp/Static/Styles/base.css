@@ -27,3 +27,7 @@ footer.attribution a {
 footer.attribution a:hover {
     text-decoration: underline;
 }
+
+.navbar-nav .nav-link {
+    color: rgb(244, 242, 252);
+}

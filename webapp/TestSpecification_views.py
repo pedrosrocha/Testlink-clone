@@ -253,3 +253,15 @@ def move_test():
         return jsonify(success=True, message="Project updated successfully")
 
     return jsonify(success=False, message="Project not updated")
+
+
+@TestSpecification_views.route('/get_testcase_html/<int:testcase_id>', methods=['GET'])
+def get_testcase_html(testcase_id):
+    test = TestCases.return_testcase_by_id(testcase_id)
+    return render_template('partials/testcase_card.html', testcase=test)
+
+
+@TestSpecification_views.route('/get_suite_html/<int:suite_id>', methods=['GET'])
+def get_suite_html(suite_id):
+    suite = TestSuits.return_suite_by_id(suite_id)
+    return render_template('partials/testsuite_card.html', suite=suite)

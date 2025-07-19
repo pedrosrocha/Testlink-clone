@@ -23,16 +23,18 @@
 
     <div class="divider" id="divider"></div>
 
-    <div class="right-pane">
+    <div id="details-pane" class="right-pane">
         <!-- Your main content goes here -->
         <h2>Project Details</h2>
         <p>Content will go here.</p>
     </div>
-</div>
 
 
-<script src="https://cdn.jsdelivr.net/npm/jquery@3.6.4/dist/jquery.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/jstree@3.3.12/dist/jstree.min.js"></script>
-<script src="{{ url_for('static', filename='Scripts/test_specification.js') }}"></script>
+    <div></div>
 
-{% endblock %}
+
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.4/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jstree@3.3.12/dist/jstree.min.js"></script>
+    <script src="{{ url_for('static', filename='Scripts/test_specification.js') }}"></script>
+
+    {% endblock %}
