@@ -17,9 +17,9 @@ def TestSpecification():
     if request.method == 'GET':
         if (not session.get('current_project_id')):
             _current_project_id = int(projects.return_oldest_project()["id"])
-            session["current_project_id"] = _current_project_id
+            session["current_project_id"] = int(_current_project_id)
 
-        _current_project_id = session.get('current_project_id')
+        _current_project_id = int(session.get('current_project_id'))
         return render_template('test_specification.jinja2',
                                projects=projects.return_all_projects(),
                                current_project_id=_current_project_id,
@@ -122,9 +122,9 @@ def rename_node():
     return jsonify(success=False, error="Error while renaming the testcase")
 
 
-@TestSpecification_views.route('/paste_node', methods=['POST'])
-def paste_node():
-    return jsonify(success=True, message="Project updated successfully")
+# @TestSpecification_views.route('/paste_node', methods=['POST'])
+# def paste_node():
+#    return jsonify(success=True, message="Project updated successfully")
 
 
 @TestSpecification_views.route('/add_test_case', methods=['POST'])
@@ -171,58 +171,6 @@ def paste_test_case():
 
     return jsonify(success=False, error="Could not copy test case")
 
-
-# @TestSpecification_views.route('/paste_suite', methods=['POST'])
-# def paste_suite():
-#    data = request.get_json()
-#    suite_id = data.get('suite_id')
-#    parent_id = data.get('parent_id')
-#    children = data.get("children")
-#
-#    # creates the first suite
-#    current_suite_id = TestSuits.copy_suite(
-#        parent_id,
-#        suite_id,
-#        current_user.username,
-#        session.get('current_project_id'))
-#
-#    if (not current_suite_id):
-#        return jsonify(success=False, error="Could not create the first suite")
-#
-#    # make a list of unique items
-#    list_previous_parent_ids = list(
-#        set([child["parent"] for child in children]))
-#
-#    list_new_parent_ids = [current_suite_id]
-#    current_parent_previous_suite = 0
-#
-#    for child in children:
-#        current_parent_previous_suite = list_previous_parent_ids.index(
-#            child["parent"]) - 1
-#
-#        if (child["id"][:1] == 'c'):  # it is a test case
-#            if (not TestCases.copy_test_case(
-#                list_new_parent_ids[current_parent_previous_suite],
-#                child["id"][2:],
-#                    current_user.username)):
-#
-#                return jsonify(success=False, error="Could not create the testcase: "+child["id"])
-#
-#        else:  # it is a suite
-#            newly_created_suite_id = TestSuits.copy_suite(
-#                list_new_parent_ids[current_parent_previous_suite],
-#                child["id"],
-#                current_user.username,
-#                session.get('current_project_id'))
-#
-#            if (not newly_created_suite_id):
-#                return jsonify(success=False, error="Could not create the suite: " + child["id"])
-#
-#            list_new_parent_ids.append(newly_created_suite_id)
-#            list_new_parent_ids = list(set(list_new_parent_ids))
-#
-#    return jsonify(success=True, message="Project updated successfully")
-#
 
 @TestSpecification_views.route('/paste_suite', methods=['POST'])
 def paste_suite():
@@ -277,3 +225,31 @@ def paste_suite():
             id_map[old_id] = new_suite_id  # store mapping
 
     return jsonify(success=True, message="Project updated successfully")
+
+
+@TestSpecification_views.route('/move_suite', methods=['POST'])
+def move_suite():
+    data = request.get_json()
+    suite_id = data.get('node_id')
+    parent_id = data.get('parent_id')            # new parent node
+    project = int(session.get('current_project_id'))
+
+    if TestSuits.update_testcase_data(suite_id, None, project, None, parent_id):
+        return jsonify(success=True, message="Project updated successfully")
+
+    return jsonify(success=False, message="Project not updated")
+
+
+@TestSpecification_views.route('/move_test', methods=['POST'])
+def move_test():
+    data = request.get_json()
+
+    test_id = data.get('node_id')
+    test_id = test_id[2:]
+
+    parent_id = data.get('parent_id')            # new parent node
+
+    if TestCases.update_testcase_data(test_id, None, parent_id, None, None, None, None, None, None):
+        return jsonify(success=True, message="Project updated successfully")
+
+    return jsonify(success=False, message="Project not updated")

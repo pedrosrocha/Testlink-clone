@@ -1,5 +1,6 @@
 
 from .Database.test_cases_database import DatabaseConnector
+from datetime import datetime
 
 
 class TestCases():
@@ -20,7 +21,9 @@ class TestCases():
 
         for test in testcases_inside_parent:
             if test["name"] == copied_testcase["name"]:
-                newName = newName + "(copy)"
+                current_datetime = datetime.now()
+                newName = current_datetime.ctime() + " : " + newName
+                break
 
         cls.add_testcase(newName,
                          copied_testcase["description"],

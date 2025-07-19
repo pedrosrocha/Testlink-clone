@@ -6,11 +6,17 @@ const leftPane = document.querySelector('.left-pane');
 
 let isResizing = false;
 
+let clipboard = {
+    node: null,
+    action: null // 'copy' or 'cut'
+};
+
 
 divider.addEventListener('mousedown', (e) => {
     isResizing = true;
     document.body.style.cursor = 'col-resize';
 });
+
 
 document.addEventListener('mousemove', (e) => {
     if (!isResizing) return;
@@ -57,10 +63,7 @@ $('#testTree').jstree({
     "plugins": ["state", "wholerow", "unique", "dnd", "types", "contextmenu"]
 });
 
-let clipboard = {
-    node: null,
-    action: null // 'copy' or 'cut'
-};
+
 
 function handleCopy(tree, node, action) {
     clipboard.data = tree.get_json(node, { flat: true }); // Full nested structure
@@ -111,7 +114,10 @@ function handleDelete(tree, node) {
         alert("It is not possible to delete a root suite!");
         return;
     }
+
     if (!confirm("Are you sure you want to delete this item?")) return;
+
+
 
     fetch('/delete_node', {
         method: 'POST',
@@ -207,7 +213,6 @@ function handleAddNode(tree, parentNode, Filetype) {
 }
 
 
-
 function handlePaste(tree, targetNode) {
     if (!clipboard.data) return;
 
@@ -215,18 +220,21 @@ function handlePaste(tree, targetNode) {
 
     success = false;
 
-    if (copied_nodes.type == "test") {
+    if (copied_nodes[0].type == "test" && clipboard.action == "copy") {
 
         success = handlecopytest(tree, targetNode, copied_nodes[0].id)
         return;
     }
 
-    // else: suite
-    success = handlecopysuite(tree, targetNode, copied_nodes[0])
-
-    if (clipboard.action == "cut" && success) {
-        handleDelete(tree, copied_nodes)
+    if (copied_nodes[0].type == "suite" && clipboard.action == "copy") {
+        success = handlecopysuite(tree, targetNode, copied_nodes[0])
+        return;
     }
+
+    //else: cut action
+    HandleMove(copied_nodes[0].id, targetNode.id, copied_nodes[0].type);
+    tree.refresh();
+
 
     //  Clear clipboard
     clipboard.node = null;
@@ -324,43 +332,45 @@ function handlecopytest(tree, parentNode, test2copyID) {
 
 
 function handlecopysuite(tree, parentNode, suiteNode) {
-    openAllLazyNodes(tree, suiteNode.id, function () {
-        // After all children are loaded and opened
-        const allNodes = tree.get_json(suiteNode, { flat: true });  // Gets suite + descendants as flat array
+    return new Promise((resolve, reject) => {
+        openAllLazyNodes(tree, suiteNode.id, function () {
+            const allNodes = tree.get_json(suiteNode, { flat: true });
 
-        // Optional: Sort so that parents come before their children
-        allNodes.sort((a, b) => a.parent.localeCompare(b.parent));
+            allNodes.sort((a, b) => a.parent.localeCompare(b.parent));
 
-        const childIds = allNodes
-            .filter(n => n.id !== suiteNode.id) // return only the childs id
-            .map(n => ({ id: n.id, parent: n.parent }));
+            const childIds = allNodes
+                .filter(n => n.id !== suiteNode.id)
+                .map(n => ({ id: n.id, parent: n.parent }));
 
-        fetch('/paste_suite', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: JSON.stringify({
-                parent_id: parentNode.id,
-                suite_id: suiteNode.id,
-                children: childIds
+            fetch('/paste_suite', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({
+                    parent_id: parentNode.id,
+                    suite_id: suiteNode.id,
+                    children: childIds
+                })
             })
-        })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    tree.close_all(suiteNode)
-                    tree.refresh_node(parentNode);
-
-                } else {
-                    alert("Copy failed: " + data.error);
-                }
-            })
-            .catch(err => {
-                console.error('Copy error:', err);
-                alert("Error contacting server.");
-            });
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        tree.close_all(suiteNode);
+                        tree.refresh_node(parentNode);
+                        resolve(true);  //  success
+                    } else {
+                        alert("Copy failed: " + data.error);
+                        resolve(false);  //  failure
+                    }
+                })
+                .catch(err => {
+                    console.error('Copy error:', err);
+                    alert("Error contacting server.");
+                    resolve(false);  //  failure
+                });
+        });
     });
 }
 
@@ -385,3 +395,85 @@ function openAllLazyNodes(tree, nodeId, onComplete) {
         });
     }, true); // true forces loading if necessary
 }
+
+function HandleMove(node_id, node_new_parent, node_type) {
+    fetch(node_type === 'suite' ? '/move_suite' : '/move_test', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({
+            node_id: node_id,
+            parent_id: node_new_parent,
+        })
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                return true;
+
+            } else {
+                alert("Move failed: " + data.error);
+                return false;
+            }
+        })
+        .catch(err => {
+            console.error('Move error:', err);
+            alert("Error contacting server.");
+        });
+}
+
+$('#testTree').on('move_node.jstree', function (e, data) {
+    //const tree = $('#testTree').jstree(true);
+
+    const node_id = data.node.id;
+    const node_new_parent = data.node.parent;
+    const node_type = data.node.type;
+
+
+    HandleMove(node_id, node_new_parent, node_type)
+});
+
+document.addEventListener('keydown', function (e) {
+    const tree = $('#testTree').jstree(true);
+    const selectedNodeId = tree.get_selected()[0];
+    const selectedNode = selectedNodeId ? tree.get_node(selectedNodeId) : null;
+
+    if (!document.querySelector('#testTree').contains(document.activeElement)) return;
+
+    if (!selectedNode) return;
+
+    // Prevent triggering when editing input fields
+    //if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+
+    // F2 → Rename
+    if (e.key === "F2") {
+        e.preventDefault();
+        handleRename(tree, selectedNode);
+    }
+
+    // Delete → Remove
+    if (e.key === "Delete") {
+        e.preventDefault();
+        handleDelete(tree, selectedNode);
+    }
+
+    // Ctrl+C → Copy
+    if (e.key.toLowerCase() === "c" && e.ctrlKey) {
+        e.preventDefault();
+        handleCopy(tree, selectedNode, "copy");
+    }
+
+    // Ctrl+X → Cut
+    if (e.key.toLowerCase() === "x" && e.ctrlKey) {
+        e.preventDefault();
+        handleCopy(tree, selectedNode, "cut");
+    }
+
+    // Ctrl+V → Paste
+    if (e.key.toLowerCase() === "v" && e.ctrlKey) {
+        e.preventDefault();
+        handlePaste(tree, selectedNode);
+    }
+});
