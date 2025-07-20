@@ -1,27 +1,27 @@
 
-
-
 const divider = document.getElementById('divider');
-const leftPane = document.querySelector('.left-pane');
+const leftPane = document.getElementById('left-pane'); // Using ID for specificity
+
+let currentSuiteId = null;
+let currentTestCaseId = null;
+
 
 let isResizing = false;
-
 let clipboard = {
     node: null,
     action: null // 'copy' or 'cut'
 };
-
 
 divider.addEventListener('mousedown', (e) => {
     isResizing = true;
     document.body.style.cursor = 'col-resize';
 });
 
-
 document.addEventListener('mousemove', (e) => {
     if (!isResizing) return;
+    // Adjust the width of the left pane within defined constraints
     const newWidth = e.clientX;
-    if (newWidth > 150 && newWidth < 600) {
+    if (newWidth > 200 && newWidth < 800) { // Adjusted min/max for better UX
         leftPane.style.width = newWidth + 'px';
     }
 });
@@ -35,7 +35,6 @@ $('#testTree').jstree({
     'core': {
         'data': {
             'url': function (node) {
-                // If root node, request toplevel items
                 return node.id === '#' ? '/get_test_tree_root' : '/get_test_tree_children';
             },
             'data': function (node) {
@@ -53,51 +52,38 @@ $('#testTree').jstree({
         }
     },
     "state": { "key": "state_demo" },
-
-    contextmenu: {
-        items: function (node) {
+    "contextmenu": {
+        "items": function (node) {
             return getContextMenuItems(node);
         }
     },
-
     "plugins": ["state", "wholerow", "unique", "dnd", "types", "contextmenu"]
 });
 
-
-
 function handleCopy(tree, node, action) {
-    clipboard.data = tree.get_json(node, { flat: true }); // Full nested structure
+    clipboard.data = tree.get_json(node, { flat: true });
     clipboard.action = action;
 }
-
 
 function handleRename(tree, node) {
     if (node.parent == "#") {
         alert("It is not possible to rename the root suite!");
         return;
     }
-
     tree.edit(node, null, function (new_node) {
-        is_new_node_name_unique = validate_new_node_name(new_node.text, node.parent, tree)
+        let is_new_node_name_unique = validate_new_node_name(new_node.text, node.parent, tree);
         if (new_node.text && new_node.text.trim() !== '' && is_new_node_name_unique) {
             fetch('/rename_node', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                body: JSON.stringify({
-                    id: node.id,
-                    new_name: new_node.text.trim(),
-                    type: node.type
-                })
+                headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                body: JSON.stringify({ id: node.id, new_name: new_node.text.trim(), type: node.type })
             })
                 .then(response => response.json())
                 .then(data => {
                     if (!data.success) {
                         alert("Rename failed: " + data.error);
                     } else {
-                        tree.refresh_node(node.parent_id)
+                        tree.refresh_node(node.parent);
                     }
                 })
                 .catch(err => {
@@ -108,27 +94,16 @@ function handleRename(tree, node) {
     });
 }
 
-
 function handleDelete(tree, node) {
     if (node.parent == "#") {
         alert("It is not possible to delete a root suite!");
         return;
     }
-
     if (!confirm("Are you sure you want to delete this item?")) return;
-
-
-
     fetch('/delete_node', {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest'
-        },
-        body: JSON.stringify({
-            id: node.id,
-            type: node.type
-        })
+        headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+        body: JSON.stringify({ id: node.id, type: node.type })
     })
         .then(response => response.json())
         .then(data => {
@@ -144,184 +119,124 @@ function handleDelete(tree, node) {
         });
 }
 
-function handleAddNode(tree, parentNode, Filetype) {
-
-
-    //Prevent adding suite to a test case
+function handleAddNode(tree, parentNode, fileType) {
     if (parentNode.type === "test") {
         return;
     }
-
-    let route = "/add_suite"
-    // Create temporary node
+    const route = fileType === "suite" ? "/add_suite" : "/add_test_case";
     const tempId = tree.create_node(parentNode, {
-        text: Filetype == "suite" ? "New suite" : "New testcase",
-        type: Filetype
+        text: fileType === "suite" ? "New suite" : "New testcase",
+        type: fileType
     });
-
     if (!tempId) {
         alert("Failed to create temporary node.");
         return;
     }
-
     const tempNode = tree.get_node(tempId);
-
-
-    if (Filetype == "suite") {
-        route = "/add_suite"
-    } else {
-        route = "/add_test_case"
-    }
-
     tree.edit(tempNode, null, function (newName) {
-        // Handle cancel or empty input
         if (!newName.text || newName.text.trim() === "") {
-            tree.delete_node(tempNode);  // Clean up if name invalid
+            tree.delete_node(tempNode);
             return;
         }
-
-        //Send to backend
         fetch(route, {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "X-Requested-With": "XMLHttpRequest"
-            },
-            body: JSON.stringify({
-                parent_id: parentNode.id,
-                name: newName.text.trim()
-            })
+            headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
+            body: JSON.stringify({ parent_id: parentNode.id, name: newName.text.trim() })
         })
             .then(response => response.json())
             .then(data => {
                 if (!data.success) {
                     alert("Backend rejected the creation: " + data.error);
-                    tree.delete_node(tempNode);  // rollback
+                    tree.delete_node(tempNode);
                 } else {
-                    tree.refresh_node(parentNode)
+                    tree.refresh_node(parentNode);
                 }
             })
             .catch(error => {
                 console.error("Error contacting backend:", error);
                 alert("Error contacting the server.");
-                tree.delete_node(tempNode);  // cleanup on error
+                tree.delete_node(tempNode);
             });
     });
-
-
-
 }
-
 
 function handlePaste(tree, targetNode) {
     if (!clipboard.data) return;
-
-    copied_nodes = clipboard.data;
-
-    success = false;
+    const copied_nodes = clipboard.data;
 
     if (copied_nodes[0].type == "test" && clipboard.action == "copy") {
-
-        success = handlecopytest(tree, targetNode, copied_nodes[0].id)
-        return;
+        handlecopytest(tree, targetNode, copied_nodes[0].id);
+    } else if (copied_nodes[0].type == "suite" && clipboard.action == "copy") {
+        handlecopysuite(tree, targetNode, copied_nodes[0]);
+    } else { // cut action
+        HandleMove(copied_nodes[0].id, targetNode.id, copied_nodes[0].type);
+        tree.refresh();
     }
 
-    if (copied_nodes[0].type == "suite" && clipboard.action == "copy") {
-        success = handlecopysuite(tree, targetNode, copied_nodes[0])
-        return;
-    }
-
-    //else: cut action
-    HandleMove(copied_nodes[0].id, targetNode.id, copied_nodes[0].type);
-    tree.refresh();
-
-
-    //  Clear clipboard
+    // Clear clipboard after paste
     clipboard.node = null;
     clipboard.data = null;
     clipboard.action = null;
 }
 
-
 function getContextMenuItems(node) {
     const tree = $('#testTree').jstree(true);
     const isTestNode = node.type === 'test';
     const isRoot = node.parent === '#';
-
-
     return {
         addTestCase: {
-            label: "Add Test Case",
-            _disabled: isTestNode,
-            action: () => handleAddNode(tree, node, 'test')
+            label: " Add Test Case",
+            _disabled: isTestNode, action: () => handleAddNode(tree, node, 'test')
         },
         addTestSuite: {
             label: "Add Test Suite",
-            _disabled: isTestNode,
-            action: () => handleAddNode(tree, node, 'suite')
+            _disabled: isTestNode, action: () => handleAddNode(tree, node, 'suite')
         },
         renameItem: {
             label: "Rename",
-            _disabled: isRoot,
-            action: () => handleRename(tree, node)
+            _disabled: isRoot, action: () => handleRename(tree, node)
         },
-
         copy: {
             label: "Copy",
-            _disabled: isRoot,
-            action: () => handleCopy(tree, node, action = "copy")
+            _disabled: isRoot, action: () => handleCopy(tree, node, "copy")
         },
         cut: {
             label: "Cut",
-            _disabled: isRoot,
-            action: () => handleCopy(tree, node, action = "cut")
+            _disabled: isRoot, action: () => handleCopy(tree, node, "cut")
         },
         paste: {
             label: "Paste",
-            _disabled: isTestNode || !clipboard.data,  // Disable if clipboard is empty
-            action: () => handlePaste(tree, node)
+            _disabled: isTestNode || !clipboard.data, action: () => handlePaste(tree, node)
         },
         deleteItem: {
             label: "Delete",
-            _disabled: isRoot,
-            action: () => handleDelete(tree, node)
+            _disabled: isRoot, action: () => handleDelete(tree, node)
         }
     };
 }
 
 function validate_new_node_name(node_name, parent_id, tree) {
     const parentNode = tree.get_node(parent_id);
-
-    parentNode.children.forEach((child) => {
-        if (tree.get_node(child).text == node_name) return false;
-    });
-
-
+    for (const childId of parentNode.children) {
+        if (tree.get_node(childId).text === node_name) {
+            return false;
+        }
+    }
     return true;
 }
 
 function handlecopytest(tree, parentNode, test2copyID) {
     fetch('/paste_test_case', {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest'
-        },
-        body: JSON.stringify({
-            parent_id: parentNode.id,
-            test_id: test2copyID
-        })
+        headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+        body: JSON.stringify({ parent_id: parentNode.id, test_id: test2copyID })
     })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-
-                tree.refresh_node(parentNode)
-                return true;
-
+                tree.refresh_node(parentNode);
             } else {
                 alert("Copy failed: " + data.error);
-                return false;
             }
         })
         .catch(err => {
@@ -330,92 +245,65 @@ function handlecopytest(tree, parentNode, test2copyID) {
         });
 }
 
-
 function handlecopysuite(tree, parentNode, suiteNode) {
     return new Promise((resolve, reject) => {
         openAllLazyNodes(tree, suiteNode.id, function () {
             const allNodes = tree.get_json(suiteNode, { flat: true });
-
             allNodes.sort((a, b) => a.parent.localeCompare(b.parent));
-
-            const childIds = allNodes
-                .filter(n => n.id !== suiteNode.id)
-                .map(n => ({ id: n.id, parent: n.parent }));
-
+            const childIds = allNodes.filter(n => n.id !== suiteNode.id).map(n => ({ id: n.id, parent: n.parent }));
             fetch('/paste_suite', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                body: JSON.stringify({
-                    parent_id: parentNode.id,
-                    suite_id: suiteNode.id,
-                    children: childIds
-                })
+                headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                body: JSON.stringify({ parent_id: parentNode.id, suite_id: suiteNode.id, children: childIds })
             })
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
                         tree.close_all(suiteNode);
                         tree.refresh_node(parentNode);
-                        resolve(true);  //  success
+                        resolve(true);
                     } else {
                         alert("Copy failed: " + data.error);
-                        resolve(false);  //  failure
+                        resolve(false);
                     }
                 })
                 .catch(err => {
                     console.error('Copy error:', err);
                     alert("Error contacting server.");
-                    resolve(false);  //  failure
+                    resolve(false);
                 });
         });
     });
 }
 
-
 function openAllLazyNodes(tree, nodeId, onComplete) {
     tree.open_node(nodeId, function (openedNode) {
         const children = openedNode.children;
-
         if (!children || children.length === 0) {
-            return onComplete(); // No children to process
+            return onComplete();
         }
-
         let remaining = children.length;
-
         children.forEach(childId => {
             openAllLazyNodes(tree, childId, function () {
                 remaining--;
                 if (remaining === 0) {
-                    onComplete(); // All children processed
+                    onComplete();
                 }
             });
         });
-    }, true); // true forces loading if necessary
+    }, true);
 }
 
 function HandleMove(node_id, node_new_parent, node_type) {
     fetch(node_type === 'suite' ? '/move_suite' : '/move_test', {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest'
-        },
-        body: JSON.stringify({
-            node_id: node_id,
-            parent_id: node_new_parent,
-        })
+        headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+        body: JSON.stringify({ node_id: node_id, parent_id: node_new_parent })
     })
         .then(response => response.json())
         .then(data => {
-            if (data.success) {
-                return true;
-
-            } else {
+            if (!data.success) {
                 alert("Move failed: " + data.error);
-                return false;
             }
         })
         .catch(err => {
@@ -425,83 +313,121 @@ function HandleMove(node_id, node_new_parent, node_type) {
 }
 
 $('#testTree').on('move_node.jstree', function (e, data) {
-    //const tree = $('#testTree').jstree(true);
-
-    const node_id = data.node.id;
-    const node_new_parent = data.node.parent;
-    const node_type = data.node.type;
-
-
-    HandleMove(node_id, node_new_parent, node_type)
+    HandleMove(data.node.id, data.node.parent, data.node.type);
 });
 
 document.addEventListener('keydown', function (e) {
     const tree = $('#testTree').jstree(true);
     const selectedNodeId = tree.get_selected()[0];
-    const selectedNode = selectedNodeId ? tree.get_node(selectedNodeId) : null;
+    if (!selectedNodeId) return;
 
-    if (!document.querySelector('#testTree').contains(document.activeElement)) return;
+    const selectedNode = tree.get_node(selectedNodeId);
+    if (!document.querySelector('#testTree').contains(document.activeElement) || ['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
 
-    if (!selectedNode) return;
-
-    // Prevent triggering when editing input fields
-    //if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
-
-    // F2 → Rename
-    if (e.key === "F2") {
-        e.preventDefault();
-        handleRename(tree, selectedNode);
-    }
-
-    // Delete → Remove
-    if (e.key === "Delete") {
-        e.preventDefault();
-        handleDelete(tree, selectedNode);
-    }
-
-    // Ctrl+C → Copy
-    if (e.key.toLowerCase() === "c" && e.ctrlKey) {
-        e.preventDefault();
-        handleCopy(tree, selectedNode, "copy");
-    }
-
-    // Ctrl+X → Cut
-    if (e.key.toLowerCase() === "x" && e.ctrlKey) {
-        e.preventDefault();
-        handleCopy(tree, selectedNode, "cut");
-    }
-
-    // Ctrl+V → Paste
-    if (e.key.toLowerCase() === "v" && e.ctrlKey) {
-        e.preventDefault();
-        handlePaste(tree, selectedNode);
-    }
+    if (e.key === "F2") { e.preventDefault(); handleRename(tree, selectedNode); }
+    if (e.key === "Delete") { e.preventDefault(); handleDelete(tree, selectedNode); }
+    if (e.key.toLowerCase() === "c" && e.ctrlKey) { e.preventDefault(); handleCopy(tree, selectedNode, "copy"); }
+    if (e.key.toLowerCase() === "x" && e.ctrlKey) { e.preventDefault(); handleCopy(tree, selectedNode, "cut"); }
+    if (e.key.toLowerCase() === "v" && e.ctrlKey) { e.preventDefault(); handlePaste(tree, selectedNode); }
 });
-
 
 $('#testTree').on("select_node.jstree", function (e, data) {
-    if (data.node.type === "test") {
-        const testcaseId = data.node.id.replace("c_", "");
-        ShowTestCase(testcaseId);
-        return;
-    }
-    const suiteID = data.node.id;
-    ShowSuite(suiteID);
-});
+    const pane = document.getElementById("details-pane");
 
+    if (data.node.type === "test") {
+        const testId = data.node.id.replace("c_", "");
+        currentTestSuiteId = null;
+        currentTestCaseId = testId;
+
+        pane.dataset.suiteId = "";
+        pane.dataset.testId = testId;
+
+        ShowTestCase(testId);
+    } else {
+        const suiteId = data.node.id;
+        currentTestSuiteId = suiteId;
+        currentTestCaseId = null;
+
+        pane.dataset.suiteId = suiteId;
+        pane.dataset.testId = "";
+
+        ShowSuite(suiteId);
+    }
+});
 
 function ShowTestCase(testcaseId) {
     fetch(`/get_testcase_html/${testcaseId}`)
         .then(response => response.text())
-        .then(html => {
-            document.getElementById("details-pane").innerHTML = html;
-        });
+        .then(html => { document.getElementById("details-pane").innerHTML = html; })
+        .catch(err => console.error("Error loading the test case:", err));
 }
 
 function ShowSuite(suiteID) {
     fetch(`/get_suite_html/${suiteID}`)
         .then(response => response.text())
-        .then(html => {
-            document.getElementById("details-pane").innerHTML = html;
-        });
+        .then(html => { document.getElementById("details-pane").innerHTML = html; })
+        .catch(err => console.error("Error loading the suite:", err));
 }
+
+
+document.getElementById("details-pane").addEventListener("click", function (event) {
+    if (!event.target) return false;
+    let error_message = "";
+    let route = "";
+    let clickedid = "";
+    let send_data = {};
+
+    switch (event.target.id) {
+        case "btn-new-testcase":
+            error_message = "Error loading new test form: ";
+            route = "/new_test_case_form";
+            break;
+
+        case "btn-delete-suite":
+            //handle delete node
+            return true;
+
+        case "btn-edit-suite":
+            error_message = "Error loading new test form: ";
+            // get current id if suite or test
+            if (document.getElementById("details-pane").dataset.suiteId) {
+                clickedid = document.getElementById("details-pane").dataset.suiteId
+                route = "/edit_suite";
+                send_data = {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                    body: JSON.stringify({ id: clickedid })
+                }
+            } else {
+                clickedid = document.getElementById("details-pane").dataset.testId
+                route = "/edit_test_case";
+                send_data = {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                    body: JSON.stringify({ id: clickedid })
+                }
+            }
+
+            break;
+
+        case "btn-new-suite":
+            error_message = "Error loading new test form: ";
+            route = "/new_suite_form";
+            break;
+
+        default:
+            return;
+
+    }
+
+    fetch(route, send_data)
+        .then(res => res.text())
+        .then(html => {
+            this.innerHTML = html;
+        })
+        .catch(err => console.error(error_message, err));
+
+    return true;
+});
+
+

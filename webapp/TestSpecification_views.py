@@ -265,3 +265,23 @@ def get_testcase_html(testcase_id):
 def get_suite_html(suite_id):
     suite = TestSuits.return_suite_by_id(suite_id)
     return render_template('partials/testsuite_card.html', suite=suite)
+
+
+@TestSpecification_views.route("/new_test_case_form", methods=['GET'])
+def new_test_case_form():
+    return render_template('partials/add_new_test_case.html')
+
+
+@TestSpecification_views.route("/edit_suite", methods=['POST'])
+def edit_suite():
+    return render_template('partials/edit_suite.html')
+
+
+@TestSpecification_views.route("/edit_test_case", methods=['POST'])
+def edit_test_case():
+    return render_template('partials/edit_test_case.html')
+
+
+@TestSpecification_views.route("/new_suite_form", methods=['GET'])
+def new_suite_form():
+    return render_template('partials/add_new_suite.html')

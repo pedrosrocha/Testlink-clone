@@ -1,8 +1,19 @@
-<div class="card my-3 shadow-sm" style="max-width: auto;" id="testcase-info-panel">
+<div class="card my-0 shadow-sm" style="max-width: auto;" id="testcase-info-panel">
     <div class="card-body bg-light">
         <h5 class="card-title">
             Test case: <span id="testcase-name">{{ testcase.name }}</span>
         </h5>
+
+        <div class="d-flex flex-wrap gap-2 mb-3 mt-2">
+            <button class="btn btn-outline-danger btn-sm" id="btn-delete-suite">
+                <i class="bi bi-trash"></i> Delete
+            </button>
+
+            <button class="btn btn-outline-secondary btn-sm" id="btn-edit-suite">
+                <i class="bi bi-pencil-square"></i> Edit
+            </button>
+
+        </div>
 
         <div class="form-group mb-3">
             <label class="font-weight-bold">Description:</label>

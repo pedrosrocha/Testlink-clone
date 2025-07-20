@@ -1,8 +1,23 @@
-<div class="card my-3 shadow-sm" style="max-width: auto;" id="suite-info-panel">
+<div class="card my-0 shadow-sm" style="max-width: auto;" id="suite-info-panel">
     <div class="card-body bg-light">
         <h5 class="card-title">
             Test suite: <span id="suite-name">{{ suite.name }}</span>
         </h5>
+
+        <div class="d-flex flex-wrap gap-2 mb-3 mt-2">
+            <button class="btn btn-outline-danger btn-sm" id="btn-delete-suite">
+                <i class="bi bi-trash"></i> Delete
+            </button>
+            <button class="btn btn-outline-secondary btn-sm" id="btn-edit-suite">
+                <i class="bi bi-pencil-square"></i> Edit
+            </button>
+            <button class="btn btn-outline-success btn-sm" id="btn-new-testcase">
+                <i class="bi bi-file-earmark-plus"></i> New Test Case
+            </button>
+            <button class="btn btn-outline-dark btn-sm" id="btn-new-suite">
+                <i class="bi bi-folder-plus"></i> New Suite
+            </button>
+        </div>
 
         <div class="form-group mb-3">
             <label class="font-weight-bold">Description:</label>
@@ -10,6 +25,7 @@
                 {{ suite.description }}
             </div>
         </div>
+
 
 
         <button class="btn btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#meta-info">

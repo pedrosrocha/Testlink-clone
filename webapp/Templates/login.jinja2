@@ -1,27 +1,60 @@
 {% extends 'base.jinja2' %}
 
 {% block content %}
+<!-- Custom animation styles -->
+<link rel="stylesheet" href="{{ url_for('static', filename='Styles/base.css') }}">
 
 
-<h1>Login</h1>
-<form method="POST">
-    <input name="username" placeholder="Username"><br>
-    <input name="password" type="password" placeholder="Password"><br>
-    <input type="submit" value="Login">
-</form>
+<div class="row justify-content-center mt-5">
+    <div class="col-md-6 col-lg-4">
+        <div class="card shadow-sm fade-in">
+            <div class="card-body">
+                <h3 class="card-title text-center mb-4 text-uppercase fw-light letter-spacing-1">
+                    Login
+                </h3>
 
-<button onclick="location.href='/AddUser'">
-    New user
-</button>
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Username</label>
+                        <input name="username" id="username" type="text" class="form-control"
+                            placeholder="Enter username" required>
+                    </div>
 
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <input name="password" id="password" type="password" class="form-control"
+                            placeholder="Enter password" required>
+                    </div>
 
-{% with messages = get_flashed_messages() %}
-{% for message in messages %}
-<p>{{ message }}</p>
-{% endfor %}
+                    <div class="d-grid mb-3">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-box-arrow-in-right"></i> Login
+                        </button>
+                    </div>
+                </form>
 
-{% endwith %}
+                <!-- 50% width buttons with spacing -->
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('users_views.AddUser') }}" class="btn btn-outline-secondary btn-sm w-50">
+                        <i class="bi bi-person-plus-fill"></i> Create New User
+                    </a>
+                    <a href="#" class="btn btn-outline-secondary btn-sm w-50">
+                        <i class="bi bi-question-lg"></i> Forgot password
+                    </a>
+                </div>
 
-
-
+                {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                <div class="alert alert-warning alert-dismissible fade show mt-3" role="alert">
+                    {% for message in messages %}
+                    {{ message }}
+                    {% endfor %}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                {% endif %}
+                {% endwith %}
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

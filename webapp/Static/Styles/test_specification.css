@@ -1,79 +1,97 @@
-.container-tree {
-    display: flex;
-    height: 100vh;
-}
+ /* Custom styles for the resizable divider */
+ #divider {
+     width: 10px;
+     cursor: col-resize;
+     /* A more subtle color or can be transparent */
+     background-color: #ffffff;
+     /* Light gray to match Bootstrap theme */
+     border-radius: 100px;
+     opacity: 0;
+ }
 
-.left-pane {
-    width: 300px;
-    min-width: 150px;
-    background-color: #f1f1f1;
-    overflow: auto;
-    padding: 10px;
-    border-width: 1;
-}
+ #page-title {
+     font-size: small;
+     align-items: center;
+ }
+
+ /* Pane for the tree with scrollbar */
+ .tree-pane {
+     flex-grow: 1;
+     overflow-y: auto;
+ }
+
+ #left-pane-container {
+     max-height: 82%;
+ }
+
+ /* Ensure the left pane itself is a flex column to manage its children */
+ #left-pane {
+     display: flex;
+     flex-direction: column;
+     min-width: 160px;
+     /* Resizing constraint */
+     max-width: 800px;
+     /* Resizing constraint */
+     overflow: hidden;
+     /* Prevents children from overflowing during resize */
+ }
+
+ .filter {
+     align-self: center;
+ }
+
+ /* --- Custom jsTree Icons (Unchanged) --- */
+ .custom-suite-icon {
+     background-size: 16px 16px;
+     background-repeat: no-repeat;
+     background-position: center;
+ }
+
+ .custom-test-icon {
+     background-image: url("/static/icons/custom-test-icon.png") !important;
+     background-size: 16px 16px !important;
+     background-repeat: no-repeat !important;
+     background-position: center !important;
+ }
+
+ .jstree-node>.jstree-anchor>.custom-suite-icon {
+     background-image: url("/static/icons/custom-suite-empty.png");
+ }
+
+ .jstree-closed>.jstree-anchor>.custom-suite-icon {
+     background-image: url("/static/icons/custom-suite-closed.png");
+ }
+
+ .jstree-open>.jstree-anchor>.custom-suite-icon {
+     background-image: url("/static/icons/custom-suite-opened.png");
+ }
 
 
+ /* Override jsTree context menu with Bootstrap style */
+ .vakata-context {
+     border: 1px solid #dee2e6;
+     border-radius: 0.5rem;
+     background-color: #fff;
+     box-shadow: 0 0.5rem 0.5rem rgba(41, 41, 41, 0.1);
+     padding: 0;
+     font-size: 0.9rem;
+     z-index: 9999 !important;
+ }
 
-.filter-pane {
-    padding: 10px;
-    border-bottom: 1px solid #ccc;
-    /* visual separation */
-    background-color: #eaeaea;
-}
+ .vakata-context li>a {
+     display: block;
+     padding: 0.5rem 1rem;
+     color: #212529;
+     text-decoration: none;
+ }
 
-.tree-pane {
-    flex-grow: 1;
-    overflow-y: auto;
-    padding: 10px;
-}
+ .vakata-context li>a:hover {
+     background-color: #f8f9fa;
+     color: #0d6efd;
+ }
 
-
-
-
-.divider {
-    width: 5px;
-    background-color: #aaa;
-    cursor: col-resize;
-}
-
-.right-pane {
-    flex-grow: 1;
-    background-color: #ffffff;
-    padding: 10px;
-    overflow: auto;
-}
-
-
-/* Base class for suite (fallback/default) */
-.custom-suite-icon {
-    background-size: 16px 16px;
-    background-repeat: no-repeat;
-    background-position: center;
-}
-
-/* Test case icon */
-.custom-test-icon {
-    background-image: url("/static/icons/custom-test-icon.png") !important;
-    background-size: 16px 16px !important;
-    background-repeat: no-repeat !important;
-    background-position: center !important;
-}
-
-
-.jstree-node>.jstree-anchor>.custom-suite-icon {
-    background-image: url("/static/icons/custom-suite-empty.png");
-    background-size: 16px 16px;
-    background-repeat: no-repeat;
-    background-position: center;
-}
-
-/* Closed folder icon */
-.jstree-closed>.jstree-anchor>.custom-suite-icon {
-    background-image: url("/static/icons/custom-suite-closed.png");
-
-}
-
-/* Open folder icon */
-.jstree-open>.jstree-anchor>.custom-suite-icon {
-    background-image: url("/static/icons/custom-suite-opened.png");
-}
+ .vakata-context .vakata-separator {
+     height: 1px;
+     background-color: #dee2e6;
+     margin: 0.25rem 0;
+ }
