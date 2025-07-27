@@ -25,7 +25,7 @@ class TestSuits():
         return DatabaseConnector.return_all_suites_names_ids(int(projectID), None)
 
     @classmethod
-    def update_testcase_data(cls, id, name=None, project_id=None, description=None, parent_suite_id=None):
+    def update_suite_data(cls, id, name=None, project_id=None, description=None, parent_suite_id=None):
         UpdatableItems = ""
         ItemsValues = {}
 

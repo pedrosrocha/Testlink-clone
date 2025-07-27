@@ -74,7 +74,7 @@ class TestCases():
             UpdatableItems = UpdatableItems + "description = :description,"
             ItemsValues["description"] = description
         if precondition:
-            UpdatableItems = UpdatableItems + "precondition = :precondition,"
+            UpdatableItems = UpdatableItems + "preconditions = :precondition,"
             ItemsValues["precondition"] = precondition
         if expected_result:
             UpdatableItems = UpdatableItems + "expected_result = :expected_result,"

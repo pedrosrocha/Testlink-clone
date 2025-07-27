@@ -109,6 +109,7 @@ function handleDelete(tree, node) {
         .then(data => {
             if (data.success) {
                 tree.delete_node(node);
+                ShowSuite(node.parent)
             } else {
                 alert("Delete failed: " + data.error);
             }
@@ -186,27 +187,33 @@ function getContextMenuItems(node) {
     return {
         addTestCase: {
             label: " Add Test Case",
-            _disabled: isTestNode, action: () => handleAddNode(tree, node, 'test')
+            _disabled: isTestNode,
+            action: () => handleAddNode(tree, node, 'test')
         },
         addTestSuite: {
             label: "Add Test Suite",
-            _disabled: isTestNode, action: () => handleAddNode(tree, node, 'suite')
+            _disabled: isTestNode,
+            action: () => handleAddNode(tree, node, 'suite')
         },
         renameItem: {
             label: "Rename",
-            _disabled: isRoot, action: () => handleRename(tree, node)
+            _disabled: isRoot,
+            action: () => handleRename(tree, node)
         },
         copy: {
             label: "Copy",
-            _disabled: isRoot, action: () => handleCopy(tree, node, "copy")
+            _disabled: isRoot,
+            action: () => handleCopy(tree, node, "copy")
         },
         cut: {
             label: "Cut",
-            _disabled: isRoot, action: () => handleCopy(tree, node, "cut")
+            _disabled: isRoot,
+            action: () => handleCopy(tree, node, "cut")
         },
         paste: {
             label: "Paste",
-            _disabled: isTestNode || !clipboard.data, action: () => handlePaste(tree, node)
+            _disabled: isTestNode || !clipboard.data,
+            action: () => handlePaste(tree, node)
         },
         deleteItem: {
             label: "Delete",
@@ -355,6 +362,185 @@ $('#testTree').on("select_node.jstree", function (e, data) {
     }
 });
 
+
+
+document.getElementById("details-pane").addEventListener("submit", function (event) {
+
+    let clickedid = document.getElementById("details-pane").dataset.testId;
+    if (document.getElementById("details-pane").dataset.suiteId) {
+        clickedid = document.getElementById("details-pane").dataset.suiteId;
+    }
+
+
+    if (event.target && event.target.id === 'edit-test-case-form') {
+        HandleEditTestCase(event, "c_" + clickedid)
+    } else if (event.target && event.target.id === 'edit-suite-form') {
+        HandleEditSuite(event, clickedid)
+    } else if (event.target && event.target.id === 'add-suite-form') {
+        HandleAddSuite(event, clickedid)
+    } else if (event.target && event.target.id === 'add-test-case-form') {
+        HandleAddTest(event, clickedid)
+    }
+});
+
+function HandleEditTestCase(event, id) {
+    event.preventDefault(); // Prevent default form submission
+
+    const form = event.target;
+    const formData = new FormData(form);
+    const testcaseId = id
+
+    const new_test_data = {
+        id: testcaseId,
+        name: formData.get('name'),
+        description: formData.get('description'),
+        preconditions: formData.get('preconditions'),
+        expected_results: formData.get('expected_result'),
+        priority: formData.get('priority'),
+        status: formData.get('status')
+    };
+
+    fetch('/update_test_case', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+        body: JSON.stringify(new_test_data)
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                ShowTestCase(testcaseId); // Reload the test case view
+            } else {
+                alert('Error updating test case: ' + data.error);
+            }
+        })
+        .catch(err => {
+            console.error('Error updating test case:', err);
+            alert('An error occurred while updating the test case.');
+        });
+}
+
+function HandleEditSuite(event, id) {
+    event.preventDefault(); // Prevent default form submission
+
+    const form = event.target;
+    const formData = new FormData(form);
+    const suiteID = id;
+
+    const new_suite_data = {
+        id: suiteID,
+        name: formData.get('name'),
+        description: formData.get('description'),
+    };
+
+    fetch('/update_suite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+        body: JSON.stringify(new_suite_data)
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                ShowSuite(suiteID); // Reload the test case view
+            } else {
+                alert('Error updating suite: ' + data.error);
+            }
+        })
+        .catch(err => {
+            console.error('Error updating suite:', err);
+            alert('An error occurred while updating the suite.');
+        });
+}
+
+function HandleAddSuite(event, parentId) {
+    event.preventDefault(); // Prevent default form submission
+
+    const form = event.target;
+    const formData = new FormData(form);
+
+
+    const tree = $('#testTree').jstree(true);
+    const parentNode = tree.get_node(parentId)
+
+    const new_suite_data = {
+        parent_id: parentNode.id,
+        name: formData.get('name'),
+        description: formData.get('description')
+    }
+
+
+
+    if (parentNode.type === "test") {
+        return;
+    }
+
+
+    fetch("/add_suite", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
+        body: JSON.stringify(new_suite_data)
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (!data.success) {
+                alert("Backend rejected the creation: " + data.error);
+            } else {
+                tree.refresh_node(parentNode);
+            }
+        })
+        .catch(error => {
+            console.error("Error contacting backend:", error);
+            alert("Error contacting the server.");
+        });
+
+}
+
+function HandleAddTest(event, parentId) {
+    event.preventDefault(); // Prevent default form submission
+
+    const form = event.target;
+    const formData = new FormData(form);
+
+    const tree = $('#testTree').jstree(true);
+    const parentNode = tree.get_node(parentId)
+
+    const new_test_data = {
+        name: formData.get('name'),
+        parent_id: parentNode.id,
+        description: formData.get('description'),
+        expected_results: formData.get('expected_results'),
+        precondition: formData.get('preconditions'),
+        status: formData.get('status'),
+        priority: formData.get('priority')
+    }
+
+
+
+    if (parentNode.type === "test") {
+        return;
+    }
+
+    fetch("/add_test_case", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
+        body: JSON.stringify(new_test_data)
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (!data.success) {
+                alert("Backend rejected the creation: " + data.error);
+            } else {
+                tree.refresh_node(parentNode);
+            }
+        })
+        .catch(error => {
+            console.error("Error contacting backend:", error);
+            alert("Error contacting the server.");
+        });
+
+}
+
+
+
 function ShowTestCase(testcaseId) {
     fetch(`/get_testcase_html/${testcaseId}`)
         .then(response => response.text())
@@ -374,42 +560,42 @@ document.getElementById("details-pane").addEventListener("click", function (even
     if (!event.target) return false;
     let error_message = "";
     let route = "";
-    let clickedid = "";
     let send_data = {};
+    let clickedid = "0"
+    const tree = $('#testTree').jstree(true);
+
+    clickedid = "c_" + document.getElementById("details-pane").dataset.testId;
+    if (document.getElementById("details-pane").dataset.suiteId) {
+        clickedid = document.getElementById("details-pane").dataset.suiteId;
+    }
+
+    const node = tree.get_node(clickedid);
 
     switch (event.target.id) {
-        case "btn-new-testcase":
-            error_message = "Error loading new test form: ";
-            route = "/new_test_case_form";
-            break;
 
         case "btn-delete-suite":
-            //handle delete node
-            return true;
+            handleDelete(tree, node)
+            break;
 
         case "btn-edit-suite":
             error_message = "Error loading new test form: ";
             // get current id if suite or test
-            if (document.getElementById("details-pane").dataset.suiteId) {
-                clickedid = document.getElementById("details-pane").dataset.suiteId
-                route = "/edit_suite";
-                send_data = {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-                    body: JSON.stringify({ id: clickedid })
-                }
-            } else {
-                clickedid = document.getElementById("details-pane").dataset.testId
-                route = "/edit_test_case";
-                send_data = {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-                    body: JSON.stringify({ id: clickedid })
-                }
+
+            route = "/edit_test_case";
+            if (node.type == "suite") route = "/edit_suite";
+
+            send_data = {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                body: JSON.stringify({ id: node.id })
             }
 
             break;
 
+        case "btn-new-testcase":
+            error_message = "Error loading new test form: ";
+            route = "/new_test_case_form";
+            break;
         case "btn-new-suite":
             error_message = "Error loading new test form: ";
             route = "/new_suite_form";

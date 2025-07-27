@@ -107,7 +107,7 @@ def rename_node():
     type = data.get('type')
 
     if (type == "suite"):
-        if TestSuits.update_testcase_data(id, name=new_name):
+        if TestSuits.update_suite_data(id, name=new_name):
             return jsonify(success=True, message="Project updated successfully")
 
         return jsonify(success=False, error="Error while renaming the suite")
@@ -132,10 +132,16 @@ def add_test_case():
     data = request.get_json()
     node_name = data.get('name')
     parent_id = data.get('parent_id')
+    description = data.get('description') if data.get('description') else ""
+    precondition = data.get('precondition') if data.get('precondition') else ""
+    expected_results = data.get('expected_results') if data.get(
+        'expected_results') else ""
+    status = data.get('status')
+    priority = data.get('priority')
 
     current_user_name = current_user.username
     new_id = TestCases.add_testcase(
-        node_name, "", "", "", "draft", "high", parent_id, current_user_name, current_user_name)
+        node_name, description, precondition, expected_results, status, priority, parent_id, current_user_name, current_user_name)
 
     return jsonify(success=True, message="Project updated successfully", name=node_name, id=new_id)
 
@@ -145,11 +151,12 @@ def add_suite():
     data = request.get_json()
     node_name = data.get('name')
     parent_id = data.get('parent_id')
+    description = data.get('description') if data.get('description') else ""
 
     _current_project_id = session.get('current_project_id')
     current_user.username
     new_id = TestSuits.add_suite(node_name,
-                                 "",
+                                 description,
                                  parent_id,
                                  _current_project_id,
                                  current_user.username)
@@ -234,7 +241,7 @@ def move_suite():
     parent_id = data.get('parent_id')            # new parent node
     project = int(session.get('current_project_id'))
 
-    if TestSuits.update_testcase_data(suite_id, None, project, None, parent_id):
+    if TestSuits.update_suite_data(suite_id, None, project, None, parent_id):
         return jsonify(success=True, message="Project updated successfully")
 
     return jsonify(success=False, message="Project not updated")
@@ -274,14 +281,63 @@ def new_test_case_form():
 
 @TestSpecification_views.route("/edit_suite", methods=['POST'])
 def edit_suite():
-    return render_template('partials/edit_suite.html')
+    data = request.get_json()
+    suite_id = data.get('id')
+
+    _suite = TestSuits.return_suite_by_id(suite_id)
+    return render_template('partials/edit_suite.jinja2', suite=_suite)
 
 
 @TestSpecification_views.route("/edit_test_case", methods=['POST'])
 def edit_test_case():
-    return render_template('partials/edit_test_case.html')
+    data = request.get_json()
+    test_id = data.get('id')
+
+    # removes the "c_" from the string and transforms to integer
+    test_id = int(test_id[2:])
+
+    current_test_case = TestCases.return_testcase_by_id(test_id)
+    return render_template('partials/edit_test_case.jinja2', testcase=current_test_case)
 
 
 @TestSpecification_views.route("/new_suite_form", methods=['GET'])
 def new_suite_form():
     return render_template('partials/add_new_suite.html')
+
+
+@TestSpecification_views.route("/update_test_case", methods=['POST'])
+def update_test_case():
+    data = request.get_json()
+    id = data.get('id')
+    name = data.get('name')
+    description = data.get('description')
+    preconditions = data.get('preconditions')
+    expected_results = data.get('expected_results')
+    priority = data.get('priority')
+    status = data.get('status')
+
+    if (TestCases.update_testcase_data(id,
+                                       name,
+                                       False,
+                                       description,
+                                       preconditions,
+                                       expected_results,
+                                       priority,
+                                       status,
+                                       current_user.username)):
+        return jsonify(success=True, message="Test updated successfuly")
+
+    return jsonify(success=False, message="It was not possible to update the test information")
+
+
+@TestSpecification_views.route("/update_suite", methods=['POST'])
+def update_suite():
+    data = request.get_json()
+    id = data.get('id')
+    name = data.get('name')
+    description = data.get('description')
+
+    if (TestSuits.update_suite_data(id, name, False, description, None)):
+        return jsonify(success=True, message="Suite updated successfuly")
+
+    return jsonify(success=False, message="It was not possible to update the suite information")

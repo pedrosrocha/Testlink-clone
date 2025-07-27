@@ -30,7 +30,7 @@
         <div class="form-group mb-3">
             <label class="font-weight-bold">Expected results:</label>
             <div class="border p-3 rounded bg-white" id="testcase-expected-results">
-                {{ testcase.expected_results }}
+                {{ testcase.expected_result }}
             </div>
         </div>
 
@@ -45,7 +45,7 @@
                     <strong>Created by:</strong> <span id="testcase-owner">{{ testcase.created_by }}</span>
                 </li>
                 <li class="list-group-item">
-                    <strong>Last updated by:</strong> <span id="testcase-updater">testcase.last_updated_by </span>
+                    <strong>Last updated by:</strong> <span id="testcase-updater">{{ testcase.last_updated_by }}</span>
                 </li>
                 <li class="list-group-item">
                     <strong>Last updated in:</strong> <span id="testcase-updated">{{ testcase.updated_at }}</span>
