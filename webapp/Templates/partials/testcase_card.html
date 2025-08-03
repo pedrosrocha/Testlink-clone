@@ -13,6 +13,28 @@
                 <i class="bi bi-pencil-square"></i> Edit
             </button>
 
+            <button class="btn btn-outline-primary btn-sm" id="btn-new-version">
+                <i class="bi bi-file-earmark-plus"></i> New Version
+            </button>
+
+            <div class="dropdown">
+                <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" id="versionDropdown"
+                    data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-clock-history"></i> Version {{ testcase.current_version }}
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="versionDropdown" id="version-list">
+                    {% for version in testcase.versions %}
+                    <li class="dropdown-item version-option" data-version-id="{{ version }}">
+                        Version {{ version }}
+
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <button class="btn btn-outline-danger btn-sm" id="btn-delete-version">
+                <i class="bi bi-x-circle"></i> Delete this version
+            </button>
         </div>
 
         <div class="form-group mb-3">
@@ -34,7 +56,6 @@
             </div>
         </div>
 
-
         <button class="btn btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#meta-info">
             More Info
         </button>
@@ -45,7 +66,8 @@
                     <strong>Created by:</strong> <span id="testcase-owner">{{ testcase.created_by }}</span>
                 </li>
                 <li class="list-group-item">
-                    <strong>Last updated by:</strong> <span id="testcase-updater">{{ testcase.last_updated_by }}</span>
+                    <strong>Last updated by:</strong> <span id="testcase-updater">{{ testcase.last_updated_by
+                        }}</span>
                 </li>
                 <li class="list-group-item">
                     <strong>Last updated in:</strong> <span id="testcase-updated">{{ testcase.updated_at }}</span>
@@ -55,8 +77,4 @@
     </div>
 
     <div id="test-list-pane"></div>
-
-    <div class="form-group mb-3">
-
-    </div>
 </div>

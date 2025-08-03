@@ -122,11 +122,6 @@ def rename_node():
     return jsonify(success=False, error="Error while renaming the testcase")
 
 
-# @TestSpecification_views.route('/paste_node', methods=['POST'])
-# def paste_node():
-#    return jsonify(success=True, message="Project updated successfully")
-
-
 @TestSpecification_views.route('/add_test_case', methods=['POST'])
 def add_test_case():
     data = request.get_json()
@@ -308,7 +303,7 @@ def new_suite_form():
 @TestSpecification_views.route("/update_test_case", methods=['POST'])
 def update_test_case():
     data = request.get_json()
-    id = data.get('id')
+    id = data.get('id')[2:]
     name = data.get('name')
     description = data.get('description')
     preconditions = data.get('preconditions')
@@ -341,3 +336,38 @@ def update_suite():
         return jsonify(success=True, message="Suite updated successfuly")
 
     return jsonify(success=False, message="It was not possible to update the suite information")
+
+
+@TestSpecification_views.route("/new_test_case_version", methods=['POST'])
+def new_test_case_version():
+    data = request.get_json()
+    id = data.get('id')[2:]
+
+    if (TestCases.new_test_version(id, current_user.username)):
+        return jsonify(success=True, message="Test version created  successfuly")
+
+    return jsonify(success=False, message="It was not possible to create the new version")
+
+
+@TestSpecification_views.route("/update_test_case_version", methods=['POST'])
+def update_test_case_version():
+    data = request.get_json()
+    id = data.get('id')
+    version = data.get("version")
+
+    if (TestCases.update_testcase_data(id, current_version=version)):
+        return jsonify(success=True, message="Test version created  successfuly")
+
+    return jsonify(success=False, message="It was not possible to create the new version")
+
+
+@TestSpecification_views.route("/delete_testcase_version", methods=['POST'])
+def delete_testcase_version():
+    data = request.get_json()
+    id = data.get('id')[2:]
+
+    command_execution = TestCases.delete_current_version(id)
+    if (command_execution[0]):
+        return jsonify(success=True, message="Test version deleted successfuly")
+
+    return jsonify(success=False, message=command_execution[1])

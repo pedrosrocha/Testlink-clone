@@ -10,3 +10,23 @@
     align-items: left;
     background-color: rgb(233, 231, 231);
 }
+
+/* In your users_management.css file */
+
+.table-primary {
+    --bs-table-bg: #cfe2ff;
+    /* Bootstrap's primary-subtle color */
+    --bs-table-striped-bg: #c5d7f2;
+    --bs-table-striped-color: #000;
+    --bs-table-active-bg: #babbf1;
+    --bs-table-active-color: #000;
+    --bs-table-hover-bg: #bfd5f4;
+    --bs-table-hover-color: #000;
+    color: #000;
+    border-color: #babbf1;
+}
+
+/* This ensures the cells within your themed table body are not transparent */
+.table> :not(caption)>*>* {
+    background-color: var(--bs-table-bg-state, var(--bs-table-bg-type, var(--bs-table-bg)));
+}

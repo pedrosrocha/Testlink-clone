@@ -26,9 +26,11 @@ def ProjectManagement():
     if request.form['action'] == "deletion":
 
         projects.delete_project(project_id)
+        first_project_id = projects.return_all_projects()[0].id
+        session['current_project_id'] = first_project_id
         return redirect(url_for('projects_views.ProjectManagement'))
 
-    # if it is deletion
+    # if it is not deletion
 
     return "UiiiiHooo"
 
@@ -118,7 +120,7 @@ def AddProject():
                                )
 
     current_project = projects.return_project_by_name(projectName)
-
+    session['current_project_id'] = current_project.id
     TestSuits.add_suite(projectName,
                         f"Root suite for the project {projectName}",
                         None,

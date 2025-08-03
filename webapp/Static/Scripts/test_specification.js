@@ -71,7 +71,7 @@ function handleRename(tree, node) {
         return;
     }
     tree.edit(node, null, function (new_node) {
-        let is_new_node_name_unique = validate_new_node_name(new_node.text, node.parent, tree);
+        let is_new_node_name_unique = validate_new_node_name(new_node, node.parent, tree);
         if (new_node.text && new_node.text.trim() !== '' && is_new_node_name_unique) {
             fetch('/rename_node', {
                 method: 'POST',
@@ -124,41 +124,48 @@ function handleAddNode(tree, parentNode, fileType) {
     if (parentNode.type === "test") {
         return;
     }
+
     const route = fileType === "suite" ? "/add_suite" : "/add_test_case";
-    const tempId = tree.create_node(parentNode, {
-        text: fileType === "suite" ? "New suite" : "New testcase",
-        type: fileType
-    });
-    if (!tempId) {
-        alert("Failed to create temporary node.");
-        return;
-    }
-    const tempNode = tree.get_node(tempId);
-    tree.edit(tempNode, null, function (newName) {
-        if (!newName.text || newName.text.trim() === "") {
-            tree.delete_node(tempNode);
+    tree.open_node(parentNode, () => { //opens the node to garantee thta the temp file will created successfully
+
+        const tempId = tree.create_node(parentNode, {
+            text: fileType === "suite" ? "New suite" : "New testcase",
+            type: fileType
+        });
+        if (!tempId) {
+            alert("Failed to create temporary node.");
             return;
         }
-        fetch(route, {
-            method: "POST",
-            headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
-            body: JSON.stringify({ parent_id: parentNode.id, name: newName.text.trim() })
-        })
-            .then(response => response.json())
-            .then(data => {
-                if (!data.success) {
-                    alert("Backend rejected the creation: " + data.error);
-                    tree.delete_node(tempNode);
-                } else {
-                    tree.refresh_node(parentNode);
-                }
-            })
-            .catch(error => {
-                console.error("Error contacting backend:", error);
-                alert("Error contacting the server.");
+
+        const tempNode = tree.get_node(tempId);
+        tree.edit(tempNode, null, function (newName) {
+            if (!newName.text || newName.text.trim() === "") {
                 tree.delete_node(tempNode);
-            });
+                return;
+            }
+            fetch(route, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
+                body: JSON.stringify({ parent_id: parentNode.id, name: newName.text.trim() })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.success) {
+                        alert("Backend rejected the creation: " + data.error);
+                        tree.delete_node(tempNode);
+                    } else {
+                        tree.refresh_node(parentNode);
+                    }
+                })
+                .catch(error => {
+                    console.error("Error contacting backend:", error);
+                    alert("Error contacting the server.");
+                    tree.delete_node(tempNode);
+                });
+        });
     });
+
+
 }
 
 function handlePaste(tree, targetNode) {
@@ -222,10 +229,11 @@ function getContextMenuItems(node) {
     };
 }
 
-function validate_new_node_name(node_name, parent_id, tree) {
+function validate_new_node_name(node, parent_id, tree) {
     const parentNode = tree.get_node(parent_id);
     for (const childId of parentNode.children) {
-        if (tree.get_node(childId).text === node_name) {
+        child = tree.get_node(childId)
+        if (child.text === node.text && child.id != node.id) {
             return false;
         }
     }
@@ -540,8 +548,10 @@ function HandleAddTest(event, parentId) {
 }
 
 
-
 function ShowTestCase(testcaseId) {
+
+    if (testcaseId.startsWith("c")) testcaseId = testcaseId.replace("c_", "");
+
     fetch(`/get_testcase_html/${testcaseId}`)
         .then(response => response.text())
         .then(html => { document.getElementById("details-pane").innerHTML = html; })
@@ -563,6 +573,7 @@ document.getElementById("details-pane").addEventListener("click", function (even
     let send_data = {};
     let clickedid = "0"
     const tree = $('#testTree').jstree(true);
+    let refresh_test_case = false;
 
     clickedid = "c_" + document.getElementById("details-pane").dataset.testId;
     if (document.getElementById("details-pane").dataset.suiteId) {
@@ -601,6 +612,25 @@ document.getElementById("details-pane").addEventListener("click", function (even
             route = "/new_suite_form";
             break;
 
+        case "btn-new-version":
+            route = "/new_test_case_version";
+            send_data = {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                body: JSON.stringify({ id: node.id })
+            }
+            refresh_test_case = true;
+            break;
+
+        case "btn-delete-version":
+            route = "/delete_testcase_version";
+            send_data = {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                body: JSON.stringify({ id: node.id })
+            }
+            refresh_test_case = true;
+            break;
         default:
             return;
 
@@ -610,10 +640,42 @@ document.getElementById("details-pane").addEventListener("click", function (even
         .then(res => res.text())
         .then(html => {
             this.innerHTML = html;
+            if (refresh_test_case) ShowTestCase(clickedid);
         })
+
         .catch(err => console.error(error_message, err));
+
 
     return true;
 });
 
 
+
+document.getElementById("details-pane").addEventListener("click", function (event) {
+    //chnges the current test version
+    if (!event.target || !event.target.classList.contains('version-option')) return;
+
+    const testID = document.getElementById("details-pane").dataset.testId;
+    const versionId = event.target.getAttribute('data-version-id');
+
+
+    fetch('/update_test_case_version', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+        body: JSON.stringify({ id: testID, version: versionId })
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                ShowTestCase(testID); // Reload the test case view
+            } else {
+                alert('Error updating suite: ' + data.error);
+            }
+        })
+        .catch(err => {
+            console.error('Error updating suite:', err);
+            alert('An error occurred while updating the suite.');
+        });
+
+    ShowTestCase(testID);
+});
