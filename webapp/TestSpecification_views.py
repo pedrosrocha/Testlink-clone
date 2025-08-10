@@ -6,7 +6,7 @@ from webapp.utils.roles_controllers import role_required
 from webapp.Parameters.projects import projects
 from webapp.Parameters.TestSuites import TestSuits
 from webapp.Parameters.TestCases import TestCases
-
+from webapp.Parameters.TestSteps import TestSteps
 
 TestSpecification_views = Blueprint('TestSpecification_views', __name__)
 
@@ -251,7 +251,10 @@ def move_test():
 
     parent_id = data.get('parent_id')            # new parent node
 
-    if TestCases.update_testcase_data(test_id, None, parent_id, None, None, None, None, None, None):
+    test_case_data = TestCases.update_testcase_data(
+        test_id, None, parent_id, None, None, None, None, None, None)
+
+    if test_case_data:
         return jsonify(success=True, message="Project updated successfully")
 
     return jsonify(success=False, message="Project not updated")
@@ -259,8 +262,19 @@ def move_test():
 
 @TestSpecification_views.route('/get_testcase_html/<int:testcase_id>', methods=['GET'])
 def get_testcase_html(testcase_id):
-    test = TestCases.return_testcase_by_id(testcase_id)
-    return render_template('partials/testcase_card.html', testcase=test)
+    _testcase = TestCases.return_testcase_by_id(testcase_id)
+
+    if not _testcase:
+        return f"test case id = {testcase_id} not found"
+
+    teststeps = TestSteps.return_steps_from_test_cases(
+        _testcase["id"],
+        _testcase["current_version"])
+
+    if not teststeps[0]:
+        return f"test case steps id = {testcase_id} not found"
+
+    return render_template('partials/testcase_card.html', testcase=_testcase, test_steps=teststeps[1])
 
 
 @TestSpecification_views.route('/get_suite_html/<int:suite_id>', methods=['GET'])
