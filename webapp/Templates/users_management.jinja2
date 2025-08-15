@@ -7,16 +7,12 @@
 
 <div class="container-fluid vh-100 d-flex flex-column p-3">
 
-    <div id="page-title" class="card mb-3 mt-2">
+    <div id="page-title" class="card mb-3 mt-2 shadow">
         <h1 style="font-size: 34px; text-align: center;">User Management System</h1>
     </div>
 
-    <div class="card flex-grow-1 p-3">
-        <div class="mb-3">
-            <a href="/AddUserFromManager" class="btn btn-primary">
-                <i class="fas fa-plus me-2"></i>New User
-            </a>
-        </div>
+    <div class="card flex-grow-1 p-3 shadow" id="user-container">
+
 
         <h2 class="h4">Users:</h2>
 
@@ -40,7 +36,7 @@
                         <td>{{ user['username'] }}</td>
                         <td>{{ user['email'] }}</td>
                         <td>
-                            <form method=" POST" style="display:inline;">
+                            <form method="POST" style="display:inline;">
                                 <input type="hidden" name="id" value="{{ user['id'] }}">
                                 <input type="hidden" name="action" value="change_level">
                                 <select name="new_level" class="form-select form-select-sm"
@@ -70,6 +66,12 @@
                     {% endfor %}
                 </tbody>
             </table>
+
+        </div>
+        <div class="mb-0">
+            <a href="/AddUserFromManager" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>New User
+            </a>
         </div>
     </div>
 </div>

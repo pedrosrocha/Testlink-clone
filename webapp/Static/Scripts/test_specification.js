@@ -1,6 +1,6 @@
 
 const divider = document.getElementById('divider');
-const leftPane = document.getElementById('left-pane'); // Using ID for specificity
+
 
 let currentSuiteId = null;
 let currentTestCaseId = null;
@@ -18,12 +18,14 @@ divider.addEventListener('mousedown', (e) => {
 });
 
 document.addEventListener('mousemove', (e) => {
+    const leftColumn = document.getElementById('left-column');
+
     if (!isResizing) return;
-    // Adjust the width of the left pane within defined constraints
+
     const newWidth = e.clientX;
-    if (newWidth > 200 && newWidth < 800) { // Adjusted min/max for better UX
-        leftPane.style.width = newWidth + 'px';
-    }
+
+    // No need to check min/max here since it's handled by the CSS
+    leftColumn.style.width = newWidth + 'px';
 });
 
 document.addEventListener('mouseup', () => {
@@ -686,6 +688,26 @@ document.getElementById("details-pane").addEventListener("click", function (even
     ShowTestCase(testID);
 });
 
+
+document.addEventListener('DOMContentLoaded', function () {
+    const header = document.getElementById('page-title');
+    const leftpane = document.getElementById('left-pane');
+    const rightpane = document.getElementById('right-pane');
+
+    const scrollingPane = document.getElementById('right-pane');
+
+    // Define the point at which the header should hide (e.g., 50 pixels)
+    const scrollThreshold = 30;
+
+    if (scrollingPane) {
+        scrollingPane.addEventListener('scroll', () => {
+            const hasScrolledPast = scrollingPane.scrollTop > scrollThreshold;
+            header.classList.toggle('header-hidden', hasScrolledPast);
+            leftpane.classList.toggle('hidden', hasScrolledPast);
+            rightpane.classList.toggle('hidden', hasScrolledPast);
+        });
+    }
+});
 
 //--------------------------- steps --------------------
 function CreateSortable() {

@@ -30,3 +30,7 @@
 .table> :not(caption)>*>* {
     background-color: var(--bs-table-bg-state, var(--bs-table-bg-type, var(--bs-table-bg)));
 }
+
+#user-container {
+    margin-bottom: 75px;
+}

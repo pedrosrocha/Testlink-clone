@@ -7,11 +7,11 @@
 
 <div class="container-fluid vh-100 d-flex flex-column p-3">
 
-    <div id="page-title" class="card mb-3 mt-2">
+    <div id="page-title" class="card mb-3 mt-2 shadow">
         <h1 style="font-size: 34px; text-align: center;">Project Management System</h1>
     </div>
 
-    <div class="card flex-grow-1 p-3">
+    <div class="card flex-grow-1 p-3 shadow" id="project-container">
         {% if current_user.user_level == 'admin' %}
         <div class="mb-3">
             <a href="/AddProject" class="btn btn-primary">
