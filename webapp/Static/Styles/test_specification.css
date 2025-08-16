@@ -73,7 +73,6 @@ html {
     margin-top: 1px;
 }
 
-/* --- Custom jsTree Icons (Unchanged) --- */
 .custom-suite-icon {
     background-size: 16px 16px;
     background-repeat: no-repeat;
@@ -82,7 +81,7 @@ html {
 
 .custom-test-icon {
     background-image: url("/static/icons/custom-test-icon.png") !important;
-    background-size: 16px 16px !important;
+    background-size: 20px 15px !important;
     background-repeat: no-repeat !important;
     background-position: center !important;
 }

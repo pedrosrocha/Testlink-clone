@@ -38,4 +38,23 @@
 <script src="{{ url_for('static', filename='Scripts/libs/tinymce/tinymce.min.js') }}"></script>
 <script src="{{ url_for('static', filename='Scripts/test_specification.js') }}"></script>
 
+<template id="editor-template">
+    <div class="list-group-item editor-form">
+        <div class="d-flex flex-column gap-3">
+            <div>
+                <label class="form-label fw-bold">Actions</label>
+                <textarea class="form-control editor-actions"></textarea>
+            </div>
+            <div>
+                <label class="form-label fw-bold">Expected Results</label>
+                <textarea class="form-control editor-results"></textarea>
+            </div>
+            <div class="d-flex justify-content-end gap-2">
+                <button type="button" class="btn btn-secondary btn-sm btn-cancel">Cancel</button>
+                <button type="button" class="btn btn-primary btn-sm btn-save">Save Step</button>
+            </div>
+        </div>
+    </div>
+</template>
+
 {% endblock %}
