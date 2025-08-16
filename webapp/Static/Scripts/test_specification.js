@@ -637,8 +637,8 @@ document.getElementById("details-pane").addEventListener("click", function (even
             refresh_test_case = true;
             break;
         case "btn-add-new-step":
-
-            break;
+            showEditor({ position: 'end' });
+            return;
         default:
             return;
 
@@ -728,8 +728,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // --- EVENT DELEGATION FOR DYNAMIC CONTENT ---
 
-    // Get the editor template
-    const editorTemplate = document.getElementById('editor-template');
+    // Get the editor template form tes_specification
+
 
     const detailsPane = document.getElementById('details-pane');
     // Attach ONE listener to the parent container
@@ -744,15 +744,22 @@ document.addEventListener('DOMContentLoaded', function () {
         if (addBtn) {
             e.preventDefault();
             const stepItem = addBtn.closest('.step-item');
-            showEditor({ position: 'after', referenceElement: stepItem });
-            return; // Stop further execution
+            showEditor({
+                position: 'after',
+                referenceElement: stepItem
+            });
+
+            return;
         }
 
         // --- Handle "Edit Step" Click ---
         if (contentWrapper) {
             e.preventDefault();
             const stepItem = contentWrapper.closest('.step-item');
-            showEditor({ position: 'replace', referenceElement: stepItem });
+            showEditor({
+                position: 'replace',
+                referenceElement: stepItem
+            });
             return;
         }
 
@@ -764,93 +771,106 @@ document.addEventListener('DOMContentLoaded', function () {
 
             if (confirm('Are you sure you want to delete this step?')) {
                 console.log(`Deleting step with ID: ${stepId}`);
-                // Add your fetch() call to the delete endpoint here
-                // On success, remove the element: stepItem.remove();
+                HandleDeleteStep(stepId)
             }
             return;
         }
 
     });
 
-    /**
-     * @param {object} options - { position: 'after'|'replace'|'end', referenceElement?: HTMLElement }
-     */
-    function showEditor(options) {
-        // First, remove any other open editors to avoid conflicts
-        const existingEditor = detailsPane.querySelector('.editor-form');
-        if (existingEditor) {
-            existingEditor.querySelector('.btn-cancel').click();
-        }
+    // @param {object} options - { position: 'after'|'replace'|'end', referenceElement?: HTMLElement }
 
-        // Clone the template
-        const editorClone = editorTemplate.content.cloneNode(true);
-        const editorForm = editorClone.querySelector('.editor-form');
-
-        // Find and assign unique IDs to textareas
-        const actionsTextarea = editorForm.querySelector('.editor-actions');
-        const resultsTextarea = editorForm.querySelector('.editor-results');
-        const uniqueId = 'editor-' + Date.now();
-        actionsTextarea.id = uniqueId + '-actions';
-        resultsTextarea.id = uniqueId + '-results';
-
-        // If editing, populate the editor with existing content
-        if (options.position === 'replace') {
-            const content = options.referenceElement.querySelector('.step-content-wrapper');
-            actionsTextarea.value = content.querySelector('.stepActions').innerHTML;
-            resultsTextarea.value = content.querySelector('.stepResults').innerHTML;
+});
 
 
 
-            // FIX: Hide the entire step item
-            options.referenceElement.classList.add('d-none');
-            const x = 10;
-        }
+function showEditor(options) {
 
-        // Insert the editor form into the correct position in the DOM
-        if (options.position === 'after' || options.position === 'replace') {
-            options.referenceElement.after(editorForm);
-        } else { // Assumes 'end'
-            const listContainer = detailsPane.querySelector('#testStepslist');
-            if (listContainer) listContainer.append(editorForm);
-        }
+    const editorTemplate = document.getElementById('editor-template');
+    const detailsPane = document.getElementById('details-pane');
 
-        // Initialize TinyMCE on the newly added textareas
-        const commonConfig = { height: 250, menubar: false, plugins: 'table lists link', toolbar: 'undo redo | bold italic | bullist numlist | table' };
-        tinymce.init({ ...commonConfig, selector: `#${actionsTextarea.id}`, license_key: 'gpl' });
-        tinymce.init({ ...commonConfig, selector: `#${resultsTextarea.id}`, license_key: 'gpl' });
-
-        // Handle Cancel button click
-        editorForm.querySelector('.btn-cancel').addEventListener('click', () => {
-            tinymce.remove(`#${actionsTextarea.id}`);
-            tinymce.remove(`#${resultsTextarea.id}`);
-            editorForm.remove();
-            if (options.position === 'replace') {
-                // This only shows the inner wrapper
-                options.referenceElement.classList.remove('d-none');
-            }
-        });
-
-        // Handle Save button click
-        editorForm.querySelector('.btn-save').addEventListener('click', () => {
-            const stepId = options.position === 'replace' ? options.referenceElement.dataset.stepId : null;
-
-            const newActions = tinymce.get(actionsTextarea.id).getContent();
-            const newResults = tinymce.get(resultsTextarea.id).getContent();
-
-            // --- YOUR SAVE LOGIC (fetch to Flask) GOES HERE ---
-            console.log('Saving Step:', { id: stepId, actions: newActions, results: newResults });
-            alert('Check the console for the data that would be sent to the server.');
-
-            // For now, just close the editor on save
-            editorForm.querySelector('.btn-cancel').click();
-        });
+    // Delete the already exisiting editor
+    const existingEditor = detailsPane.querySelector('.editor-form');
+    if (existingEditor) {
+        existingEditor.querySelector('.btn-cancel').click();
     }
 
-    // You can still have a listener for a main "Add Step" button outside the list
-    // This listener would be on a static button, so it doesn't need delegation
-    detailsPane.addEventListener('click', function (e) {
-        if (e.target.closest('#your-main-add-button-id')) {
-            showEditor({ position: 'end' });
-        }
+    // Copy the template
+    const editorClone = editorTemplate.content.cloneNode(true);
+    const editorForm = editorClone.querySelector('.editor-form');
+
+    // Find and assign unique IDs to textareas
+    const actionsTextarea = editorForm.querySelector('.editor-actions');
+    const resultsTextarea = editorForm.querySelector('.editor-results');
+    const uniqueId = 'editor-' + Date.now();
+    actionsTextarea.id = uniqueId + '-actions';
+    resultsTextarea.id = uniqueId + '-results';
+
+    // If editing, populate the editor with existing content
+    if (options.position === 'replace') {
+        const content = options.referenceElement.querySelector('.step-content-wrapper');
+        actionsTextarea.value = content.querySelector('.stepActions').innerHTML;
+        resultsTextarea.value = content.querySelector('.stepResults').innerHTML;
+
+        options.referenceElement.classList.add('d-none');
+    }
+
+    if (options.position === 'after' || options.position === 'replace') {
+        options.referenceElement.after(editorForm);
+    } else {
+        const listContainer = detailsPane.querySelector('#testStepslist');
+        if (listContainer) listContainer.append(editorForm);
+    }
+
+    // Initialize TinyMCE on the newly added textareas
+    const commonConfig = {
+        height: 250,
+        menubar: false,
+        plugins: 'table lists link',
+        toolbar: 'undo redo | bold italic | bullist numlist | table'
+    };
+
+    tinymce.init({
+        ...commonConfig,
+        selector: `#${actionsTextarea.id}`,
+        license_key: 'gpl'
+    }
+    );
+
+    tinymce.init({
+        ...commonConfig,
+        selector: `#${resultsTextarea.id}`,
+        license_key: 'gpl'
     });
-});
+
+    // Handle Cancel button click
+    editorForm.querySelector('.btn-cancel').addEventListener('click', () => {
+        tinymce.remove(`#${actionsTextarea.id}`);
+        tinymce.remove(`#${resultsTextarea.id}`);
+        editorForm.remove();
+
+        if (options.position === 'replace') options.referenceElement.classList.remove('d-none');
+
+    });
+
+    // Handle Save button click
+    editorForm.querySelector('.btn-save').addEventListener('click', () => {
+        const stepId = options.position === 'replace' ? options.referenceElement.dataset.stepId : null;
+
+        const newActions = tinymce.get(actionsTextarea.id).getContent();
+        const newResults = tinymce.get(resultsTextarea.id).getContent();
+
+        console.log('Saving Step:', {
+            id: stepId,
+            actions: newActions,
+            results: newResults
+        });
+
+        editorForm.querySelector('.btn-cancel').click();
+    });
+}
+
+function HandleDeleteStep(StepID) {
+
+    return;
+}
