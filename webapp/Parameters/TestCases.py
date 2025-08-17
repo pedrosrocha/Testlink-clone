@@ -10,7 +10,11 @@ class TestCases():
             DatabaseConnector.return_testcase_by_id(int(testcase_id)))
         versions_list = testDict["versions"].split(',')
         testDict['versions'] = versions_list
-        return testDict
+
+        if (testDict):
+            return testDict
+
+        return False
 
     @classmethod
     def copy_test_case(cls, parent_id, testcase_id, current_user):

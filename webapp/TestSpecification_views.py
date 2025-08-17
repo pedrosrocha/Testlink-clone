@@ -385,3 +385,58 @@ def delete_testcase_version():
         return jsonify(success=True, message="Test version deleted successfuly")
 
     return jsonify(success=False, message=command_execution[1])
+
+
+@TestSpecification_views.route("/save_step_data", methods=['POST'])
+def save_step_data():
+    data = request.get_json()
+    step_id = data.get('id')
+    actions_data = data.get('actions_data')
+    results_data = data.get('results_data')
+
+    result = TestSteps.update_step_info(step_id, actions_data, results_data)
+
+    if (not result[0]):
+        return jsonify(success=False, message=f"It was not possible to save the step {step_id} error: {result[1]}")
+
+    return jsonify(success=True, message="Step saved")
+
+
+@TestSpecification_views.route("/new_step", methods=['POST'])
+def new_step():
+    data = request.get_json()
+    test_id = data.get('test_id')
+    actions = data.get('actions_data')
+    results = data.get('results_data')
+    previous_step = data.get('previous_step_id')
+
+    testcase = TestCases.return_testcase_by_id(test_id)
+
+    if (not testcase):
+        return jsonify(success=False, message="test case for this step was not found")
+
+    results = TestSteps.create_new_step(
+        actions,
+        results,
+        testcase["id"],
+        testcase["current_version"],
+        previous_step
+    )
+
+    if (results[0]):
+        return jsonify(success=True, message="Step saved: "+results[1])
+
+    return jsonify(success=False, message="Step not saved: "+results[1])
+
+
+@TestSpecification_views.route("/delete_step", methods=['POST'])
+def delete_step():
+    data = request.get_json()
+    step_id = data.get('step_id')
+
+    results = TestSteps.delete_step(step_id)
+
+    if (results[0]):
+        return jsonify(success=True, message=f"Step {step_id} deleted")
+
+    return jsonify(success=False, message=f"Step {step_id} was not deleted. error: "+results[1])

@@ -4,6 +4,7 @@ const divider = document.getElementById('divider');
 
 let currentSuiteId = null;
 let currentTestCaseId = null;
+let StepAlreadyClicked = false;
 
 
 let isResizing = false;
@@ -728,8 +729,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // --- EVENT DELEGATION FOR DYNAMIC CONTENT ---
 
-    // Get the editor template form tes_specification
-
 
     const detailsPane = document.getElementById('details-pane');
     // Attach ONE listener to the parent container
@@ -737,7 +736,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Check what was clicked using .closest()
         const addBtn = e.target.closest('.btn-add-after');
-        const contentWrapper = e.target.closest('.step-content-wrapper');
+        const contentWrapperClicked = e.target.closest('.step-content-wrapper');
+        const NumberClicked = e.target.closest('.stepNumber')
         const deleteBtn = e.target.closest('.btn-delete');
 
         // --- Handle "Add Step After" Click ---
@@ -753,9 +753,10 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         // --- Handle "Edit Step" Click ---
-        if (contentWrapper) {
+        if (NumberClicked || contentWrapperClicked) {
+
             e.preventDefault();
-            const stepItem = contentWrapper.closest('.step-item');
+            const stepItem = contentWrapperClicked.closest('.step-item');
             showEditor({
                 position: 'replace',
                 referenceElement: stepItem
@@ -849,28 +850,126 @@ function showEditor(options) {
         tinymce.remove(`#${resultsTextarea.id}`);
         editorForm.remove();
 
-        if (options.position === 'replace') options.referenceElement.classList.remove('d-none');
 
+        if (options.position === 'replace') options.referenceElement.classList.remove('d-none');
+        StepAlreadyClicked = true
     });
 
     // Handle Save button click
     editorForm.querySelector('.btn-save').addEventListener('click', () => {
-        const stepId = options.position === 'replace' ? options.referenceElement.dataset.stepId : null;
+        // const ExistingStep = options.position === 'replace' ? true : false;
 
+        //read the values written by the user
         const newActions = tinymce.get(actionsTextarea.id).getContent();
         const newResults = tinymce.get(resultsTextarea.id).getContent();
 
-        console.log('Saving Step:', {
-            id: stepId,
-            actions: newActions,
-            results: newResults
-        });
-
+        //closes the tinymce
         editorForm.querySelector('.btn-cancel').click();
+
+        //Enters in the if statement only a test is being edit
+        if (options.position === 'replace' ? true : false) {
+            HandleEditStep(
+                options.referenceElement.dataset.stepId,
+                newActions,
+                newResults,
+                options.referenceElement
+            );
+            return;
+        }
+
+        const stepID = options.referenceElement ? options.referenceElement.dataset.stepId : false;
+
+        HandleSaveStep(
+            stepID,
+            newActions,
+            newResults,
+            options.referenceElement,
+            document.getElementById("details-pane").dataset.testId,
+        )
+
     });
 }
 
 function HandleDeleteStep(StepID) {
+    const testID = document.getElementById("details-pane").dataset.testId;
+
+    fetch('/delete_step', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+        body: JSON.stringify({ step_id: StepID })
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                ShowTestCase(testID)
+            } else {
+                alert("Not possible to delete the step. Message: " + data.message);
+            }
+        })
+        .catch(err => {
+            console.error('Delete error:', err);
+            alert("Error contacting server.");
+        });
+
+    return;
+}
+
+function HandleSaveStep(previousStepId, Actions, Results, testID) {
+
+
+    let data = {
+        test_id: testID,
+        actions_data: Actions,
+        results_data: Results,
+        previous_step_id: previousStepId
+    }
+
+
+    fetch('/new_step', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+        body: JSON.stringify(data)
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (!data.success) {
+                alert("Not possible to create the new step. Message: " + data.message);
+            } else {
+                ShowTestCase(testID)
+            }
+        })
+        .catch(err => {
+            console.error('Delete error:', err);
+            alert("Error contacting server.");
+        });
+
+    return;
+}
+
+function HandleEditStep(stepID, Actions, Results, StepElement) {
+
+    fetch('/save_step_data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+        body: JSON.stringify({
+            id: stepID,
+            actions_data: Actions,
+            results_data: Results
+        })
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (!data.success) {
+                alert("Not possible to save the step: " + stepID + ". Message: " + data.message);
+            } else { //if success
+                StepElement.querySelector(".stepActions").innerHTML = Actions
+                StepElement.querySelector(".stepResults").innerHTML = Results
+            }
+        })
+        .catch(err => {
+            console.error('Delete error:', err);
+            alert("Error contacting server.");
+        });
 
     return;
 }

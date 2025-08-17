@@ -4,6 +4,15 @@ from datetime import datetime
 
 
 class TestSteps():
+
+    @classmethod
+    def return_step_by_id(cls, step_id):
+        try:
+            step = DatabaseConnector.return_step_by_id(int(step_id))
+            return step,  f"Step{step_id} found"
+        except:
+            return False, f"No step was found for the id {step_id}"
+
     @classmethod
     def return_steps_from_test_cases(cls, test_case_id, test_case_version):
 
@@ -17,6 +26,64 @@ class TestSteps():
 
         except:
             return False, f"No steps found for the test case id = {test_case_id} and version = {test_case_version}"
+
+    @classmethod
+    def update_step_info(cls, step_id, actions_data, results_data):
+        try:
+            DatabaseConnector.update_step_data(
+                int(step_id),
+                actions_data,
+                results_data)
+            return True, "step updated"
+        except:
+            return False, f"No steps found for the id = {step_id}"
+
+    @classmethod
+    def create_new_step(cls, actions_data, results_data, test_id, version, previous_step_id):
+        previous_step_position = cls.return_step_by_id(
+            previous_step_id)[0].step_position
+
+        all_steps = cls.return_steps_from_test_cases(
+            int(test_id),
+            int(version)
+        )[1]
+
+        cls.update_steps_positions(all_steps, int(previous_step_position)+1)
+
+        result = DatabaseConnector.create_new_step(
+            int(version),
+            int(test_id),
+            actions_data,
+            results_data,
+            int(previous_step_position)+1
+        )
+
+        if (result):
+            return True, "New step added successfully"
+
+        return False, "It was not possible to create the new step"
+
+    @classmethod
+    def update_steps_positions(cls, steps_list, new_step_position):
+        increment = 0
+        for step in steps_list:
+            if (step.step_position == new_step_position):
+                increment = 1
+
+            if (increment):
+                DatabaseConnector.update_step_position(
+                    step.id,
+                    int(step.step_position) + increment
+                )
+
+    @classmethod
+    def delete_step(cls, step_id):
+        result = DatabaseConnector.delete_test_step_from_database(int(step_id))
+
+        if (result):
+            return True, f"step {step_id} deleted successfully"
+
+        return False, f"step {step_id} was not deleted"
 
 
 """

@@ -105,7 +105,8 @@
 
     <div id="testStepslist" class="list-group">
         {% for step in test_steps %}
-        <div class="list-group-item d-flex align-items-center step-item" data-step-id="{{ step.id }}">
+        <div class="list-group-item d-flex align-items-center step-item" data-step-id="{{ step.id }}"
+            id="{{ step.id }}">
 
             <i class="bi bi-grip-vertical me-3"></i>
             <div class="stepNumber fw-bold me-3">{{ step.step_position }}</div>
