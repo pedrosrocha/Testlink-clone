@@ -1,51 +1,55 @@
-<form id="edit-test-case-form">
-    <h5 class="mb-3">Edit Test Case</h5>
+<div class="bg-light shadow card my-0">
+    <form id="edit-test-case-form" class="p-4">
+        <h5 class="mb-3">Edit Test Case</h5>
 
-    <input type="hidden" id="testcase-id" value="{{testcase['id']}}">
-    <div class="mb-3">
-        <label for="testcase-name" class="form-label">Name</label>
-        <input type="text" class="form-control" id="testcase-name" name="name" required value="{{testcase['name']}}">
-    </div>
-
-    <div class=" mb-3">
-        <label for="testcase-description" class="form-label">Description</label>
-        <textarea class="form-control" id="testcase-description" name="description"
-            rows="3">{{testcase['description']}}</textarea>
-    </div>
-
-    <div class="mb-3">
-        <label for="testcase-preconditions" class="form-label">Preconditions</label>
-        <textarea class="form-control" id="testcase-preconditions" name="preconditions"
-            rows="2">{{testcase['preconditions']}}</textarea>
-    </div>
-
-    <div class="mb-3">
-        <label for="testcase-expected-results" class="form-label">Expected Result</label>
-        <textarea class="form-control" id="testcase-expected-results" name="expected_result"
-            rows="2">{{testcase['expected_result']}}</textarea>
-    </div>
-
-    <div class="row g-3 mb-3">
-        <div class="col-md-6">
-            <label for="testcase-priority" class="form-label">Priority</label>
-            <select class="form-select" id="testcase-priority" name="priority">
-                <option value="low" {% if testcase['priority']=='low' %} selected {% endif %}>Low</option>
-                <option value="medium" {% if testcase['priority']=='medium' %} selected {% endif %}>Medium</option>
-                <option value="high" {% if testcase['priority']=='high' %} selected {% endif %}>High</option>
-            </select>
+        <input type="hidden" id="testcase-id" value="{{testcase['id']}}">
+        <div class="mb-3">
+            <label for="testcase-name" class="form-label">Name</label>
+            <input type="text" class="form-control" id="testcase-name" name="name" required
+                value="{{testcase['name']}}">
         </div>
 
-        <div class="col-md-6">
-            <label for="testcase-status" class="form-label">Status</label>
-            <select class="form-select" id="testcase-status" name="status">
-                <option value="draft" {% if testcase['status']=='draft' %} selected {% endif %}>Draft</option>
-                <option value="final" {% if testcase['status']=='final' %} selected {% endif %}>Final</option>
-                <option value="deprecated" {% if testcase['status']=='deprecated' %} selected {% endif %}>Deprecated
-                </option>
-            </select>
+        <div class=" mb-3">
+            <label for="testcase-description" class="form-label">Description</label>
+            <textarea class="form-control" id="testcase-description" name="description"
+                rows="3">{{testcase['description']}}</textarea>
         </div>
-    </div>
 
-    <button type="submit" class="btn btn-success">Update Test Case</button>
+        <div class="mb-3">
+            <label for="testcase-preconditions" class="form-label">Preconditions</label>
+            <textarea class="form-control" id="testcase-preconditions" name="preconditions"
+                rows="2">{{testcase['preconditions']}}</textarea>
+        </div>
 
-</form>
+        <div class="mb-3">
+            <label for="testcase-expected-results" class="form-label">Expected Result</label>
+            <textarea class="form-control" id="testcase-expected-results" name="expected_result"
+                rows="2">{{testcase['expected_result']}}</textarea>
+        </div>
+
+        <div class="row g-3 mb-3">
+            <div class="col-md-6">
+                <label for="testcase-priority" class="form-label">Priority</label>
+                <select class="form-select" id="testcase-priority" name="priority">
+                    <option value="low" {% if testcase['priority']=='low' %} selected {% endif %}>Low</option>
+                    <option value="medium" {% if testcase['priority']=='medium' %} selected {% endif %}>Medium</option>
+                    <option value="high" {% if testcase['priority']=='high' %} selected {% endif %}>High</option>
+                </select>
+            </div>
+
+            <div class="col-md-6">
+                <label for="testcase-status" class="form-label">Status</label>
+                <select class="form-select" id="testcase-status" name="status">
+                    <option value="draft" {% if testcase['status']=='draft' %} selected {% endif %}>Draft</option>
+                    <option value="final" {% if testcase['status']=='final' %} selected {% endif %}>Final</option>
+                    <option value="deprecated" {% if testcase['status']=='deprecated' %} selected {% endif %}>Deprecated
+                    </option>
+                </select>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-success">Update Test Case</button>
+
+    </form>
+
+</div>

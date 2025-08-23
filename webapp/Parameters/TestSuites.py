@@ -62,8 +62,9 @@ class TestSuits():
     def copy_suite(cls, parent_id, suite_id, current_user, project_id):
         copied_suite = cls.return_suite_by_id(int(suite_id))
         testcases_inside_parent = DatabaseConnector.return_all_suites_names_ids(
-            int(parent_id),
-            int(project_id))
+            int(project_id),
+            int(parent_id)
+        )
 
         if not copied_suite:
             return False
@@ -74,7 +75,7 @@ class TestSuits():
             if test["name"] == copied_suite["name"]:
                 newName = newName + "(copy)"
 
-        suite_id = cls.add_suite(copied_suite["name"],
+        suite_id = cls.add_suite(newName,
                                  copied_suite["description"],
                                  parent_id,
                                  copied_suite["project_id"],

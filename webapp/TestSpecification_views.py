@@ -168,7 +168,23 @@ def paste_test_case():
     test_case_id = int(test_case_id[2:])
     parent_id = int(parent_id)
 
-    if TestCases.copy_test_case(parent_id, test_case_id, current_user.username):
+    new_id = TestCases.copy_test_case(
+        parent_id,
+        test_case_id,
+        current_user.username
+    )
+    if new_id:
+
+        current_version_to_copy = TestCases.return_testcase_by_id(test_case_id)[
+            "current_version"
+        ]
+
+        TestSteps.copy_steps(
+            test_case_id,
+            current_version_to_copy,
+            new_id
+        )
+
         return jsonify(success=True, message="Project updated successfully")
 
     return jsonify(success=False, error="Could not copy test case")
@@ -206,20 +222,30 @@ def paste_suite():
             return jsonify(success=False, error=f"Missing parent mapping for {old_parent_id}")
 
         if old_id.startswith('c_'):  # test case
-            result = TestCases.copy_test_case(
+            new_id = TestCases.copy_test_case(
                 new_parent_id,
                 old_id[2:],  # remove prefix 'c_'
                 current_user.username
             )
-            if not result:
+            if not new_id:
                 return jsonify(success=False, error=f"Could not create test case {old_id}")
+
+            current_version_to_copy = TestCases.return_testcase_by_id(old_id[2:])[
+                "current_version"
+            ]
+            TestSteps.copy_steps(
+                old_id[2:],  # remove prefix 'c_')
+                current_version_to_copy,
+                new_id
+            )
 
         else:  # suite
             new_suite_id = TestSuits.copy_suite(
                 new_parent_id,
                 old_id,
                 current_user.username,
-                session.get('current_project_id'))
+                session.get('current_project_id')
+            )
 
             if not new_suite_id:
                 return jsonify(success=False, error=f"Could not create suite {old_id}")
@@ -357,7 +383,20 @@ def new_test_case_version():
     data = request.get_json()
     id = data.get('id')[2:]
 
+    testcase_previous_version = TestCases.return_testcase_by_id(id)[
+        "current_version"]
+
     if (TestCases.new_test_version(id, current_user.username)):
+        testcase_new_version = TestCases.return_testcase_by_id(id)[
+            "current_version"
+        ]
+
+        TestSteps.copy_steps_new_version(
+            id,
+            testcase_previous_version,
+            testcase_new_version
+        )
+
         return jsonify(success=True, message="Test version created  successfuly")
 
     return jsonify(success=False, message="It was not possible to create the new version")
@@ -433,8 +472,10 @@ def new_step():
 def delete_step():
     data = request.get_json()
     step_id = data.get('step_id')
+    test_id = data.get('test_id')
 
-    results = TestSteps.delete_step(step_id)
+    test_version = TestCases.return_testcase_by_id(test_id)["current_version"]
+    results = TestSteps.delete_step(step_id, test_id, test_version)
 
     if (results[0]):
         return jsonify(success=True, message=f"Step {step_id} deleted")

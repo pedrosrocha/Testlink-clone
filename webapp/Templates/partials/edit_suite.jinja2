@@ -1,16 +1,18 @@
-<form id="edit-suite-form">
-    <h5 class="mb-3">Edit Test Suite</h5>
+<div class="bg-light shadow card my-0">
+    <form id="edit-suite-form" class="p-4">
+        <h5 class="mb-3">Edit Test Suite</h5>
 
-    <div class="mb-3">
-        <label for="edit-suite-name" class="form-label">Name</label>
-        <input type="text" class="form-control" id="edit-suite-name" name="name" required value="{{suite['name']}}">
-    </div>
+        <div class="mb-3">
+            <label for="edit-suite-name" class="form-label">Name</label>
+            <input type="text" class="form-control" id="edit-suite-name" name="name" required value="{{suite['name']}}">
+        </div>
 
-    <div class="mb-3">
-        <label for="edit-suite-description" class="form-label">Description</label>
-        <textarea class="form-control" id="edit-suite-description" name="description"
-            rows="3">{{suite['description']}}</textarea>
-    </div>
+        <div class="mb-3">
+            <label for="edit-suite-description" class="form-label">Description</label>
+            <textarea class="form-control" id="edit-suite-description" name="description"
+                rows="3">{{suite['description']}}</textarea>
+        </div>
 
-    <button type="submit" class="btn btn-success">Update Suite</button>
-</form>
+        <button type="submit" class="btn btn-success">Update Suite</button>
+    </form>
+</div>

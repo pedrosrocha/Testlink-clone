@@ -33,16 +33,16 @@ class TestCases():
                 newName = current_datetime.ctime() + " : " + newName
                 break
 
-        cls.add_testcase(newName,
-                         copied_testcase["description"],
-                         copied_testcase["preconditions"],
-                         copied_testcase["expected_result"],
-                         copied_testcase["status"],
-                         copied_testcase["priority"],
-                         parent_id,
-                         current_user,
-                         current_user)
-        return True
+        new_id = cls.add_testcase(newName,
+                                  copied_testcase["description"],
+                                  copied_testcase["preconditions"],
+                                  copied_testcase["expected_result"],
+                                  copied_testcase["status"],
+                                  copied_testcase["priority"],
+                                  parent_id,
+                                  current_user,
+                                  current_user)
+        return new_id
 
     @classmethod
     def add_testcase(cls, test_name, Description, precondition, expected_result, status, priority, suite_id, created_by, last_updated_by):
@@ -126,11 +126,13 @@ class TestCases():
 
         updated_versions_list = updated_versions_list + str(latest_version + 1)
 
-        return (cls.update_testcase_data(
-            int(testcase_id),
-            last_updated_by=current_user_name,
-            versions=updated_versions_list,
-            current_version=latest_version + 1))
+        return (
+            cls.update_testcase_data(
+                int(testcase_id),
+                last_updated_by=current_user_name,
+                versions=updated_versions_list,
+                current_version=latest_version + 1)
+        )
 
     @classmethod
     def delete_current_version(cls, testcase_id):

@@ -420,6 +420,10 @@ function HandleEditTestCase(event, id) {
         .then(data => {
             if (data.success) {
                 ShowTestCase(testcaseId); // Reload the test case view
+                const tree = $('#testTree').jstree(true);
+                const testcaseNode = tree.get_node(testcaseId);
+                const ParentNode = tree.get_node(testcaseNode.parent);
+                tree.refresh_node(ParentNode);
             } else {
                 alert('Error updating test case: ' + data.error);
             }
@@ -452,6 +456,11 @@ function HandleEditSuite(event, id) {
         .then(data => {
             if (data.success) {
                 ShowSuite(suiteID); // Reload the test case view
+
+                const tree = $('#testTree').jstree(true);
+                const suiteNode = tree.get_node(suiteID);
+                const ParentNode = tree.get_node(suiteNode.parent);
+                tree.refresh_node(ParentNode);
             } else {
                 alert('Error updating suite: ' + data.error);
             }
@@ -739,6 +748,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const contentWrapperClicked = e.target.closest('.step-content-wrapper');
         const NumberClicked = e.target.closest('.stepNumber')
         const deleteBtn = e.target.closest('.btn-delete');
+        const editBtn = e.target.closest('.btn-edit');
 
         // --- Handle "Add Step After" Click ---
         if (addBtn) {
@@ -753,10 +763,16 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         // --- Handle "Edit Step" Click ---
-        if (NumberClicked || contentWrapperClicked) {
+        if (NumberClicked || contentWrapperClicked || editBtn) {
 
             e.preventDefault();
-            const stepItem = contentWrapperClicked.closest('.step-item');
+            let stepItem = "";
+            if (contentWrapperClicked) {
+                stepItem = contentWrapperClicked.closest('.step-item');
+            } else {
+                stepItem = editBtn.closest('.step-item');
+            }
+
             showEditor({
                 position: 'replace',
                 referenceElement: stepItem
@@ -827,16 +843,29 @@ function showEditor(options) {
     const commonConfig = {
         height: 250,
         menubar: false,
-        plugins: 'table lists link',
-        toolbar: 'undo redo | bold italic | bullist numlist | table'
+        plugins: [
+            'advlist', 'autolink', 'link', 'image', 'lists', 'charmap', 'preview', 'anchor', 'pagebreak',
+            'searchreplace', 'wordcount', 'visualblocks', 'visualchars', 'code', 'fullscreen', 'insertdatetime',
+            'media', 'table', 'emoticons', 'help'
+        ],
+        toolbar: 'undo redo | bold italic | alignleft aligncenter alignright alignjustify | forecolor backcolor'
     };
 
     tinymce.init({
         ...commonConfig,
         selector: `#${actionsTextarea.id}`,
-        license_key: 'gpl'
-    }
-    );
+        license_key: 'gpl',
+        menu: {
+            edit: { title: 'Edit', items: 'undo redo | cut copy paste pastetext | selectall | searchreplace' },
+            view: { title: 'View', items: 'code suggestededits revisionhistory | visualaid visualchars visualblocks | spellchecker | preview fullscreen | showcomments' },
+            insert: { title: 'Insert', items: 'image link addcomment pageembed codesample | math | charmap hr | pagebreak nonbreaking tableofcontents | insertdatetime' },
+            format: { title: 'Format', items: 'bold italic underline strikethrough superscript subscript codeformat | styles blocks fontfamily fontsize align lineheight | forecolor backcolor | language | removeformat' },
+            tools: { title: 'Tools', items: 'spellchecker spellcheckerlanguage | a11ycheck code wordcount' },
+            table: { title: 'Table', items: 'inserttable | cell row column | advtablesort | tableprops deletetable' },
+            help: { title: 'Help', items: 'help' }
+        },
+        menubar: ' edit | view | insert | format | tools | table | help'
+    });
 
     tinymce.init({
         ...commonConfig,
@@ -883,8 +912,6 @@ function showEditor(options) {
             stepID,
             newActions,
             newResults,
-            options.referenceElement,
-            document.getElementById("details-pane").dataset.testId,
         )
 
     });
@@ -896,7 +923,10 @@ function HandleDeleteStep(StepID) {
     fetch('/delete_step', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-        body: JSON.stringify({ step_id: StepID })
+        body: JSON.stringify({
+            step_id: StepID,
+            test_id: testID
+        })
     })
         .then(response => response.json())
         .then(data => {
@@ -914,8 +944,9 @@ function HandleDeleteStep(StepID) {
     return;
 }
 
-function HandleSaveStep(previousStepId, Actions, Results, testID) {
+function HandleSaveStep(previousStepId, Actions, Results) {
 
+    const testID = document.getElementById("details-pane").dataset.testId;
 
     let data = {
         test_id: testID,
