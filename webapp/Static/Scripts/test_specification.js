@@ -5,13 +5,16 @@ const divider = document.getElementById('divider');
 let currentSuiteId = null;
 let currentTestCaseId = null;
 let StepAlreadyClicked = false;
-
+let EditingSteps = false;
+var sortablehandler;
 
 let isResizing = false;
+
 let clipboard = {
     node: null,
     action: null // 'copy' or 'cut'
 };
+
 
 divider.addEventListener('mousedown', (e) => {
     isResizing = true;
@@ -568,9 +571,29 @@ function ShowTestCase(testcaseId) {
         .then(response => response.text())
         .then(html => {
             document.getElementById("details-pane").innerHTML = html;
+
+
             CreateSortable();
+
+
+
+            const SpanEditModeValue = document.querySelector('#editing-steps-value');
+
+            if (!SpanEditModeValue) return;
+
+            if (SpanEditModeValue.innerHTML === "False") {
+                SwitchElementsEditMode(false);
+                EditingSteps = false;
+                return;
+            }
+
+            SwitchElementsEditMode(true);
+            EditingSteps = true;
+            return;
         })
         .catch(err => console.error("Error loading the test case:", err));
+
+
 }
 
 function ShowSuite(suiteID) {
@@ -723,12 +746,14 @@ document.addEventListener('DOMContentLoaded', function () {
 function CreateSortable() {
     const sortableList = document.getElementById('testStepslist');
 
+
     if (sortableList) {
-        Sortable.create(sortableList, {
+        sortablehandler = Sortable.create(sortableList, {
             handle: '.bi-grip-vertical',
             animation: 150
         });
     }
+
 }
 
 
@@ -749,9 +774,13 @@ document.addEventListener('DOMContentLoaded', function () {
         const NumberClicked = e.target.closest('.stepNumber')
         const deleteBtn = e.target.closest('.btn-delete');
         const editBtn = e.target.closest('.btn-edit');
+        const editStepsBtn = e.target.closest('.btn-check');
 
         // --- Handle "Add Step After" Click ---
         if (addBtn) {
+
+            if (!EditingSteps) return; //If the test is not in edidting mode
+
             e.preventDefault();
             const stepItem = addBtn.closest('.step-item');
             showEditor({
@@ -764,6 +793,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // --- Handle "Edit Step" Click ---
         if (NumberClicked || contentWrapperClicked || editBtn) {
+
+            if (!EditingSteps) return; //If the test is not in edidting mode
 
             e.preventDefault();
             let stepItem = "";
@@ -782,6 +813,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // --- Handle "Delete Step" Click ---
         if (deleteBtn) {
+            if (!EditingSteps) return; //If the test is not in edidting mode
+
             e.preventDefault();
             const stepItem = deleteBtn.closest('.step-item');
             const stepId = stepItem.dataset.stepId;
@@ -791,6 +824,44 @@ document.addEventListener('DOMContentLoaded', function () {
                 HandleDeleteStep(stepId)
             }
             return;
+        }
+
+        if (editStepsBtn) {
+            const EditingStepsButton = document.getElementById("btn-steps-editing");
+            const SpanEditModeValue = document.querySelector('#editing-steps-value');
+
+            if (EditingSteps) {
+                SwitchElementsEditMode(false);
+
+                EditingSteps = false;
+                EditingStepsButton.innerHTML = "Enable edit mode";
+                SpanEditModeValue.innerHTML = "False";
+
+            } else {
+                SwitchElementsEditMode(true);
+
+                EditingSteps = true;
+                EditingStepsButton.innerHTML = "Disable edit mode"
+                SpanEditModeValue.innerHTML = "True";
+            }
+
+
+            fetch('/set_edit_mode', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                body: JSON.stringify({
+                    edit_mode: EditingSteps,
+                })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.success) {
+                        alert("Not possible to set the edit mode. Message: " + data.message);
+                    }
+                })
+                .catch(err => {
+                    console.error('Delete error:', err);
+                });
         }
 
     });
@@ -842,29 +913,42 @@ function showEditor(options) {
     // Initialize TinyMCE on the newly added textareas
     const commonConfig = {
         height: 250,
-        menubar: false,
+        menubar: true,
+        promotion: false,
+        resize: true,
+        branding: false,
         plugins: [
-            'advlist', 'autolink', 'link', 'image', 'lists', 'charmap', 'preview', 'anchor', 'pagebreak',
-            'searchreplace', 'wordcount', 'visualblocks', 'visualchars', 'code', 'fullscreen', 'insertdatetime',
-            'media', 'table', 'emoticons', 'help'
+            'advlist', 'autolink', 'link', 'lists', 'charmap', 'preview',
+            'searchreplace', 'wordcount', 'visualblocks', 'visualchars', 'code', 'fullscreen',
+            'insertdatetime', 'table', 'help', 'autoresize'
         ],
-        toolbar: 'undo redo | bold italic | alignleft aligncenter alignright alignjustify | forecolor backcolor'
+        toolbar: 'undo redo | bold italic | alignleft aligncenter alignright alignjustify | forecolor backcolor',
+        menu: {
+            edit: { title: 'Edit', items: 'undo redo | cut copy paste pastetext | selectall | searchreplace' },
+            view: { title: 'View', items: 'code suggestededits revisionhistory | visualaid visualchars visualblocks | spellchecker | preview fullscreen | showcomments' },
+            insert: { title: 'Insert', items: 'link addcomment pageembed codesample | math | charmap hr | nonbreaking tableofcontents | insertdatetime' },
+            format: { title: 'Format', items: 'bold italic underline strikethrough superscript subscript codeformat | styles blocks fontfamily fontsize align lineheight | forecolor backcolor | language | removeformat' },
+            tools: { title: 'Tools', items: 'code | wordcount' },
+            table: { title: 'Table', items: 'inserttable | cell row column | advtablesort | tableprops deletetable' },
+            help: { title: 'Help', items: 'help' }
+        },
+        menubar: ' edit | view | insert | format | tools | table | help',
+        link_default_target: '_blank',
+        autoresize_bottom_margin: 10,
+        max_height: 500,
+        min_height: 100,
+        table_border_widths: [
+            { title: 'small', value: '2px' },
+            { title: 'medium', value: '3px' },
+            { title: 'large', value: '6px' },
+        ],
+
     };
 
     tinymce.init({
         ...commonConfig,
         selector: `#${actionsTextarea.id}`,
         license_key: 'gpl',
-        menu: {
-            edit: { title: 'Edit', items: 'undo redo | cut copy paste pastetext | selectall | searchreplace' },
-            view: { title: 'View', items: 'code suggestededits revisionhistory | visualaid visualchars visualblocks | spellchecker | preview fullscreen | showcomments' },
-            insert: { title: 'Insert', items: 'image link addcomment pageembed codesample | math | charmap hr | pagebreak nonbreaking tableofcontents | insertdatetime' },
-            format: { title: 'Format', items: 'bold italic underline strikethrough superscript subscript codeformat | styles blocks fontfamily fontsize align lineheight | forecolor backcolor | language | removeformat' },
-            tools: { title: 'Tools', items: 'spellchecker spellcheckerlanguage | a11ycheck code wordcount' },
-            table: { title: 'Table', items: 'inserttable | cell row column | advtablesort | tableprops deletetable' },
-            help: { title: 'Help', items: 'help' }
-        },
-        menubar: ' edit | view | insert | format | tools | table | help'
     });
 
     tinymce.init({
@@ -1002,5 +1086,33 @@ function HandleEditStep(stepID, Actions, Results, StepElement) {
             alert("Error contacting server.");
         });
 
+    return;
+}
+
+function SwitchElementsEditMode(EnableEditMode) {
+    const editStepButtons = document.querySelectorAll('.btn-edit');
+    const deleteStepButtons = document.querySelectorAll('.btn-delete');
+    const addtepButtons = document.querySelectorAll('.btn-add-after');
+    const addStepEndButton = document.querySelectorAll("#btn-add-new-step");
+    const EditingStepsButton = document.getElementById("btn-steps-editing");
+
+
+    if (EnableEditMode) {
+        editStepButtons.forEach(button => { button.removeAttribute('hidden') });
+        deleteStepButtons.forEach(button => { button.removeAttribute('hidden') });
+        addtepButtons.forEach(button => { button.removeAttribute('hidden') });
+        addStepEndButton.forEach(button => { button.removeAttribute('hidden') });
+        EditingStepsButton.removeAttribute("check");
+
+        sortablehandler.option("disabled", false);
+        return;
+    }
+
+    editStepButtons.forEach(button => { button.setAttribute('hidden', 'true') });
+    deleteStepButtons.forEach(button => { button.setAttribute('hidden', 'true') });
+    addtepButtons.forEach(button => { button.setAttribute('hidden', 'true') });
+    addStepEndButton.forEach(button => { button.setAttribute('hidden', 'true') });
+    EditingStepsButton.setAttribute("check", "true");
+    sortablehandler.option("disabled", true);
     return;
 }

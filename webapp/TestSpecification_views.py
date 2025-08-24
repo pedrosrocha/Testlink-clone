@@ -19,11 +19,15 @@ def TestSpecification():
             _current_project_id = int(projects.return_oldest_project()["id"])
             session["current_project_id"] = int(_current_project_id)
 
+        if (not session.get('editing_steps')):
+            session["editing_steps"] = False
+
         _current_project_id = int(session.get('current_project_id'))
         return render_template('test_specification.jinja2',
                                projects=projects.return_all_projects(),
                                current_project_id=_current_project_id,
-                               user=current_user)
+                               user=current_user
+                               )
 
 
 @TestSpecification_views.route('/get_test_tree_root')
@@ -300,7 +304,9 @@ def get_testcase_html(testcase_id):
     if not teststeps[0]:
         return f"test case steps id = {testcase_id} not found"
 
-    return render_template('partials/testcase_card.html', testcase=_testcase, test_steps=teststeps[1])
+    return render_template('partials/testcase_card.jinja2',
+                           testcase=_testcase, test_steps=teststeps[1],
+                           editing_steps=session.get('editing_steps'))
 
 
 @TestSpecification_views.route('/get_suite_html/<int:suite_id>', methods=['GET'])
@@ -481,3 +487,20 @@ def delete_step():
         return jsonify(success=True, message=f"Step {step_id} deleted")
 
     return jsonify(success=False, message=f"Step {step_id} was not deleted. error: "+results[1])
+
+
+@TestSpecification_views.route("/set_edit_mode", methods=['POST'])
+def set_edit_mode():
+    data = request.get_json()
+    edit_mode = data.get('edit_mode')
+
+    session["editing_steps"] = edit_mode
+    return jsonify(success=True, message="edit mode updated")
+
+
+@TestSpecification_views.route("/get_edit_mode", methods=['GET'])
+def get_edit_mode():
+
+    current_user.editing_steps
+
+    return jsonify(success=True, data=current_user.editing_steps, message="edit mode updated")
