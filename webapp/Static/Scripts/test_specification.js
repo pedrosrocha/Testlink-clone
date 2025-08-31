@@ -9,11 +9,13 @@ let EditingSteps = false;
 var sortablehandler;
 
 let isResizing = false;
-
+let debounceTimer;
 let clipboard = {
     node: null,
     action: null // 'copy' or 'cut'
 };
+let new_steps_order_payload = null;
+let stepid_clipboard = null;
 
 
 divider.addEventListener('mousedown', (e) => {
@@ -573,7 +575,7 @@ function ShowTestCase(testcaseId) {
             document.getElementById("details-pane").innerHTML = html;
 
 
-            CreateSortable();
+            CreateSortable(testcaseId);
 
 
 
@@ -743,16 +745,41 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 //--------------------------- steps --------------------
-function CreateSortable() {
+function CreateSortable(testcaseId) {
     const sortableList = document.getElementById('testStepslist');
+    if (!sortableList) return;
 
+    sortablehandler = Sortable.create(sortableList, {
+        handle: '.bi-grip-vertical',
+        animation: 150,
+        dataIdAttr: 'data-step-id', // HTML attribute that is used by the `toArray()` method
+        swapThreshold: 10, // Threshold of the swap zone
+        direction: 'horizontal', // Direction of Sortable (will be detected automatically if not given)
+        onChange: function () {
 
-    if (sortableList) {
-        sortablehandler = Sortable.create(sortableList, {
-            handle: '.bi-grip-vertical',
-            animation: 150
-        });
-    }
+            const steps_positions = this.toArray();
+            //As the steps position alteration have a timeout, a backup is need to save the last altartion in case of the page being reloaded or unloaded
+            new_steps_order_payload = { id: testcaseId, steps: steps_positions };
+
+            if (debounceTimer) clearTimeout(debounceTimer);
+
+            debounceTimer = setTimeout(() => {
+                HandlePositionChange(testcaseId, steps_positions);
+            }, 2000);
+
+        },
+        onEnd: function () {
+
+            const all_steps_positions = document.querySelectorAll('.stepNumber');
+
+            for (let position = 0; position < all_steps_positions.length; position++) {
+                all_steps_positions[position].innerHTML = position + 1;
+            }
+
+        }
+
+    });
+
 
 }
 
@@ -761,11 +788,7 @@ function CreateSortable() {
 
 document.addEventListener('DOMContentLoaded', function () {
 
-    // --- EVENT DELEGATION FOR DYNAMIC CONTENT ---
-
-
     const detailsPane = document.getElementById('details-pane');
-    // Attach ONE listener to the parent container
     detailsPane.addEventListener('click', function (e) {
 
         // Check what was clicked using .closest()
@@ -800,7 +823,8 @@ document.addEventListener('DOMContentLoaded', function () {
             let stepItem = "";
             if (contentWrapperClicked) {
                 stepItem = contentWrapperClicked.closest('.step-item');
-            } else {
+            }
+            if (editBtn) {
                 stepItem = editBtn.closest('.step-item');
             }
 
@@ -895,6 +919,7 @@ function showEditor(options) {
     resultsTextarea.id = uniqueId + '-results';
 
     // If editing, populate the editor with existing content
+    if (!options.referenceElement) return;
     if (options.position === 'replace') {
         const content = options.referenceElement.querySelector('.step-content-wrapper');
         actionsTextarea.value = content.querySelector('.stepActions').innerHTML;
@@ -942,6 +967,7 @@ function showEditor(options) {
             { title: 'medium', value: '3px' },
             { title: 'large', value: '6px' },
         ],
+        help_accessibility: false,
 
     };
 
@@ -1116,3 +1142,170 @@ function SwitchElementsEditMode(EnableEditMode) {
     sortablehandler.option("disabled", true);
     return;
 }
+
+function HandlePositionChange(testcaseId, new_steps_order) {
+
+    fetch('/reorder_steps', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+        body: JSON.stringify({ id: testcaseId, steps: new_steps_order })
+    })
+        .then(response => response.json())
+        .then(data => {
+            //As the steps position were already changed, it is not necessary to save this payload
+            new_steps_order_payload = null;
+
+            if (!data.success) {
+                alert("reorder failed: " + data.error);
+            } else {
+                const currentID = document.getElementById("details-pane").dataset.testId;
+                if (currentID != testcaseId) return;
+
+                ShowTestCase(testcaseId);
+            }
+        })
+        .catch(err => {
+            console.error('reorder error:', err);
+            alert("Error contacting server.");
+        });
+}
+
+window.addEventListener("beforeunload", () => {
+
+    //Handles sending the last position saved from the step ordr altetion
+    if (new_steps_order_payload) {
+        const steps = new Blob(
+            [JSON.stringify(new_steps_order_payload)],
+            { type: 'application/json' }
+        );
+
+        navigator.sendBeacon("/reorder_steps", steps);
+    }
+
+
+});
+
+//context menu handler
+document.addEventListener('DOMContentLoaded', function () {
+
+    const listContainer = document.getElementById('details-pane');
+    const contextMenu = document.getElementById('step-context-menu');
+    let currentStepElement = null; // To store which step was clicked
+
+    // Show the context menu on right-click inside the list
+    listContainer.addEventListener('contextmenu', function (e) {
+        const targetStep = e.target.closest('.step-item');
+        if (!EditingSteps) return; //If the test is not in edidting mode
+
+        if (targetStep) {
+            //Handles the context menu exhbition considering the window dimensions 
+            e.preventDefault();
+            currentStepElement = targetStep;
+
+            const windowHeight = window.innerHeight;
+            const windowWidth = window.innerWidth;
+            const menuHeight = contextMenu.offsetHeight;
+            const menuWidth = contextMenu.offsetWidth;
+
+            let topPosition = e.clientY;
+            if ((e.clientY + menuHeight) > windowHeight) {
+                topPosition = e.clientY - menuHeight;
+            }
+
+            let leftPosition = e.clientX;
+            if ((e.clientX + menuWidth) > windowWidth) {
+                leftPosition = e.clientX - menuWidth;
+            }
+            contextMenu.style.top = `${topPosition}px`;
+            contextMenu.style.left = `${leftPosition}px`;
+            contextMenu.classList.add('show');
+        }
+    });
+
+    // Hide the menu when clicking anywhere else on the page
+    window.addEventListener('click', function () {
+        if (contextMenu.classList.contains('show')) {
+            contextMenu.classList.remove('show');
+        }
+    });
+
+    // Handle clicks on the menu action items
+    contextMenu.addEventListener('click', function (e) {
+        e.preventDefault();
+        const action = e.target.closest('.dropdown-item')?.dataset.action;
+
+        let stepItem = currentStepElement.closest('.step-item');
+        if (action && currentStepElement) {
+
+            switch (action) {
+                case 'edit':
+                    if (!EditingSteps) return; //If the test is not in edidting mode
+
+                    e.preventDefault();
+
+                    showEditor({
+                        position: 'replace',
+                        referenceElement: stepItem
+                    });
+                    break;
+                case 'copy':
+                    stepid_clipboard = stepItem.dataset.stepId;
+                    break;
+                case 'paste':
+
+                    if (!stepid_clipboard) break;
+
+                    const testID = document.getElementById("details-pane").dataset.testId;
+                    fetch('/copy_step', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                        body: JSON.stringify({
+                            copied_step_id: stepid_clipboard,
+                            test_id: testID,
+                            clicked_step_id: stepItem.dataset.stepId
+                        })
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (!data.success) {
+                                alert("Rename failed: " + data.message);
+                            } else {
+                                ShowTestCase(testID);
+                            }
+                        })
+                        .catch(err => {
+                            console.error('Rename error:', err);
+                            alert("Error contacting server.");
+                        });
+
+                    stepid_clipboard = null;
+                    break;
+                case 'delete':
+                    if (!EditingSteps) return; //If the test is not in edidting mode
+
+                    e.preventDefault();
+
+                    const stepId = stepItem.dataset.stepId;
+
+                    if (confirm('Are you sure you want to delete this step?')) {
+                        console.log(`Deleting step with ID: ${stepId}`);
+                        HandleDeleteStep(stepId)
+                    }
+                    break;
+                case 'add':
+
+                    if (!EditingSteps) return; //If the test is not in edidting mode
+
+                    e.preventDefault();
+                    showEditor({
+                        position: 'after',
+                        referenceElement: stepItem
+                    });
+
+                    break;
+            }
+        }
+
+        contextMenu.classList.remove('show');
+    });
+});

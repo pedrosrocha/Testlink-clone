@@ -127,3 +127,14 @@ html {
     background-color: #dee2e6;
     margin: 0.25rem 0;
 }
+
+
+#step-context-menu {
+    position: fixed;
+    display: none;
+    z-index: 1050;
+}
+
+#step-context-menu.show {
+    display: block;
+}

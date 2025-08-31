@@ -59,5 +59,23 @@
     </div>
 </template>
 
+<div id="step-context-menu" class="dropdown-menu shadow-sm">
+    <a href="#" class="dropdown-item" data-action="edit">
+        <i class="bi bi-pencil-square me-2"></i>Edit
+    </a>
+    <a href="#" class="dropdown-item" data-action="add">
+        <i class="bi bi-plus-circle"></i> New Step
+    </a>
+    <a href="#" class="dropdown-item" data-action="copy">
+        <i class="bi bi-files me-2"></i>Copy
+    </a>
+    <a href="#" class="dropdown-item text-dark" data-action="paste">
+        <i class="bi bi-file-earmark-text"></i> Paste
+    </a>
+    <div class="dropdown-divider"></div>
+    <a href="#" class="dropdown-item text-danger" data-action="delete">
+        <i class="bi bi-trash me-2"></i>Delete
+    </a>
 
+</div>
 {% endblock %}

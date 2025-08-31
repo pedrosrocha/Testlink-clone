@@ -269,7 +269,7 @@ def move_suite():
     if TestSuits.update_suite_data(suite_id, None, project, None, parent_id):
         return jsonify(success=True, message="Project updated successfully")
 
-    return jsonify(success=False, message="Project not updated")
+    return jsonify(success=False, error="Project not updated")
 
 
 @TestSpecification_views.route('/move_test', methods=['POST'])
@@ -287,7 +287,7 @@ def move_test():
     if test_case_data:
         return jsonify(success=True, message="Project updated successfully")
 
-    return jsonify(success=False, message="Project not updated")
+    return jsonify(success=False, error="Project not updated")
 
 
 @TestSpecification_views.route('/get_testcase_html/<int:testcase_id>', methods=['GET'])
@@ -368,7 +368,7 @@ def update_test_case():
                                        current_user.username)):
         return jsonify(success=True, message="Test updated successfuly")
 
-    return jsonify(success=False, message="It was not possible to update the test information")
+    return jsonify(success=False, error="It was not possible to update the test information")
 
 
 @TestSpecification_views.route("/update_suite", methods=['POST'])
@@ -381,7 +381,7 @@ def update_suite():
     if (TestSuits.update_suite_data(id, name, False, description, None)):
         return jsonify(success=True, message="Suite updated successfuly")
 
-    return jsonify(success=False, message="It was not possible to update the suite information")
+    return jsonify(success=False, error="It was not possible to update the suite information")
 
 
 @TestSpecification_views.route("/new_test_case_version", methods=['POST'])
@@ -405,7 +405,7 @@ def new_test_case_version():
 
         return jsonify(success=True, message="Test version created  successfuly")
 
-    return jsonify(success=False, message="It was not possible to create the new version")
+    return jsonify(success=False, error="It was not possible to create the new version")
 
 
 @TestSpecification_views.route("/update_test_case_version", methods=['POST'])
@@ -417,7 +417,7 @@ def update_test_case_version():
     if (TestCases.update_testcase_data(id, current_version=version)):
         return jsonify(success=True, message="Test version created  successfuly")
 
-    return jsonify(success=False, message="It was not possible to create the new version")
+    return jsonify(success=False, error="It was not possible to create the new version")
 
 
 @TestSpecification_views.route("/delete_testcase_version", methods=['POST'])
@@ -429,7 +429,7 @@ def delete_testcase_version():
     if (command_execution[0]):
         return jsonify(success=True, message="Test version deleted successfuly")
 
-    return jsonify(success=False, message=command_execution[1])
+    return jsonify(success=False, error=command_execution[1])
 
 
 @TestSpecification_views.route("/save_step_data", methods=['POST'])
@@ -442,7 +442,7 @@ def save_step_data():
     result = TestSteps.update_step_info(step_id, actions_data, results_data)
 
     if (not result[0]):
-        return jsonify(success=False, message=f"It was not possible to save the step {step_id} error: {result[1]}")
+        return jsonify(success=False, error=f"It was not possible to save the step {step_id} error: {result[1]}")
 
     return jsonify(success=True, message="Step saved")
 
@@ -458,7 +458,7 @@ def new_step():
     testcase = TestCases.return_testcase_by_id(test_id)
 
     if (not testcase):
-        return jsonify(success=False, message="test case for this step was not found")
+        return jsonify(success=False, error="test case for this step was not found")
 
     results = TestSteps.create_new_step(
         actions,
@@ -471,7 +471,7 @@ def new_step():
     if (results[0]):
         return jsonify(success=True, message="Step saved: "+results[1])
 
-    return jsonify(success=False, message="Step not saved: "+results[1])
+    return jsonify(success=False, error="Step not saved: "+results[1])
 
 
 @TestSpecification_views.route("/delete_step", methods=['POST'])
@@ -486,7 +486,7 @@ def delete_step():
     if (results[0]):
         return jsonify(success=True, message=f"Step {step_id} deleted")
 
-    return jsonify(success=False, message=f"Step {step_id} was not deleted. error: "+results[1])
+    return jsonify(success=False, error=f"Step {step_id} was not deleted. error: "+results[1])
 
 
 @TestSpecification_views.route("/set_edit_mode", methods=['POST'])
@@ -504,3 +504,46 @@ def get_edit_mode():
     current_user.editing_steps
 
     return jsonify(success=True, data=current_user.editing_steps, message="edit mode updated")
+
+
+@TestSpecification_views.route("/reorder_steps", methods=['POST'])
+def reorder_steps():
+    data = request.get_json()
+    test_case_id = data.get('id')
+    steps_ids_in_order = data.get('steps')
+
+    result = TestSteps.reorder_steps_position(steps_ids_in_order)
+
+    if (not result.executed):
+        return jsonify(success=False, error=f"It was not possible to chnage the steps order of the test {test_case_id}. error: {result.error}")
+
+    return jsonify(success=True, message=f"steps updated for the test {test_case_id}")
+
+
+@TestSpecification_views.route("/copy_step", methods=['POST'])
+def copy_step():
+    data = request.get_json()
+
+    copied_step_id = data.get('copied_step_id')
+    test_id = data.get('test_id')
+    clicked_step_id = data.get("clicked_step_id")
+
+    Old_step = TestSteps.return_step_by_id(copied_step_id)
+    if (not Old_step[1]):
+        return jsonify(success=False, error=f"Error readingf the step id {copied_step_id}")
+
+    testcase = TestCases.return_testcase_by_id(test_id)
+
+    if (not testcase):
+        return jsonify(success=False, error=f"test case for the step {clicked_step_id} was not found")
+
+    result = TestSteps.create_new_step(
+        Old_step[0]["step_action"],
+        Old_step[0]["expected_value"],
+        testcase["id"],
+        testcase["current_version"],
+        clicked_step_id
+    )
+    if (not result[0]):
+        return jsonify(success=False, error=f"Error copying the step  {copied_step_id}. error{result[1]}")
+    return jsonify(success=True, message=f"step created successfuly")
