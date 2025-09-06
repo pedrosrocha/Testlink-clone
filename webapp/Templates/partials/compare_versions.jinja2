@@ -1,0 +1,92 @@
+<div class="card my-0 shadow" style="max-width: auto;" id="compare-testcase-panel">
+    <div class="card-body bg-light">
+        <h5 class="card-title">
+            Test case: <span id="testcase-name">{{ testcase.name }}</span>
+        </h5>
+        <div class="d-flex flex-wrap">
+
+            <div class="dropdown gap-2 mb-3 mt-2 p-2">
+
+                <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" id="versionDropdown-1"
+                    data-bs-toggle="dropdown" aria-expanded="false" current-version={{left_dropdown_version}}>
+                    <i class="bi bi-clock-history"></i> Version {{ left_dropdown_version}}
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="versionDropdown1" id="version-list-1">
+                    {% for version in testcase.versions %}
+                    <li class="dropdown-item version-option" data-version-id="{{ version }}" position="left">
+                        Version {{ version }}
+
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <div class="dropdown gap-2 mb-3 mt-2 p-2">
+                <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" id="versionDropdown-2"
+                    data-bs-toggle="dropdown" aria-expanded="false" current-version={{right_dropdown_version}}>
+                    <i class="bi bi-clock-history"></i> Version {{ right_dropdown_version }}
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="versionDropdown2" id="version-list-2">
+                    {% for version in testcase.versions %}
+                    <li class="dropdown-item version-option" data-version-id="{{ version }}" position="right">
+                        Version {{ version }}
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+
+<br>
+<!--
+<div class="comparation-versions-div">
+
+    <div class="card my-0 shadow" id="testcase-steps-panel-1">
+        <div class="card-header">
+            Version {{ testcase.current_version }}
+        </div>
+        <div id="testStepslist-1" class="list-group list-group-flush">
+            {% for step in test_steps_v1 %}
+            <div class="list-group-item d-flex align-items-center">
+                <div class="fw-bold me-3">
+                    {{ step.step_position }}
+                </div>
+
+                <div class="d-flex w-100">
+                    <div class="Actions w-50 pe-3 table-container-div">{{ step.step_action | safe }}</div>
+                    <div class="Results w-50 table-container-div">{{ step.expected_value | safe }}</div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="card my-0 shadow" id="testcase-steps-panel-2">
+        <div class="card-header">
+            Version {{ testcase.versions[0] }}
+        </div>
+        <div id="testStepslist-2" class="list-group list-group-flush">
+
+            <div id="testStepslist-2" class="list-group">
+                {% for step in test_steps_v2 %}
+                <div class="list-group-item d-flex align-items-center">
+                    <div class="fw-bold me-3">
+                        {{ step.step_position }}
+                    </div>
+
+                    <div class="d-flex w-100">
+                        <div class="Actions w-50 pe-3 table-container-div">{{ step.step_action | safe }}</div>
+                        <div class="Results w-50 table-container-div">{{ step.expected_value | safe }}</div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+    </div>
+
+    -->

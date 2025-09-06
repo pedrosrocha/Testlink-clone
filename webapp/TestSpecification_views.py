@@ -547,3 +547,45 @@ def copy_step():
     if (not result[0]):
         return jsonify(success=False, error=f"Error copying the step  {copied_step_id}. error{result[1]}")
     return jsonify(success=True, message=f"step created successfuly")
+
+
+@TestSpecification_views.route("/compare_test_versions", methods=['POST'])
+def compare_test_versions():
+    data = request.get_json()
+    test_id = data.get("id")[2:]
+    left_dropdown_version = data.get("left_compare")
+    right_dropdown_version = data.get("right_compare")
+
+    _testcase = TestCases.return_testcase_by_id(test_id)
+
+    if (not _testcase):
+        return jsonify(success=False, error=f"It was not possible to execute the compare of the test {test_id}")
+
+    # if the versions are not explicitaly sent, the current version and the newest one will be sent
+    if (not left_dropdown_version and not right_dropdown_version):
+        left_dropdown_version = _testcase["current_version"]
+        right_dropdown_version = _testcase["versions"][-1]
+
+    _teststepsV1 = TestSteps.return_steps_from_test_cases(
+        test_id,
+        left_dropdown_version
+    )
+
+    if (not _teststepsV1[0]):
+        return jsonify(success=False, error=f"It was not possible to find steps for the test {test_id}")
+
+    _teststepsV2 = TestSteps.return_steps_from_test_cases(
+        test_id,
+        right_dropdown_version  # newest version
+    )
+
+    if (not _teststepsV2[0]):
+        return jsonify(success=False, error=f"It was not possible to find steps for the test {test_id}")
+
+    return render_template('partials/compare_versions.jinja2',
+                           testcase=_testcase,
+                           left_dropdown_version=left_dropdown_version,
+                           right_dropdown_version=right_dropdown_version,
+                           test_steps_v1=_teststepsV1[1],
+                           test_steps_v2=_teststepsV2[1],
+                           )

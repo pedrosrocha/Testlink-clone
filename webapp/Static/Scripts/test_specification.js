@@ -673,7 +673,19 @@ document.getElementById("details-pane").addEventListener("click", function (even
             break;
         case "btn-add-new-step":
             showEditor({ position: 'end' });
-            return;
+            break;
+
+        case "btn-compare-version":
+            error_message = "Error loading compare test form: ";
+
+            route = "/compare_test_versions";
+
+            send_data = {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                body: JSON.stringify({ id: node.id })
+            }
+            break;
         default:
             return;
 
@@ -694,17 +706,60 @@ document.getElementById("details-pane").addEventListener("click", function (even
 
 
 
-document.getElementById("details-pane").addEventListener("click", function (event) {
-    //chnges the current test version
-    if (!event.target || !event.target.classList.contains('version-option')) return;
+function handleCompareVersionChange(event, testID, left_dropdown_current_value, right_dropdown_current_value) {
 
-    const testID = document.getElementById("details-pane").dataset.testId;
-    const versionId = event.target.getAttribute('data-version-id');
+    const dropdownclicked = event.target.getAttribute('position');
+    const changeVersionID = event.target.getAttribute('data-version-id');
+
+    let left_dropdown_new_value = left_dropdown_current_value;
+    let right_dropdown_new_value = right_dropdown_current_value;
+
+    if (dropdownclicked == 'left') {
+        left_dropdown_new_value = changeVersionID;
+    }
+    if (dropdownclicked == 'right') {
+        right_dropdown_new_value = changeVersionID;
+    }
 
 
-    fetch('/update_test_case_version', {
+    // Reload comparison view with new versions
+    fetch('/compare_test_versions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+        body: JSON.stringify({ id: 'c_' + testID, left_compare: left_dropdown_new_value, right_compare: right_dropdown_new_value })
+    })
+        .then(res => res.text())
+        .then(html => {
+            document.getElementById("details-pane").innerHTML = html;
+        })
+        .catch(err => console.error("Error loading compare test form: ", err));
+}
+
+document.getElementById("details-pane").addEventListener("click", function (event) {
+
+    if (!event.target || !event.target.classList.contains('version-option')) return;
+
+
+    const testID = document.getElementById("details-pane").dataset.testId;
+
+
+    // Check whether dropdown 1 or 2 exists
+    if (document.getElementById('version-list-1') || document.getElementById('version-list-2')) {
+        handleCompareVersionChange(
+            event,
+            testID,
+            document.getElementById("versionDropdown-1").getAttribute("current-version"),
+            document.getElementById("versionDropdown-2").getAttribute("current-version")
+        );
+        return; // Stop further execution
+    }
+
+
+
+    const versionId = event.target.getAttribute('data-version-id');
+    fetch('/update_test_case_version', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Requested-sWith': 'XMLHttpRequest' },
         body: JSON.stringify({ id: testID, version: versionId })
     })
         .then(response => response.json())
@@ -712,15 +767,13 @@ document.getElementById("details-pane").addEventListener("click", function (even
             if (data.success) {
                 ShowTestCase(testID); // Reload the test case view
             } else {
-                alert('Error updating suite: ' + data.error);
+                alert('Error updating test case version: ' + data.error);
             }
         })
         .catch(err => {
-            console.error('Error updating suite:', err);
-            alert('An error occurred while updating the suite.');
+            console.error('Error updating test case version:', err);
+            alert('An error occurred while updating the test case version.');
         });
-
-    ShowTestCase(testID);
 });
 
 
@@ -1195,7 +1248,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // Show the context menu on right-click inside the list
     listContainer.addEventListener('contextmenu', function (e) {
         const targetStep = e.target.closest('.step-item');
-        if (!EditingSteps) return; //If the test is not in edidting mode
+        if (!EditingSteps) return; //If the test is not in editing mode
 
         if (targetStep) {
             //Handles the context menu exhbition considering the window dimensions 

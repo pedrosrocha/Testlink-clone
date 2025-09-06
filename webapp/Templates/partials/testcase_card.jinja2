@@ -1,0 +1,159 @@
+<div class="card my-0 shadow" style="max-width: auto;" id="testcase-info-panel">
+    <div class="card-body bg-light">
+        <h5 class="card-title">
+            Test case: <span id="testcase-name">{{ testcase.name }}</span>
+        </h5>
+
+        <div class="d-flex flex-wrap gap-2 mb-3 mt-2">
+            <button class="btn btn-outline-danger btn-sm" id="btn-delete-suite">
+                <i class="bi bi-trash"></i> Delete
+            </button>
+
+            <button class="btn btn-outline-secondary btn-sm" id="btn-edit-suite">
+                <i class="bi bi-pencil-square"></i> Edit
+            </button>
+
+            <button class="btn btn-outline-primary btn-sm" id="btn-new-version">
+                <i class="bi bi-file-earmark-plus"></i> New Version
+            </button>
+
+            <div class="dropdown">
+                <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" id="versionDropdown"
+                    data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-clock-history"></i> Version {{ testcase.current_version }}
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="versionDropdown" id="version-list">
+                    {% for version in testcase.versions %}
+                    <li class="dropdown-item version-option" data-version-id="{{ version }}">
+                        Version {{ version }}
+
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <button class="btn btn-outline-danger btn-sm" id="btn-delete-version">
+                <i class="bi bi-x-circle"></i> Delete this version
+            </button>
+
+            <button class="btn btn-outline-secondary btn-sm" id="btn-compare-version">
+                <i class="bi bi-file-ruled"></i>
+                Compare Versions
+            </button>
+        </div>
+
+        <div class="form-group mb-3">
+            <label class="font-weight-bold">Description:</label>
+            <div class="border p-3 rounded bg-white" id="testcase-description">
+                {{ testcase.description }}
+            </div>
+        </div>
+        <div class="form-group mb-3">
+            <label class="font-weight-bold">Precondition:</label>
+            <div class="border p-3 rounded bg-white" id="testcase-precondition">
+                {{ testcase.preconditions }}
+            </div>
+        </div>
+        <div class="form-group mb-3">
+            <label class="font-weight-bold">Expected results:</label>
+            <div class="border p-3 rounded bg-white" id="testcase-expected-results">
+                {{ testcase.expected_result }}
+            </div>
+        </div>
+
+
+        <div class="d-flex align-items-center gap-3">
+
+            <button class="btn btn-outline-secondary" type="button" data-bs-toggle="collapse"
+                data-bs-target="#meta-info">
+                More Info
+            </button>
+
+            <div>
+                <input type="checkbox" class="btn-check" id="btn-check-active" autocomplete="off" {% if editing_steps %}
+                    checked {% endif %}>
+                <label id="btn-steps-editing" class="btn btn-outline-primary" for="btn-check-active">
+                    {% if editing_steps %}
+                    Disable edit mode
+                    {%else%}
+                    Enable edit mode
+                    {%endif%}
+                </label>
+            </div>
+
+        </div>
+
+        <div class="collapse mt-3 " id="meta-info">
+            <ul class="list-group list-group-flush small">
+                <li class="list-group-item">
+                    <strong>Created by:</strong> <span id="testcase-owner">{{ testcase.created_by }}</span>
+                </li>
+                <li class="list-group-item">
+                    <strong>Last updated by:</strong> <span id="testcase-updater">{{ testcase.last_updated_by
+                        }}</span>
+                </li>
+                <li class="list-group-item">
+                    <strong>Last updated in:</strong> <span id="testcase-updated">{{ testcase.updated_at }}</span>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+</div>
+
+<br>
+
+<div class="card my-0 shadow" style="max-width: auto;" id="testcase-steps-panel">
+    <div class="list-group-item list-group-item-secondary d-flex align-items-center rounded-0">
+
+        <div style="width: 48px;"></div>
+
+        <div class="fw-bold" style="min-width: 80px;">Step #</div>
+        <div class="fw-bold w-50 pe-3 text-center">Actions</div>
+        <div class="fw-bold w-50 text-center">Expected Results</div>
+
+        <div style="width: 80px;"></div>
+    </div>
+
+    <div id="testStepslist" class="list-group">
+        {% for step in test_steps %}
+        <div class="list-group-item d-flex align-items-center step-item" data-step-id="{{ step.id }}"
+            id="{{ step.id }}">
+
+            <i class="bi bi-grip-vertical me-3"></i>
+
+            <div class="stepNumber fw-bold me-3">
+                {{ step.step_position }}
+            </div>
+
+            <div class="step-content-wrapper d-flex w-100" id="step-wrapper-{{ step.id }}">
+                <div class="stepActions w-50 pe-3 table-container">{{ step.step_action | safe }}</div>
+                <div class="stepResults w-50 table-container">{{ step.expected_value | safe }}</div>
+            </div>
+
+            <div class="ms-auto d-flex gap-2">
+                <a href="#" class="btn btn-link p-0 btn-edit" title="Edit step" hidden>
+                    <i class="bi bi-pencil-square fs-5 text-primary"></i>
+                </a>
+                <a href="#" class="btn btn-link p-0 btn-add-after" title="Add step after this one" hidden>
+                    <i class="bi bi-plus-circle fs-5 text-success"></i>
+                </a>
+                <a href="#" class="btn btn-link p-0 btn-delete" title="Delete this step" hidden>
+                    <i class="bi bi-trash fs-5 text-danger"></i>
+                </a>
+
+
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+
+    <div class="card-footer text-left">
+        <button class="btn btn-outline-primary" id="btn-add-new-step" hidden>
+            <i class="bi bi-plus-lg"></i> Add New Step
+        </button>
+    </div>
+</div>
+
+<span id="editing-steps-value" hidden>{{ editing_steps }}</span>
