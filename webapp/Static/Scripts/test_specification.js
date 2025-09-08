@@ -16,6 +16,33 @@ let clipboard = {
 };
 let new_steps_order_payload = null;
 let stepid_clipboard = null;
+let user_level = null;
+
+document.addEventListener('DOMContentLoaded', function () {
+    //function that handles the user level initialization
+
+    fetch('/get_user_level', {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+        //body: JSON.stringify({})
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (!data.success) {
+                alert("Not possible read the current user level: " + data.message);
+            } else {
+                user_level = data.user_level;
+            }
+        })
+        .catch(err => {
+            console.error('Not possible to read the current user level:', err);
+        });
+
+    if (user_level == 'viewer') {
+        sortablehandler.option("disabled", true);
+    }
+
+});
 
 
 divider.addEventListener('mousedown', (e) => {
@@ -30,7 +57,6 @@ document.addEventListener('mousemove', (e) => {
 
     const newWidth = e.clientX;
 
-    // No need to check min/max here since it's handled by the CSS
     leftColumn.style.width = newWidth + 'px';
 });
 
@@ -62,6 +88,8 @@ $('#testTree').jstree({
     "state": { "key": "state_demo" },
     "contextmenu": {
         "items": function (node) {
+            if (user_level == 'viewer') return;
+
             return getContextMenuItems(node);
         }
     },
@@ -196,6 +224,7 @@ function handlePaste(tree, targetNode) {
 }
 
 function getContextMenuItems(node) {
+    if (user_level == 'viewer') return;
     const tree = $('#testTree').jstree(true);
     const isTestNode = node.type === 'test';
     const isRoot = node.parent === '#';
@@ -327,6 +356,8 @@ function HandleMove(node_id, node_new_parent, node_type) {
         .then(data => {
             if (!data.success) {
                 alert("Move failed: " + data.error);
+                const tree = $('#testTree').jstree(true);
+                tree.refresh();
             }
         })
         .catch(err => {
@@ -377,7 +408,6 @@ $('#testTree').on("select_node.jstree", function (e, data) {
         ShowSuite(suiteId);
     }
 });
-
 
 
 document.getElementById("details-pane").addEventListener("submit", function (event) {
@@ -578,7 +608,6 @@ function ShowTestCase(testcaseId) {
             CreateSortable(testcaseId);
 
 
-
             const SpanEditModeValue = document.querySelector('#editing-steps-value');
 
             if (!SpanEditModeValue) return;
@@ -672,7 +701,9 @@ document.getElementById("details-pane").addEventListener("click", function (even
             refresh_test_case = true;
             break;
         case "btn-add-new-step":
-            showEditor({ position: 'end' });
+            showEditor({
+                position: 'end',
+            });
             break;
 
         case "btn-compare-version":
@@ -691,6 +722,7 @@ document.getElementById("details-pane").addEventListener("click", function (even
 
     }
 
+    if (!route) return;
     fetch(route, send_data)
         .then(res => res.text())
         .then(html => {
@@ -799,6 +831,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
 //--------------------------- steps --------------------
 function CreateSortable(testcaseId) {
+    if (user_level == 'viewer') return;
+
     const sortableList = document.getElementById('testStepslist');
     if (!sortableList) return;
 
@@ -851,6 +885,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const deleteBtn = e.target.closest('.btn-delete');
         const editBtn = e.target.closest('.btn-edit');
         const editStepsBtn = e.target.closest('.btn-check');
+        const addStepEnd = e.target.closest("#btn-add-new-step");
 
         // --- Handle "Add Step After" Click ---
         if (addBtn) {
@@ -948,7 +983,6 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 
-
 function showEditor(options) {
 
     const editorTemplate = document.getElementById('editor-template');
@@ -972,11 +1006,11 @@ function showEditor(options) {
     resultsTextarea.id = uniqueId + '-results';
 
     // If editing, populate the editor with existing content
-    if (!options.referenceElement) return;
+    if (!options.referenceElement && options.position != "end") return;
     if (options.position === 'replace') {
         const content = options.referenceElement.querySelector('.step-content-wrapper');
-        actionsTextarea.value = content.querySelector('.stepActions').innerHTML;
-        resultsTextarea.value = content.querySelector('.stepResults').innerHTML;
+        actionsTextarea.value = content.querySelector('.Actions').innerHTML;
+        resultsTextarea.value = content.querySelector('.Results').innerHTML;
 
         options.referenceElement.classList.add('d-none');
     }
@@ -1021,6 +1055,13 @@ function showEditor(options) {
             { title: 'large', value: '6px' },
         ],
         help_accessibility: false,
+        table_border_widths: [
+            { title: '1px', value: '2px' },
+            { title: '2px', value: '3px' },
+            { title: '3px', value: '4px' },
+            { title: '4px', value: '5px' },
+            { title: '5px', value: '6px' }
+        ],
 
     };
 
@@ -1033,7 +1074,7 @@ function showEditor(options) {
     tinymce.init({
         ...commonConfig,
         selector: `#${resultsTextarea.id}`,
-        license_key: 'gpl'
+        license_key: 'gpl',
     });
 
     // Handle Cancel button click
@@ -1051,9 +1092,9 @@ function showEditor(options) {
     editorForm.querySelector('.btn-save').addEventListener('click', () => {
         // const ExistingStep = options.position === 'replace' ? true : false;
 
-        //read the values written by the user
-        const newActions = tinymce.get(actionsTextarea.id).getContent();
-        const newResults = tinymce.get(resultsTextarea.id).getContent();
+        //The replace is used to enlarge the default border size, because the the default one is not visible
+        let newActions = tinymce.get(actionsTextarea.id).getContent().replaceAll("<td>", "<td style='border-width: 2px;'>");
+        let newResults = tinymce.get(resultsTextarea.id).getContent().replaceAll("<td>", "<td style='border-width: 2px;'>");
 
         //closes the tinymce
         editorForm.querySelector('.btn-cancel').click();
@@ -1156,8 +1197,8 @@ function HandleEditStep(stepID, Actions, Results, StepElement) {
             if (!data.success) {
                 alert("Not possible to save the step: " + stepID + ". Message: " + data.message);
             } else { //if success
-                StepElement.querySelector(".stepActions").innerHTML = Actions
-                StepElement.querySelector(".stepResults").innerHTML = Results
+                StepElement.querySelector(".Actions").innerHTML = Actions
+                StepElement.querySelector(".Results").innerHTML = Results
             }
         })
         .catch(err => {
@@ -1169,11 +1210,14 @@ function HandleEditStep(stepID, Actions, Results, StepElement) {
 }
 
 function SwitchElementsEditMode(EnableEditMode) {
+    if (user_level == 'viewer') return;
+
     const editStepButtons = document.querySelectorAll('.btn-edit');
     const deleteStepButtons = document.querySelectorAll('.btn-delete');
     const addtepButtons = document.querySelectorAll('.btn-add-after');
     const addStepEndButton = document.querySelectorAll("#btn-add-new-step");
     const EditingStepsButton = document.getElementById("btn-steps-editing");
+    const OrderStepGrip = document.querySelectorAll(".bi-grip-vertical");
 
 
     if (EnableEditMode) {
@@ -1181,8 +1225,8 @@ function SwitchElementsEditMode(EnableEditMode) {
         deleteStepButtons.forEach(button => { button.removeAttribute('hidden') });
         addtepButtons.forEach(button => { button.removeAttribute('hidden') });
         addStepEndButton.forEach(button => { button.removeAttribute('hidden') });
+        OrderStepGrip.forEach(button => { button.removeAttribute('hidden') });
         EditingStepsButton.removeAttribute("check");
-
         sortablehandler.option("disabled", false);
         return;
     }
@@ -1191,7 +1235,9 @@ function SwitchElementsEditMode(EnableEditMode) {
     deleteStepButtons.forEach(button => { button.setAttribute('hidden', 'true') });
     addtepButtons.forEach(button => { button.setAttribute('hidden', 'true') });
     addStepEndButton.forEach(button => { button.setAttribute('hidden', 'true') });
+    OrderStepGrip.forEach(button => { button.setAttribute('hidden', 'true') });
     EditingStepsButton.setAttribute("check", "true");
+
     sortablehandler.option("disabled", true);
     return;
 }

@@ -44,7 +44,7 @@
                         </a>
                     </li>
 
-                    {% if user.user_level == 'admin' %}
+                    {% if user.user_level == 'admin' or user.user_level == 'editor' %}
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('projects_views.ProjectManagement') }}">
                             <i class="bi bi-kanban-fill"></i> Projects
@@ -52,13 +52,11 @@
                     </li>
                     {% endif %}
 
-                    {% if user.user_level in ['admin', 'editor'] %}
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('TestSpecification_views.TestSpecification') }}">
                             <i class="bi bi-diagram-3-fill"></i> Test Specification
                         </a>
                     </li>
-                    {% endif %}
                 </ul>
 
                 <!-- Project selector -->

@@ -23,11 +23,12 @@ def TestSpecification():
             session["editing_steps"] = False
 
         _current_project_id = int(session.get('current_project_id'))
-        return render_template('test_specification.jinja2',
-                               projects=projects.return_all_projects(),
-                               current_project_id=_current_project_id,
-                               user=current_user
-                               )
+        return render_template(
+            'test_specification.jinja2',
+            projects=projects.return_all_projects().data,
+            current_project_id=_current_project_id,
+            user=current_user
+        )
 
 
 @TestSpecification_views.route('/get_test_tree_root')
@@ -84,6 +85,8 @@ def get_test_tree_children():
 
 
 @TestSpecification_views.route('/delete_node', methods=['POST'])
+@role_required('admin', 'editor')
+@login_required
 def delete_node():
     data = request.get_json()
     id = data.get('id')
@@ -104,6 +107,8 @@ def delete_node():
 
 
 @TestSpecification_views.route('/rename_node', methods=['POST'])
+@role_required('admin', 'editor')
+@login_required
 def rename_node():
     data = request.get_json()
     id = data.get('id')
@@ -127,6 +132,8 @@ def rename_node():
 
 
 @TestSpecification_views.route('/add_test_case', methods=['POST'])
+@role_required('admin', 'editor')
+@login_required
 def add_test_case():
     data = request.get_json()
     node_name = data.get('name')
@@ -146,6 +153,8 @@ def add_test_case():
 
 
 @TestSpecification_views.route('/add_suite', methods=['POST'])
+@role_required('admin', 'editor')
+@login_required
 def add_suite():
     data = request.get_json()
     node_name = data.get('name')
@@ -163,6 +172,8 @@ def add_suite():
 
 
 @TestSpecification_views.route('/paste_test_case', methods=['POST'])
+@role_required('admin', 'editor')
+@login_required
 def paste_test_case():
     data = request.get_json()
     test_case_id = data.get('test_id')
@@ -195,6 +206,8 @@ def paste_test_case():
 
 
 @TestSpecification_views.route('/paste_suite', methods=['POST'])
+@role_required('admin', 'editor')
+@login_required
 def paste_suite():
     data = request.get_json()
     suite_id = data.get('suite_id')              # root suite being copied
@@ -260,6 +273,8 @@ def paste_suite():
 
 
 @TestSpecification_views.route('/move_suite', methods=['POST'])
+@role_required('admin', 'editor')
+@login_required
 def move_suite():
     data = request.get_json()
     suite_id = data.get('node_id')
@@ -273,6 +288,8 @@ def move_suite():
 
 
 @TestSpecification_views.route('/move_test', methods=['POST'])
+@role_required('admin', 'editor')
+@login_required
 def move_test():
     data = request.get_json()
 
@@ -304,23 +321,34 @@ def get_testcase_html(testcase_id):
     if not teststeps[0]:
         return f"test case steps id = {testcase_id} not found"
 
-    return render_template('partials/testcase_card.jinja2',
-                           testcase=_testcase, test_steps=teststeps[1],
-                           editing_steps=session.get('editing_steps'))
+    return render_template(
+        'partials/testcase_card.jinja2',
+        testcase=_testcase, test_steps=teststeps[1],
+        editing_steps=session.get('editing_steps'),
+        user=current_user
+    )
 
 
 @TestSpecification_views.route('/get_suite_html/<int:suite_id>', methods=['GET'])
 def get_suite_html(suite_id):
     suite = TestSuits.return_suite_by_id(suite_id)
-    return render_template('partials/testsuite_card.html', suite=suite)
+    return render_template(
+        'partials/testsuite_card.jinja2',
+        suite=suite,
+        user=current_user
+    )
 
 
 @TestSpecification_views.route("/new_test_case_form", methods=['GET'])
+@role_required('admin', 'editor')
+@login_required
 def new_test_case_form():
     return render_template('partials/add_new_test_case.html')
 
 
 @TestSpecification_views.route("/edit_suite", methods=['POST'])
+@role_required('admin', 'editor')
+@login_required
 def edit_suite():
     data = request.get_json()
     suite_id = data.get('id')
@@ -330,6 +358,8 @@ def edit_suite():
 
 
 @TestSpecification_views.route("/edit_test_case", methods=['POST'])
+@role_required('admin', 'editor')
+@login_required
 def edit_test_case():
     data = request.get_json()
     test_id = data.get('id')
@@ -342,11 +372,15 @@ def edit_test_case():
 
 
 @TestSpecification_views.route("/new_suite_form", methods=['GET'])
+@role_required('admin', 'editor')
+@login_required
 def new_suite_form():
     return render_template('partials/add_new_suite.html')
 
 
 @TestSpecification_views.route("/update_test_case", methods=['POST'])
+@role_required('admin', 'editor')
+@login_required
 def update_test_case():
     data = request.get_json()
     id = data.get('id')[2:]
@@ -372,6 +406,8 @@ def update_test_case():
 
 
 @TestSpecification_views.route("/update_suite", methods=['POST'])
+@role_required('admin', 'editor')
+@login_required
 def update_suite():
     data = request.get_json()
     id = data.get('id')
@@ -385,6 +421,8 @@ def update_suite():
 
 
 @TestSpecification_views.route("/new_test_case_version", methods=['POST'])
+@role_required('admin', 'editor')
+@login_required
 def new_test_case_version():
     data = request.get_json()
     id = data.get('id')[2:]
@@ -409,6 +447,7 @@ def new_test_case_version():
 
 
 @TestSpecification_views.route("/update_test_case_version", methods=['POST'])
+@login_required
 def update_test_case_version():
     data = request.get_json()
     id = data.get('id')
@@ -421,6 +460,8 @@ def update_test_case_version():
 
 
 @TestSpecification_views.route("/delete_testcase_version", methods=['POST'])
+@role_required('admin', 'editor')
+@login_required
 def delete_testcase_version():
     data = request.get_json()
     id = data.get('id')[2:]
@@ -433,6 +474,8 @@ def delete_testcase_version():
 
 
 @TestSpecification_views.route("/save_step_data", methods=['POST'])
+@role_required('editor', 'admin', 'editor')
+@login_required
 def save_step_data():
     data = request.get_json()
     step_id = data.get('id')
@@ -448,6 +491,8 @@ def save_step_data():
 
 
 @TestSpecification_views.route("/new_step", methods=['POST'])
+@role_required('editor', 'admin', 'editor')
+@login_required
 def new_step():
     data = request.get_json()
     test_id = data.get('test_id')
@@ -475,6 +520,8 @@ def new_step():
 
 
 @TestSpecification_views.route("/delete_step", methods=['POST'])
+@role_required('editor', 'admin', 'editor')
+@login_required
 def delete_step():
     data = request.get_json()
     step_id = data.get('step_id')
@@ -490,6 +537,8 @@ def delete_step():
 
 
 @TestSpecification_views.route("/set_edit_mode", methods=['POST'])
+@role_required('editor', 'admin', 'editor')
+@login_required
 def set_edit_mode():
     data = request.get_json()
     edit_mode = data.get('edit_mode')
@@ -507,6 +556,8 @@ def get_edit_mode():
 
 
 @TestSpecification_views.route("/reorder_steps", methods=['POST'])
+@role_required('editor', 'admin', 'editor')
+@login_required
 def reorder_steps():
     data = request.get_json()
     test_case_id = data.get('id')
@@ -521,6 +572,8 @@ def reorder_steps():
 
 
 @TestSpecification_views.route("/copy_step", methods=['POST'])
+@role_required('editor', 'admin', 'editor')
+@login_required
 def copy_step():
     data = request.get_json()
 
@@ -550,6 +603,7 @@ def copy_step():
 
 
 @TestSpecification_views.route("/compare_test_versions", methods=['POST'])
+@login_required
 def compare_test_versions():
     data = request.get_json()
     test_id = data.get("id")[2:]
@@ -582,10 +636,17 @@ def compare_test_versions():
     if (not _teststepsV2[0]):
         return jsonify(success=False, error=f"It was not possible to find steps for the test {test_id}")
 
-    return render_template('partials/compare_versions.jinja2',
-                           testcase=_testcase,
-                           left_dropdown_version=left_dropdown_version,
-                           right_dropdown_version=right_dropdown_version,
-                           test_steps_v1=_teststepsV1[1],
-                           test_steps_v2=_teststepsV2[1],
-                           )
+    return render_template(
+        'partials/compare_versions.jinja2',
+        testcase=_testcase,
+        left_dropdown_version=left_dropdown_version,
+        right_dropdown_version=right_dropdown_version,
+        test_steps_v1=_teststepsV1[1],
+        test_steps_v2=_teststepsV2[1],
+    )
+
+
+@TestSpecification_views.route("/get_user_level", methods=['GET'])
+@login_required
+def get_user_level():
+    return jsonify(success=True, user_level=current_user.user_level, message="current user level")

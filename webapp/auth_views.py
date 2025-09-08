@@ -55,17 +55,17 @@ def logout():
 @auth.route('/MainPage')
 @login_required
 def MainPage():
-    _projects = projects.return_all_projects()
+    command = projects.return_all_projects()
     _current_id = 0
 
     if session.get('current_project_id'):
         _current_id = int(session.get('current_project_id'))
 
     if not _current_id:
-        session['current_project_id'] = int(_projects[0]['id'])
+        session['current_project_id'] = int(command.data[0]['id'])
     return render_template('main_page.jinja2',
                            username=current_user.username,
-                           projects=_projects,
+                           projects=command.data,
                            current_project_id=int(
                                session.get('current_project_id')),
                            user=current_user)

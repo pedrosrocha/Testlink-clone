@@ -42,12 +42,11 @@
 
 
 <br>
-<!--
-<div class="comparation-versions-div">
 
+<div class="comparation-versions-div d-flex flex-wrap">
     <div class="card my-0 shadow" id="testcase-steps-panel-1">
         <div class="card-header">
-            Version {{ testcase.current_version }}
+            Version {{ left_dropdown_version}}
         </div>
         <div id="testStepslist-1" class="list-group list-group-flush">
             {% for step in test_steps_v1 %}
@@ -57,36 +56,33 @@
                 </div>
 
                 <div class="d-flex w-100">
-                    <div class="Actions w-50 pe-3 table-container-div">{{ step.step_action | safe }}</div>
-                    <div class="Results w-50 table-container-div">{{ step.expected_value | safe }}</div>
+                    <div class="Actions w-50 pe-3">{{ step.step_action | safe }}</div>
+                    <div class="Results w-50">{{ step.expected_value | safe }}</div>
                 </div>
+
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="card my-0 shadow" id="testcase-steps-panel-2">
+        <div class="card-header">
+            Version {{ right_dropdown_version }}
+        </div>
+        <div id="testStepslist-2" class="list-group list-group-flush">
+            {% for step in test_steps_v2 %}
+            <div class="list-group-item d-flex align-items-center">
+                <div class="fw-bold me-3">
+                    {{ step.step_position }}
+                </div>
+
+                <div class="d-flex w-100">
+                    <div class="Actions w-50 pe-3">{{ step.step_action | safe }}</div>
+                    <div class="Results w-50">{{ step.expected_value | safe }}</div>
+                </div>
+
             </div>
             {% endfor %}
         </div>
     </div>
 
-    <div class="card my-0 shadow" id="testcase-steps-panel-2">
-        <div class="card-header">
-            Version {{ testcase.versions[0] }}
-        </div>
-        <div id="testStepslist-2" class="list-group list-group-flush">
-
-            <div id="testStepslist-2" class="list-group">
-                {% for step in test_steps_v2 %}
-                <div class="list-group-item d-flex align-items-center">
-                    <div class="fw-bold me-3">
-                        {{ step.step_position }}
-                    </div>
-
-                    <div class="d-flex w-100">
-                        <div class="Actions w-50 pe-3 table-container-div">{{ step.step_action | safe }}</div>
-                        <div class="Results w-50 table-container-div">{{ step.expected_value | safe }}</div>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-
-    </div>
-
-    -->
+</div>

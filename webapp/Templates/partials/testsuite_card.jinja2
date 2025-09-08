@@ -4,6 +4,7 @@
             Test suite: <span id="suite-name">{{ suite.name }}</span>
         </h5>
 
+        {%if not user.user_level == 'viewer'%}
         <div class="d-flex flex-wrap gap-2 mb-3 mt-2">
             <button class="btn btn-outline-danger btn-sm" id="btn-delete-suite">
                 <i class="bi bi-trash"></i> Delete
@@ -18,6 +19,7 @@
                 <i class="bi bi-folder-plus"></i> New Suite
             </button>
         </div>
+        {%endif%}
 
         <div class="form-group mb-3">
             <label class="font-weight-bold">Description:</label>

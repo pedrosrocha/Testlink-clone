@@ -12,6 +12,7 @@ html {
     cursor: col-resize;
     background-color: #f1f1f1;
     opacity: 0;
+    flex-shrink: 0;
 }
 
 /* New container for the left side */
@@ -20,6 +21,7 @@ html {
     /* Initial width */
     min-width: 200px;
     max-width: 800px;
+    flex-shrink: 0;
 }
 
 #page-title {
@@ -29,6 +31,8 @@ html {
     top: 0;
     z-index: 1000;
     overflow: hidden;
+    margin-bottom: 16px;
+    margin-top: 16px;
 }
 
 #page-title.header-hidden {
@@ -52,7 +56,7 @@ html {
 }
 
 #left-pane {
-    margin-top: 16px;
+    margin-top: 0px;
     border-style: groove;
     border-width: 1px;
     border-color: #e6e5e5;
@@ -67,6 +71,7 @@ html {
 #right-pane {
     flex-grow: 1;
     margin-bottom: 75px;
+    min-width: 0;
 }
 
 #right-pane.hidden {
@@ -141,7 +146,8 @@ html {
 .comparation-versions-div {
     display: flex;
     gap: 1rem;
-    height: 80vh;
+    flex-grow: 1;
+    min-height: 0;
 }
 
 .comparation-versions-div .card {
@@ -149,6 +155,8 @@ html {
     display: flex;
     flex-direction: column;
     min-width: 0;
+    min-height: 0;
+    overflow-y: auto;
 }
 
 .comparation-versions-div .list-group {
@@ -157,15 +165,22 @@ html {
 }
 
 
-
 .Actions,
 .Results {
     overflow-wrap: break-word;
     word-break: break-word;
     white-space: normal;
+    min-width: 0;
 }
 
-.table-container-div table {
-    table-layout: fixed;
-    width: 50%;
+#testStepslist-2,
+#testStepslist-1 {
+    overflow-y: auto;
+    max-height: 100%;
+}
+
+.stepActions,
+.stepResults {
+    text-wrap: auto;
+    flex-wrap: wrap;
 }

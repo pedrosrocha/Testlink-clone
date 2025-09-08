@@ -35,6 +35,7 @@ def AddUser():
 
 @users_views.route('/AddUserFromManager', methods=['GET', 'POST'])
 @login_required
+@role_required('editor', 'admin')
 def AddUserFromManager():
     if request.method == 'GET':
         return render_template('add_user_from_manager.jinja2')
@@ -60,7 +61,7 @@ def UsersManagement():
         return render_template('users_management.jinja2',
                                users=current_app.Users_manipulation.return_users(),
                                user=current_user,
-                               projects=projects.return_all_projects(),
+                               projects=projects.return_all_projects().data,
                                current_project_id=int(session.get('current_project_id')))
 
     # if it is a POST

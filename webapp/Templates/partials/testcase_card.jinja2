@@ -5,6 +5,7 @@
         </h5>
 
         <div class="d-flex flex-wrap gap-2 mb-3 mt-2">
+            {%if not user.user_level == 'viewer'%}
             <button class="btn btn-outline-danger btn-sm" id="btn-delete-suite">
                 <i class="bi bi-trash"></i> Delete
             </button>
@@ -17,6 +18,10 @@
                 <i class="bi bi-file-earmark-plus"></i> New Version
             </button>
 
+            <button class="btn btn-outline-danger btn-sm" id="btn-delete-version">
+                <i class="bi bi-x-circle"></i> Delete this version
+            </button>
+            {%endif%}
             <div class="dropdown">
                 <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" id="versionDropdown"
                     data-bs-toggle="dropdown" aria-expanded="false">
@@ -32,15 +37,14 @@
                 </ul>
             </div>
 
-            <button class="btn btn-outline-danger btn-sm" id="btn-delete-version">
-                <i class="bi bi-x-circle"></i> Delete this version
-            </button>
 
             <button class="btn btn-outline-secondary btn-sm" id="btn-compare-version">
                 <i class="bi bi-file-ruled"></i>
                 Compare Versions
             </button>
+
         </div>
+
 
         <div class="form-group mb-3">
             <label class="font-weight-bold">Description:</label>
@@ -69,6 +73,7 @@
                 More Info
             </button>
 
+            {%if not user.user_level == 'viewer'%}
             <div>
                 <input type="checkbox" class="btn-check" id="btn-check-active" autocomplete="off" {% if editing_steps %}
                     checked {% endif %}>
@@ -80,6 +85,7 @@
                     {%endif%}
                 </label>
             </div>
+            {%endif%}
 
         </div>
 
@@ -120,15 +126,16 @@
         <div class="list-group-item d-flex align-items-center step-item" data-step-id="{{ step.id }}"
             id="{{ step.id }}">
 
+            {%if not user.user_level == 'viewer'%}
             <i class="bi bi-grip-vertical me-3"></i>
-
+            {%endif%}
             <div class="stepNumber fw-bold me-3">
                 {{ step.step_position }}
             </div>
 
             <div class="step-content-wrapper d-flex w-100" id="step-wrapper-{{ step.id }}">
-                <div class="stepActions w-50 pe-3 table-container">{{ step.step_action | safe }}</div>
-                <div class="stepResults w-50 table-container">{{ step.expected_value | safe }}</div>
+                <div class="Actions w-50 pe-3 ">{{ step.step_action | safe }}</div>
+                <div class="Results w-50">{{ step.expected_value | safe }}</div>
             </div>
 
             <div class="ms-auto d-flex gap-2">

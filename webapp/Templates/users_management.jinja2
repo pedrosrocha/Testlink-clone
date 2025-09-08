@@ -20,7 +20,6 @@
             <table class="table table-hover">
                 <thead class="bg-primary text-white">
                     <tr class="">
-                        <th>ID</th>
                         <th>Username</th>
                         <th>Email</th>
                         <th>User Level</th>
@@ -32,9 +31,11 @@
                 <tbody>
                     {% for user in users %}
                     <tr>
-                        <td>{{ user['id'] }}</td>
                         <td>{{ user['username'] }}</td>
                         <td>{{ user['email'] }}</td>
+
+
+                        {% if current_user.user_level == 'admin' %}
                         <td>
                             <form method="POST" style="display:inline;">
                                 <input type="hidden" name="id" value="{{ user['id'] }}">
@@ -50,7 +51,6 @@
                                 </select>
                             </form>
                         </td>
-                        {% if current_user.user_level == 'admin' %}
                         <td>
                             <form method="POST" style="display: inline"
                                 onsubmit="return confirm('Do you really want to delete the user {{user['username']}}?')">
@@ -61,6 +61,8 @@
                             <a href="{{url_for('users_views.ResetUserPassword', username=user['username'])}}"
                                 class="btn btn-warning btn-sm">Reset Password</a>
                         </td>
+                        {%else%}
+                        <td>{{ user['user_level'] }}</td>
                         {% endif %}
                     </tr>
                     {% endfor %}
@@ -69,9 +71,11 @@
 
         </div>
         <div class="mb-0">
+            {% if not current_user.user_level == 'viewer' %}
             <a href="/AddUserFromManager" class="btn btn-primary">
                 <i class="fas fa-plus me-2"></i>New User
             </a>
+            {%endif%}
         </div>
     </div>
 </div>

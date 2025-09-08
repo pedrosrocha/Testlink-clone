@@ -14,8 +14,9 @@
             <ul class="list-group list-group-flush">
                 <li class="list-group-item"><b>Name:</b> {{project['name']}}</li>
                 <li class="list-group-item"><b>Id:</b> {{project['id']}}</li>
-                <li class="list-group-item"><b>Status:</b> <span
-                        class="badge bg-info text-dark">{{project['status']}}</span></li>
+                <li class="list-group-item"><b>Status:</b>
+                    <span class="badge bg-info text-dark">{{project['status']}}</span>
+                </li>
                 <li class="list-group-item"><b>Created by:</b> {{project['owner_name']}}</li>
                 <li class="list-group-item"><b>Start Date:</b> {{project['start_date']}}</li>
                 <li class="list-group-item"><b>End Date:</b> {{project['end_date']}}</li>
@@ -29,7 +30,9 @@
                 action="{{url_for('projects_views.EditProject', project_id=project['id'])}}">
                 <input type="hidden" name="action" value="editing">
                 <input type="hidden" name="id" value="{{project['id']}}">
+                {%if user.user_level == 'admin'%}
                 <button type="submit" class="btn btn-primary">Edit project</button>
+                {%endif%}
             </form>
         </div>
     </div>

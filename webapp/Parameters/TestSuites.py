@@ -85,3 +85,16 @@ class TestSuits():
             return suite_id
 
         return False
+
+    @classmethod
+    def update_root_suite_name(cls, project_id, projectName):
+        root_suite = DatabaseConnector.return_all_suites_names_ids(
+            int(project_id),
+            None)
+
+        result = cls.update_suite_data(root_suite[0].id, projectName)
+
+        if (not result):
+            return f"It was not possible to update the root suite name"
+
+        return True

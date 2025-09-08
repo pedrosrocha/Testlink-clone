@@ -1,59 +1,204 @@
 from .Database.project_database import DatabaseConnector
+from ..utils.return_data_model import DatabaseReturnValueModel
+from typing import Optional
 
 
 class projects:
 
     @classmethod
-    def return_all_projects_names(cls):
-        return DatabaseConnector.return_all_projects_names()
+    def return_all_projects_names(cls) -> DatabaseReturnValueModel:
+        """
+        Retrieves the names of all projects from the database.
+        """
+        result, database_error = DatabaseConnector.return_all_projects_names()
+
+        if result is not None:
+            return DatabaseReturnValueModel(
+                executed=True,
+                message="Project names read successfully.",
+                data=result
+            )
+
+        return DatabaseReturnValueModel(
+            executed=False,
+            message="An error occurred while reading project names.",
+            error=database_error
+        )
 
     @classmethod
-    def return_all_projects(cls):
-        return DatabaseConnector.return_all_projects()
+    def return_all_projects(cls) -> DatabaseReturnValueModel:
+        """
+        Retrieves all data for all projects from the database.
+        """
+        result, database_error = DatabaseConnector.return_all_projects()
+
+        if result is not None:
+            return DatabaseReturnValueModel(
+                executed=True,
+                message="All projects read successfully.",
+                data=result
+            )
+
+        return DatabaseReturnValueModel(
+            executed=False,
+            message="An error occurred while reading all projects.",
+            error=database_error
+        )
 
     @classmethod
-    def delete_project(cls, project_id):
-        return DatabaseConnector.delete_project_from_database(int(project_id))
+    def delete_project(cls, project_id: int) -> DatabaseReturnValueModel:
+        """
+        Deletes a project from the database by its ID.
+        """
+        was_deleted, database_error = DatabaseConnector.delete_project_from_database(
+            int(project_id))
+
+        if was_deleted:
+            return DatabaseReturnValueModel(
+                executed=True,
+                message=f"Project with ID {project_id} deleted successfully."
+            )
+
+        return DatabaseReturnValueModel(
+            executed=False,
+            message=f"Failed to delete project with ID {project_id}.",
+            error=database_error
+        )
 
     @classmethod
-    def add_project(cls, projectName, StartDate, EndDate, Description, username):
-        projects = cls.return_all_projects()
+    def add_project(cls, projectName: str, StartDate: str, EndDate: str, Description: str, username: str) -> DatabaseReturnValueModel:
+        """
+        Adds a new project to the database after checking for duplicate names.
+        """
+        # Check for duplicates (case-insensitive)
+        existing_projects_result = cls.return_all_projects_names()
 
-        for project in projects:
+        if not existing_projects_result.executed:
+            return DatabaseReturnValueModel(
+                executed=False,
+                message=f"It was not possible to read all the projects names.",
+                error=existing_projects_result.error
+            )
+
+        for project in existing_projects_result.data:
             if project['name'].lower() == projectName.lower():
-                return False
+                return DatabaseReturnValueModel(
+                    executed=False,
+                    message=f"Not possible to create a project with the name: '{projectName}'.",
+                    error=f"A project with the name '{projectName}' already exists."
+                )
 
-        DatabaseConnector.add_project_to_database(
-            projectName, Description, username, StartDate, EndDate)
-        return True
+        # Add project to database
+        was_added, database_error = DatabaseConnector.add_project_to_database(
+            projectName,
+            Description,
+            username,
+            StartDate,
+            EndDate
+        )
 
-    @classmethod
-    def return_project_by_name(cls, project_name):
-        if project_name:
-            return DatabaseConnector.return_project_by_name(project_name)
-        return False
-
-    @classmethod
-    def return_project_by_id(cls, project_id):
-        return DatabaseConnector.return_project_by_id(int(project_id))
-
-    @classmethod
-    def update_project_data(cls, name, description, status, user):
-        if status.lower() == 'inactive':
-            status = 2
-        elif status.lower() == 'archived':
-            status = 3
+        if was_added:
+            return DatabaseReturnValueModel(
+                executed=True,
+                message=f"Project '{projectName}' added successfully."
+            )
         else:
-            status = 1
-
-        if DatabaseConnector.update_project_data(name, description, int(status), user.username):
-            return True
-        return False
+            return DatabaseReturnValueModel(
+                executed=False,
+                message=f"An error occurred while adding the project '{projectName}' to the database.",
+                error=database_error
+            )
 
     @classmethod
-    def return_oldest_project(cls):
-        first_project = DatabaseConnector.return_first_project()
-        if first_project:
-            return first_project
+    def return_project_by_name(cls, project_name: str) -> DatabaseReturnValueModel:
+        """
+        Retrieves a single project from the database by its name.
+        """
+        if not project_name:
+            return DatabaseReturnValueModel(executed=False, message="Project name cannot be empty.")
 
-        return {id: 1}
+        project, database_error = DatabaseConnector.return_project_by_name(
+            project_name)
+
+        if project:
+            return DatabaseReturnValueModel(
+                executed=True,
+                message=f"Project '{project_name}' found.",
+                data=project
+            )
+        else:
+            return DatabaseReturnValueModel(
+                executed=False,
+                message=f"Project with name '{project_name}' not found.",
+                error=database_error
+            )
+
+    @classmethod
+    def return_project_by_id(cls, project_id: int) -> DatabaseReturnValueModel:
+        """
+        Retrieves a single project from the database by its ID.
+        """
+        project_data_as_row, database_error = DatabaseConnector.return_project_by_id(
+            int(project_id))
+
+        project_data = [dict(project_data_as_row)]
+        if project_data:
+            return DatabaseReturnValueModel(
+                executed=True,
+                message=f"Project with ID {project_id} found.",
+                data=project_data[0]
+            )
+        else:
+            return DatabaseReturnValueModel(
+                executed=False,
+                message=f"Project with ID {project_id} not found.",
+                error=database_error
+            )
+
+    @classmethod
+    def update_project_data(cls, project_id: str, name: str, description: str, status: str, user) -> DatabaseReturnValueModel:
+        """
+        Updates a project's status and description.
+        """
+        status_map = {'inactive': 2, 'archived': 3, 'active': 1}
+        status_code = status_map.get(status.lower(), 1)
+
+        was_updated, database_error = DatabaseConnector.update_project_data(
+            int(project_id),
+            name,
+            description,
+            status_code,
+            user.username
+        )
+
+        if was_updated:
+            return DatabaseReturnValueModel(
+                executed=True,
+                message=f"Project '{name}' updated successfully."
+            )
+
+        return DatabaseReturnValueModel(
+            executed=False,
+            message=f"Failed to update project '{name}'.",
+            error=database_error
+        )
+
+    @classmethod
+    def return_oldest_project(cls) -> DatabaseReturnValueModel:
+        """
+        Retrieves the oldest project from the database (based on creation date).
+        """
+        first_project, database_error = DatabaseConnector.return_first_project()
+
+        if first_project:
+            return DatabaseReturnValueModel(
+                executed=True,
+                message="Oldest project found.",
+                data=first_project,
+            )
+
+        return DatabaseReturnValueModel(
+            executed=False,
+            message="No projects found in the database.",
+            error=database_error
+        )
