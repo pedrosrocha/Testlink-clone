@@ -18,10 +18,9 @@ def login():
     password = request.form['password']
 
     if current_app.Users_manipulation.is_user_valid(username, password):
-        user_data = current_app.Users_manipulation.return_user_by_username(
+        user = current_app.Users_manipulation.return_user_by_username(
             username)
-        user = testclone_user.from_dict(user_data)
-        login_user(user)
+        login_user(testclone_user.from_dict(user.data))
 
         next_page = request.args.get('next')
 
@@ -34,7 +33,7 @@ def login():
         return redirect(next_page or url_for('auth.MainPage'))
 
     flash('Invalid credentials')
-    return render_template('login.jinja2', user=None)
+    return render_template('login.jinja2', user=None), 401
 
 
 @auth.route('/', methods=['GET'])
@@ -61,11 +60,15 @@ def MainPage():
     if session.get('current_project_id'):
         _current_id = int(session.get('current_project_id'))
 
+    # this was added to handle a system without project
+    current_project_id = command.data[0]['id'] if command.data else 1
+
     if not _current_id:
-        session['current_project_id'] = int(command.data[0]['id'])
+        session['current_project_id'] = int(current_project_id)
     return render_template('main_page.jinja2',
                            username=current_user.username,
                            projects=command.data,
                            current_project_id=int(
-                               session.get('current_project_id')),
+                               session.get('current_project_id')
+                           ),
                            user=current_user)

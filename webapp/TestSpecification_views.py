@@ -16,7 +16,8 @@ TestSpecification_views = Blueprint('TestSpecification_views', __name__)
 def TestSpecification():
     if request.method == 'GET':
         if (not session.get('current_project_id')):
-            _current_project_id = int(projects.return_oldest_project()["id"])
+            _current_project_id = int(
+                projects.return_oldest_project().data["id"])
             session["current_project_id"] = int(_current_project_id)
 
         if (not session.get('editing_steps')):

@@ -34,8 +34,13 @@ def ProjectManagement():
     if request.form['action'] == "deletion":
 
         projects.delete_project(project_id)
-        first_project_id = projects.return_all_projects().data[0].id
-        session['current_project_id'] = first_project_id
+
+        all_projects = projects.return_all_projects().data
+
+        project_id = 1
+        if all_projects:
+            project_id = all_projects[0]["id"]
+        session['current_project_id'] = project_id
         return redirect(url_for('projects_views.ProjectManagement'))
 
     # if it is not deletion
@@ -49,7 +54,14 @@ def OpenProject(project_id):
     if request.method == 'GET':
         command = projects.return_project_by_id(project_id)
         if (not command.executed):
-            return f"error while reading the projects. error{command.error}"
+            return render_template(
+                '404.jinja2',
+                message=f"error while reading the projects. error{command.error}",
+                projects=projects.return_all_projects().data,
+                current_project_id=int(
+                    session.get('current_project_id')
+                )
+            ), 404
 
         return render_template(
             'open_project.jinja2',
@@ -81,7 +93,14 @@ def EditProject(project_id):
     if request.method == 'GET':
         command = projects.return_project_by_id(project_id)
         if (not command.executed):
-            return f"error while reading the projects. error{command.error}"
+            return render_template(
+                '404.jinja2',
+                message=f"error while reading the projects. error{command.error}",
+                projects=projects.return_all_projects().data,
+                current_project_id=int(
+                    session.get('current_project_id')
+                )
+            ), 404
 
         return render_template('edit_project.jinja2', project=command.data, user=current_user, projects=projects.return_all_projects().data)
 
@@ -151,14 +170,17 @@ def AddProject():
                                projects=projects.return_all_projects().data,
                                current_project_id=int(
                                    session.get('current_project_id'))
-                               )
+                               ), 409
 
-    command = projects.return_project_by_name(projectName)
-    session['current_project_id'] = command.data.id
+    project = projects.return_project_by_name(projectName)
+    project_id = 1
+    if project.data:
+        project_id = project.data["id"]
+    session['current_project_id'] = project_id
     TestSuits.add_suite(projectName,
                         f"Root suite for the project {projectName}",
                         None,
-                        command.data['id'],
+                        project.data['id'],
                         current_user.username)
 
     return redirect(url_for('projects_views.ProjectManagement'))

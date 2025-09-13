@@ -24,11 +24,18 @@ def AddUser():
     if not url_parser.is_safe_url(next_page):
         next_page = url_for('auth.MainPage')  # MainPage after login
 
-    if not current_app.Users_manipulation.add_user(username, password, email):
-        return render_template('add_user.jinja2',
-                               error_message=f"The user {username} already exists'.",
-                               projects=projects.return_all_projects(),
-                               current_project_id=int(session.get('current_project_id')))
+    add_user_command = current_app.Users_manipulation.add_user(
+        username,
+        password,
+        email
+    )
+    if not add_user_command.executed:
+        return render_template(
+            'add_user.jinja2',
+            error_message=add_user_command.error,
+            projects=projects.return_all_projects().data,
+            current_project_id=int(session.get('current_project_id'))
+        )
 
     return redirect(next_page or url_for('auth.login'))
 
@@ -45,11 +52,19 @@ def AddUserFromManager():
     password = request.form['password']
     email = request.form['email']
 
-    if not current_app.Users_manipulation.add_user(username, password, email):
-        return render_template('add_user.jinja2',
-                               error_message=f"The user {username} already exists'.",
-                               user=current_user, projects=projects.return_all_projects(),
-                               current_project_id=int(session.get('current_project_id')))
+    add_user_command = current_app.Users_manipulation.add_user(
+        username,
+        password,
+        email
+    )
+    if not add_user_command.executed:
+        return render_template(
+            'add_user.jinja2',
+            error_message=add_user_command.error,
+            user=current_user,
+            projects=projects.return_all_projects().data,
+            current_project_id=int(session.get('current_project_id'))
+        )
 
     return redirect(url_for('users_views.UsersManagement'))
 
@@ -58,24 +73,39 @@ def AddUserFromManager():
 @login_required
 def UsersManagement():
     if request.method == 'GET':
-        return render_template('users_management.jinja2',
-                               users=current_app.Users_manipulation.return_users(),
-                               user=current_user,
-                               projects=projects.return_all_projects().data,
-                               current_project_id=int(session.get('current_project_id')))
+        command = current_app.Users_manipulation.return_users()
+        if not command.executed:
+            return render_template(
+                "error_message.jinja2",
+                error_message=command.error,
+                page_url="users_views.UsersManagement",
+                page_name="Users management",
+                user=current_user,
+                projects=projects.return_all_projects().data,
+                current_project_id=int(session.get('current_project_id'))
+            )
+        return render_template(
+            'users_management.jinja2',
+            users=command.data,
+            user=current_user,
+            projects=projects.return_all_projects().data,
+            current_project_id=int(session.get('current_project_id'))
+        )
 
     # if it is a POST
     user_id = request.form['id']
     if request.form['action'] == "deletion":
-
-        if not current_app.Users_manipulation.delete_user(user_id):
-            return render_template("error_message.jinja2",
-                                   error_message="There must be at least one admin user!",
-                                   page_url="users_views.UsersManagement",
-                                   page_name="Users management",
-                                   user=current_user,
-                                   projects=projects.return_all_projects(),
-                                   current_project_id=int(session.get('current_project_id')))
+        command = current_app.Users_manipulation.delete_user(user_id)
+        if not command.executed:
+            return render_template(
+                "error_message.jinja2",
+                error_message=command.error,
+                page_url="users_views.UsersManagement",
+                page_name="Users management",
+                user=current_user,
+                projects=projects.return_all_projects().data,
+                current_project_id=int(session.get('current_project_id'))
+            )
         return redirect(url_for('users_views.UsersManagement'))
 
     if request.form['action'] == "reseting":
@@ -85,14 +115,16 @@ def UsersManagement():
         user_id = request.form['id']
         user_level = request.form['new_level']
         if not current_app.Users_manipulation.change_user_level(user_id, user_level):
-            return render_template("error_message.jinja2",
-                                   error_message="There must be at least one admin user!",
-                                   page_url="users_views.UsersManagement",
-                                   page_name="Users management",
-                                   user=current_user,
-                                   projects=projects.return_all_projects(),
-                                   current_project_id=int(session.get('current_project_id')))
-            # return render_template("users_management.jinja2", users=current_app.Users_manipulation.return_users(), error_message="There must be at least 1 Admin user.")
+            return render_template(
+                "error_message.jinja2",
+                error_message="There must be at least one admin user!",
+                page_url="users_views.UsersManagement",
+                page_name="Users management",
+                user=current_user,
+                projects=projects.return_all_projects().data,
+                current_project_id=int(session.get('current_project_id'))
+            )
+            # return render_template("users_management.jinja2", users=current_app.Users_manipulation.return_users().data, error_message="There must be at least 1 Admin user.")
 
         return redirect(url_for('users_views.UsersManagement'))
 
@@ -109,10 +141,12 @@ def UsersManagement():
 @login_required
 def ResetUserPassword(username):
     if request.method == 'GET':
-        return render_template('reset_password.jinja2',
-                               username=username,
-                               projects=projects.return_all_projects(),
-                               current_project_id=int(session.get('current_project_id')))
+        return render_template(
+            'reset_password.jinja2',
+            username=username,
+            projects=projects.return_all_projects().data,
+            current_project_id=int(session.get('current_project_id'))
+        )
 
     if current_user.user_level != 'admin':
         abort(403)
@@ -122,6 +156,8 @@ def ResetUserPassword(username):
         return redirect(url_for('users_views.UsersManagement'))
 
     # In case a non mapped post is sent
-    return render_template('404.jinja2',
-                           projects=projects.return_all_projects(),
-                           current_project_id=int(session.get('current_project_id')))
+    return render_template(
+        '404.jinja2',
+        projects=projects.return_all_projects().data,
+        current_project_id=int(session.get('current_project_id'))
+    )

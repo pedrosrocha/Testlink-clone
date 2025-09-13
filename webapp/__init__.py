@@ -29,9 +29,9 @@ def create_app():
 
     @login_manager.user_loader
     def load_user(user_id):
-        user_data = app.Users_manipulation.get_by_id(user_id)
-        if user_data:
-            return testclone_user.from_dict(user_data)
-        return None
+        user = app.Users_manipulation.get_by_id(user_id)
+        if user.executed:
+            return testclone_user.from_dict(user.data)
+        return user.error
 
     return app
