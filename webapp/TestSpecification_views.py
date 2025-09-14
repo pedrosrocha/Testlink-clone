@@ -36,15 +36,22 @@ def TestSpecification():
 def get_test_tree_root():
 
     _current_project_id = session.get('current_project_id')
-    suites = TestSuits.return_testsuits_from_project(_current_project_id, None)
+
+    command = TestSuits.return_testsuits_from_project(
+        _current_project_id,
+        None
+    )
+
+    if not command.executed:
+        return jsonify(success=False, message="Error while acquiring the root suite", error=command.error), 404
 
     return jsonify([
         {
             'id': suite["id"],
             'text': suite["name"],
             'type': "suite",
-            'children': True  # To enable lazy loading
-        } for suite in suites
+            'children': True  # Enables lazy loading
+        } for suite in command.data
     ])
 
 
@@ -59,12 +66,15 @@ def get_test_tree_children():
 
         _current_project_id = session.get('current_project_id')
 
-        suites = TestSuits.return_testsuits_from_project(
+        command = TestSuits.return_testsuits_from_project(
             _current_project_id,
             suite_id
         )
 
-        for suite in suites:
+        if not command.executed:
+            return jsonify(success=False, message="Error while reading the suites", error=command.error), 404
+
+        for suite in command.data:
             children.append({
                 'id': suite["id"],
                 'text': suite["name"],
@@ -72,9 +82,12 @@ def get_test_tree_children():
                 'children': True  # This is what makes the jstrre lazy loading possible
             })
 
-        cases = TestCases.return_testcases_from_project(suite_id)
+        command = TestCases.return_testcases_from_project(suite_id)
 
-        for case in cases:
+        if not command.executed:
+            abort(404)
+
+        for case in command.data:
             children.append({
                 'id': f'c_{case["id"]}',
                 'text': case["name"],
@@ -94,17 +107,19 @@ def delete_node():
     type = data.get('type')
 
     if (type == "suite"):
-        if TestSuits.delete_suite(id):
-            return jsonify(success=True, message="suite deleted successfully")
+        command = TestSuits.delete_suite(id)
+        if command.executed:
+            return jsonify(success=True, message=command.message)
 
-        return jsonify(success=False, error="Error while deleting the suite")
+        return jsonify(success=False, error=command.error), 500
 
     # else: type == test
     id = id[2:]
-    if TestCases.delete_test_case(id):
-        return jsonify(success=True, message="test case deleted successfully")
+    delete_command = TestCases.delete_test_case(id)
+    if delete_command.executed:
+        return jsonify(success=True, message=delete_command.message)
 
-    return jsonify(success=False, error="Error while deelting the testcase")
+    return jsonify(success=False, error=delete_command.error), 500
 
 
 @TestSpecification_views.route('/rename_node', methods=['POST'])
@@ -117,19 +132,27 @@ def rename_node():
     type = data.get('type')
 
     if (type == "suite"):
-        if TestSuits.update_suite_data(id, name=new_name):
-            return jsonify(success=True, message="Project updated successfully")
+        command = TestSuits.update_suite_data(
+            id,
+            name=new_name
+        )
+        if command.executed:
+            return jsonify(success=True, message=command.message), 200
 
-        return jsonify(success=False, error="Error while renaming the suite")
+        return jsonify(success=False, error=command.error), 500
 
     # else: type == test
     current_user_name = current_user.username
     id = id[2:]
-    if TestCases.update_testcase_data(id, name=new_name, last_updated_by=current_user_name):
+    update_command = TestCases.update_testcase_data(
+        id,
+        name=new_name,
+        last_updated_by=current_user_name
+    )
+    if update_command.executed:
+        return jsonify(success=True, message=update_command.message)
 
-        return jsonify(success=True, message="Project updated successfully")
-
-    return jsonify(success=False, error="Error while renaming the testcase")
+    return jsonify(success=False, error=update_command.error), 500
 
 
 @TestSpecification_views.route('/add_test_case', methods=['POST'])
@@ -147,10 +170,21 @@ def add_test_case():
     priority = data.get('priority')
 
     current_user_name = current_user.username
-    new_id = TestCases.add_testcase(
-        node_name, description, precondition, expected_results, status, priority, parent_id, current_user_name, current_user_name)
+    command = TestCases.add_testcase(
+        node_name,
+        description,
+        precondition,
+        expected_results,
+        status,
+        priority,
+        parent_id,
+        current_user_name,
+        current_user_name
+    )
+    if not command.executed:
+        return jsonify(success=False, error=command.error, name=node_name, id=0), 500
 
-    return jsonify(success=True, message="Project updated successfully", name=node_name, id=new_id)
+    return jsonify(success=True, message=command.message, name=node_name, id=command.data), 200
 
 
 @TestSpecification_views.route('/add_suite', methods=['POST'])
@@ -164,12 +198,17 @@ def add_suite():
 
     _current_project_id = session.get('current_project_id')
     current_user.username
-    new_id = TestSuits.add_suite(node_name,
-                                 description,
-                                 parent_id,
-                                 _current_project_id,
-                                 current_user.username)
-    return jsonify(success=True, message="Project updated successfully", name=node_name, id=new_id)
+    command = TestSuits.add_suite(
+        node_name,
+        description,
+        parent_id,
+        _current_project_id,
+        current_user.username
+    )
+
+    if not command.executed:
+        return jsonify(success=False, message=command.message, error=command.error, name=node_name, id=command.data), 400
+    return jsonify(success=True,  message=command.message, name=node_name, id=command.data), 201
 
 
 @TestSpecification_views.route('/paste_test_case', methods=['POST'])
@@ -184,26 +223,27 @@ def paste_test_case():
     test_case_id = int(test_case_id[2:])
     parent_id = int(parent_id)
 
-    new_id = TestCases.copy_test_case(
+    command = TestCases.copy_test_case(
         parent_id,
         test_case_id,
         current_user.username
     )
-    if new_id:
-
-        current_version_to_copy = TestCases.return_testcase_by_id(test_case_id)[
+    if command.data:
+        current_version_to_copy = TestCases.return_testcase_by_id(test_case_id).data[
             "current_version"
         ]
 
-        TestSteps.copy_steps(
+        copy_command = TestSteps.copy_steps(
             test_case_id,
             current_version_to_copy,
-            new_id
+            command.data
         )
+        if not copy_command.executed:
+            return jsonify(success=False, error=copy_command.error), 500
 
-        return jsonify(success=True, message="Project updated successfully")
+        return jsonify(success=True, message=command.message + "\n"+copy_command.message), 201
 
-    return jsonify(success=False, error="Could not copy test case")
+    return jsonify(success=False, error=command.error), 500
 
 
 @TestSpecification_views.route('/paste_suite', methods=['POST'])
@@ -220,16 +260,17 @@ def paste_suite():
     id_map = {}
 
     # Create the root suite first
-    new_root_id = TestSuits.copy_suite(
+    copied_suite_command = TestSuits.copy_suite(
         parent_id,
         suite_id,
         current_user.username,
-        session.get('current_project_id'))
+        session.get('current_project_id')
+    )
 
-    if not new_root_id:
-        return jsonify(success=False, error="Could not create root suite")
+    if not copied_suite_command.executed:
+        return jsonify(success=False, error=copied_suite_command.error), 500
 
-    id_map[suite_id] = new_root_id  # link old to new
+    id_map[suite_id] = copied_suite_command.data  # link old to new
 
     for child in children:
         old_parent_id = child["parent"]
@@ -237,40 +278,40 @@ def paste_suite():
 
         new_parent_id = id_map.get(old_parent_id)
         if not new_parent_id:
-            return jsonify(success=False, error=f"Missing parent mapping for {old_parent_id}")
+            return jsonify(success=False, error=f"Missing parent mapping for {old_parent_id}"), 400
 
         if old_id.startswith('c_'):  # test case
-            new_id = TestCases.copy_test_case(
+            command = TestCases.copy_test_case(
                 new_parent_id,
                 old_id[2:],  # remove prefix 'c_'
                 current_user.username
             )
-            if not new_id:
-                return jsonify(success=False, error=f"Could not create test case {old_id}")
+            if not command.data:
+                return jsonify(success=False, error=command.error), 500
 
-            current_version_to_copy = TestCases.return_testcase_by_id(old_id[2:])[
+            current_version_to_copy = TestCases.return_testcase_by_id(old_id[2:]).data[
                 "current_version"
             ]
             TestSteps.copy_steps(
                 old_id[2:],  # remove prefix 'c_')
                 current_version_to_copy,
-                new_id
+                command.data
             )
 
         else:  # suite
-            new_suite_id = TestSuits.copy_suite(
+            command_suite = TestSuits.copy_suite(
                 new_parent_id,
                 old_id,
                 current_user.username,
                 session.get('current_project_id')
             )
 
-            if not new_suite_id:
-                return jsonify(success=False, error=f"Could not create suite {old_id}")
+            if not command_suite.executed:
+                return jsonify(success=False, error=f"Could not create suite {old_id}"), 500
 
-            id_map[old_id] = new_suite_id  # store mapping
+            id_map[old_id] = command_suite.data  # store mapping
 
-    return jsonify(success=True, message="Project updated successfully")
+    return jsonify(success=True, message="Project updated successfully"), 201
 
 
 @TestSpecification_views.route('/move_suite', methods=['POST'])
@@ -280,12 +321,20 @@ def move_suite():
     data = request.get_json()
     suite_id = data.get('node_id')
     parent_id = data.get('parent_id')            # new parent node
-    project = int(session.get('current_project_id'))
+    project = session.get('current_project_id')
 
-    if TestSuits.update_suite_data(suite_id, None, project, None, parent_id):
-        return jsonify(success=True, message="Project updated successfully")
+    command = TestSuits.update_suite_data(
+        suite_id,
+        None,
+        project,
+        None,
+        parent_id
+    )
 
-    return jsonify(success=False, error="Project not updated")
+    if command.executed:
+        return jsonify(success=True, message=command.message), 200
+
+    return jsonify(success=False, error=command.error), 500
 
 
 @TestSpecification_views.route('/move_test', methods=['POST'])
@@ -299,32 +348,42 @@ def move_test():
 
     parent_id = data.get('parent_id')            # new parent node
 
-    test_case_data = TestCases.update_testcase_data(
-        test_id, None, parent_id, None, None, None, None, None, None)
+    test_case_move = TestCases.update_testcase_data(
+        test_id,
+        None,
+        parent_id,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None
+    )
 
-    if test_case_data:
-        return jsonify(success=True, message="Project updated successfully")
+    if test_case_move.executed:
+        return jsonify(success=True, message="test case moved successfuly")
 
-    return jsonify(success=False, error="Project not updated")
+    return jsonify(success=False, error=test_case_move.error), 500
 
 
 @TestSpecification_views.route('/get_testcase_html/<int:testcase_id>', methods=['GET'])
 def get_testcase_html(testcase_id):
-    _testcase = TestCases.return_testcase_by_id(testcase_id)
-
-    if not _testcase:
-        return f"test case id = {testcase_id} not found"
+    testcase_command = TestCases.return_testcase_by_id(testcase_id)
+    if not testcase_command.executed:
+        abort(404)
 
     teststeps = TestSteps.return_steps_from_test_cases(
-        _testcase["id"],
-        _testcase["current_version"])
+        testcase_command.data["id"],
+        testcase_command.data["current_version"]
+    )
 
-    if not teststeps[0]:
-        return f"test case steps id = {testcase_id} not found"
+    if not teststeps.executed:
+        abort(404)
 
     return render_template(
         'partials/testcase_card.jinja2',
-        testcase=_testcase, test_steps=teststeps[1],
+        testcase=testcase_command.data,
+        test_steps=teststeps.data,
         editing_steps=session.get('editing_steps'),
         user=current_user
     )
@@ -332,10 +391,14 @@ def get_testcase_html(testcase_id):
 
 @TestSpecification_views.route('/get_suite_html/<int:suite_id>', methods=['GET'])
 def get_suite_html(suite_id):
-    suite = TestSuits.return_suite_by_id(suite_id)
+    command = TestSuits.return_suite_by_id(suite_id)
+
+    if not command.executed:
+        abort(404)
+
     return render_template(
         'partials/testsuite_card.jinja2',
-        suite=suite,
+        suite=command.data,
         user=current_user
     )
 
@@ -354,8 +417,10 @@ def edit_suite():
     data = request.get_json()
     suite_id = data.get('id')
 
-    _suite = TestSuits.return_suite_by_id(suite_id)
-    return render_template('partials/edit_suite.jinja2', suite=_suite)
+    command = TestSuits.return_suite_by_id(suite_id)
+    if not command.executed:
+        abort(404)
+    return render_template('partials/edit_suite.jinja2', suite=command.data)
 
 
 @TestSpecification_views.route("/edit_test_case", methods=['POST'])
@@ -369,7 +434,9 @@ def edit_test_case():
     test_id = int(test_id[2:])
 
     current_test_case = TestCases.return_testcase_by_id(test_id)
-    return render_template('partials/edit_test_case.jinja2', testcase=current_test_case)
+    if not current_test_case.executed:
+        abort(404)
+    return render_template('partials/edit_test_case.jinja2', testcase=current_test_case.data)
 
 
 @TestSpecification_views.route("/new_suite_form", methods=['GET'])
@@ -392,18 +459,21 @@ def update_test_case():
     priority = data.get('priority')
     status = data.get('status')
 
-    if (TestCases.update_testcase_data(id,
-                                       name,
-                                       False,
-                                       description,
-                                       preconditions,
-                                       expected_results,
-                                       priority,
-                                       status,
-                                       current_user.username)):
-        return jsonify(success=True, message="Test updated successfuly")
+    testcase_update = TestCases.update_testcase_data(
+        id,
+        name,
+        False,
+        description,
+        preconditions,
+        expected_results,
+        priority,
+        status,
+        current_user.username
+    )
+    if (testcase_update.executed):
+        return jsonify(success=True, message=testcase_update.message)
 
-    return jsonify(success=False, error="It was not possible to update the test information")
+    return jsonify(success=False, error=testcase_update.error), 500
 
 
 @TestSpecification_views.route("/update_suite", methods=['POST'])
@@ -415,10 +485,18 @@ def update_suite():
     name = data.get('name')
     description = data.get('description')
 
-    if (TestSuits.update_suite_data(id, name, False, description, None)):
-        return jsonify(success=True, message="Suite updated successfuly")
+    command = TestSuits.update_suite_data(
+        id,
+        name,
+        False,
+        description,
+        None
+    )
 
-    return jsonify(success=False, error="It was not possible to update the suite information")
+    if (command.executed):
+        return jsonify(success=True, message=command.message), 200
+
+    return jsonify(success=False, error=command.error), 500
 
 
 @TestSpecification_views.route("/new_test_case_version", methods=['POST'])
@@ -428,11 +506,12 @@ def new_test_case_version():
     data = request.get_json()
     id = data.get('id')[2:]
 
-    testcase_previous_version = TestCases.return_testcase_by_id(id)[
+    testcase_previous_version = TestCases.return_testcase_by_id(id).data[
         "current_version"]
 
-    if (TestCases.new_test_version(id, current_user.username)):
-        testcase_new_version = TestCases.return_testcase_by_id(id)[
+    new_version = TestCases.new_test_version(id, current_user.username)
+    if (new_version.executed):
+        testcase_new_version = TestCases.return_testcase_by_id(id).data[
             "current_version"
         ]
 
@@ -442,9 +521,9 @@ def new_test_case_version():
             testcase_new_version
         )
 
-        return jsonify(success=True, message="Test version created  successfuly")
+        return jsonify(success=True, message=new_version.message), 201
 
-    return jsonify(success=False, error="It was not possible to create the new version")
+    return jsonify(success=False, error=new_version.error), 500
 
 
 @TestSpecification_views.route("/update_test_case_version", methods=['POST'])
@@ -454,10 +533,14 @@ def update_test_case_version():
     id = data.get('id')
     version = data.get("version")
 
-    if (TestCases.update_testcase_data(id, current_version=version)):
-        return jsonify(success=True, message="Test version created  successfuly")
+    change_version = TestCases.update_testcase_data(
+        id,
+        current_version=version
+    )
+    if (change_version.executed):
+        return jsonify(success=True, message="Test version created successfuly")
 
-    return jsonify(success=False, error="It was not possible to create the new version")
+    return jsonify(success=False, error=change_version.error), 500
 
 
 @TestSpecification_views.route("/delete_testcase_version", methods=['POST'])
@@ -468,10 +551,10 @@ def delete_testcase_version():
     id = data.get('id')[2:]
 
     command_execution = TestCases.delete_current_version(id)
-    if (command_execution[0]):
-        return jsonify(success=True, message="Test version deleted successfuly")
+    if (command_execution.executed):
+        return jsonify(success=True, message=command_execution.message)
 
-    return jsonify(success=False, error=command_execution[1])
+    return jsonify(success=False, error=command_execution.error), 500
 
 
 @TestSpecification_views.route("/save_step_data", methods=['POST'])
@@ -483,12 +566,16 @@ def save_step_data():
     actions_data = data.get('actions_data')
     results_data = data.get('results_data')
 
-    result = TestSteps.update_step_info(step_id, actions_data, results_data)
+    command_step = TestSteps.update_step_info(
+        step_id,
+        actions_data,
+        results_data
+    )
 
-    if (not result[0]):
-        return jsonify(success=False, error=f"It was not possible to save the step {step_id} error: {result[1]}")
+    if (not command_step.executed):
+        return jsonify(success=False, error=command_step.error), 500
 
-    return jsonify(success=True, message="Step saved")
+    return jsonify(success=True, message=command_step.message)
 
 
 @TestSpecification_views.route("/new_step", methods=['POST'])
@@ -503,21 +590,21 @@ def new_step():
 
     testcase = TestCases.return_testcase_by_id(test_id)
 
-    if (not testcase):
-        return jsonify(success=False, error="test case for this step was not found")
+    if (not testcase.executed):
+        return jsonify(success=False, error=testcase.error), 404
 
     results = TestSteps.create_new_step(
         actions,
         results,
-        testcase["id"],
-        testcase["current_version"],
+        testcase.data["id"],
+        testcase.data["current_version"],
         previous_step
     )
 
-    if (results[0]):
-        return jsonify(success=True, message="Step saved: "+results[1])
+    if (results.executed):
+        return jsonify(success=True, message="Step saved: "+results.message), 201
 
-    return jsonify(success=False, error="Step not saved: "+results[1])
+    return jsonify(success=False, error="Step not saved: "+results.error), 500
 
 
 @TestSpecification_views.route("/delete_step", methods=['POST'])
@@ -528,13 +615,14 @@ def delete_step():
     step_id = data.get('step_id')
     test_id = data.get('test_id')
 
-    test_version = TestCases.return_testcase_by_id(test_id)["current_version"]
+    test_version = TestCases.return_testcase_by_id(
+        test_id).data["current_version"]
     results = TestSteps.delete_step(step_id, test_id, test_version)
 
-    if (results[0]):
-        return jsonify(success=True, message=f"Step {step_id} deleted")
+    if (results.executed):
+        return jsonify(success=True, message=results.message)
 
-    return jsonify(success=False, error=f"Step {step_id} was not deleted. error: "+results[1])
+    return jsonify(success=False, error=f"Step {step_id} was not deleted. error: "+results.error), 500
 
 
 @TestSpecification_views.route("/set_edit_mode", methods=['POST'])
@@ -567,7 +655,7 @@ def reorder_steps():
     result = TestSteps.reorder_steps_position(steps_ids_in_order)
 
     if (not result.executed):
-        return jsonify(success=False, error=f"It was not possible to chnage the steps order of the test {test_case_id}. error: {result.error}")
+        return jsonify(success=False, error=f"It was not possible to change the steps order of the test {test_case_id}. error: {result.error}"), 500
 
     return jsonify(success=True, message=f"steps updated for the test {test_case_id}")
 
@@ -582,25 +670,25 @@ def copy_step():
     test_id = data.get('test_id')
     clicked_step_id = data.get("clicked_step_id")
 
-    Old_step = TestSteps.return_step_by_id(copied_step_id)
-    if (not Old_step[1]):
-        return jsonify(success=False, error=f"Error readingf the step id {copied_step_id}")
+    Old_step_command = TestSteps.return_step_by_id(copied_step_id)
+    if (not Old_step_command.executed):
+        return jsonify(success=False, error=f"Error reading the step id {copied_step_id}.\n"+Old_step_command.error), 404
 
     testcase = TestCases.return_testcase_by_id(test_id)
 
-    if (not testcase):
-        return jsonify(success=False, error=f"test case for the step {clicked_step_id} was not found")
+    if (not testcase.executed):
+        return jsonify(success=False, error=f"test case for the step {clicked_step_id} was not found. \n"+testcase.error), 404
 
     result = TestSteps.create_new_step(
-        Old_step[0]["step_action"],
-        Old_step[0]["expected_value"],
-        testcase["id"],
-        testcase["current_version"],
+        Old_step_command.data["step_action"],
+        Old_step_command.data["expected_value"],
+        testcase.data["id"],
+        testcase.data["current_version"],
         clicked_step_id
     )
-    if (not result[0]):
-        return jsonify(success=False, error=f"Error copying the step  {copied_step_id}. error{result[1]}")
-    return jsonify(success=True, message=f"step created successfuly")
+    if (not result.executed):
+        return jsonify(success=False, error=f"Error copying the step  {copied_step_id}. error{result.error}"), 500
+    return jsonify(success=True, message=result.message), 201
 
 
 @TestSpecification_views.route("/compare_test_versions", methods=['POST'])
@@ -613,37 +701,37 @@ def compare_test_versions():
 
     _testcase = TestCases.return_testcase_by_id(test_id)
 
-    if (not _testcase):
-        return jsonify(success=False, error=f"It was not possible to execute the compare of the test {test_id}")
+    if (not _testcase.executed):
+        return jsonify(success=False, error=f"It was not possible to execute the compare of the test {test_id}. \n"+_testcase.error), 404
 
     # if the versions are not explicitaly sent, the current version and the newest one will be sent
     if (not left_dropdown_version and not right_dropdown_version):
-        left_dropdown_version = _testcase["current_version"]
-        right_dropdown_version = _testcase["versions"][-1]
+        left_dropdown_version = _testcase.data["current_version"]
+        right_dropdown_version = _testcase.data["versions"][-1]
 
     _teststepsV1 = TestSteps.return_steps_from_test_cases(
         test_id,
         left_dropdown_version
     )
 
-    if (not _teststepsV1[0]):
-        return jsonify(success=False, error=f"It was not possible to find steps for the test {test_id}")
+    if (not _teststepsV1.executed):
+        return jsonify(success=False, error=_teststepsV1.error), 404
 
     _teststepsV2 = TestSteps.return_steps_from_test_cases(
         test_id,
         right_dropdown_version  # newest version
     )
 
-    if (not _teststepsV2[0]):
-        return jsonify(success=False, error=f"It was not possible to find steps for the test {test_id}")
+    if (not _teststepsV2.executed):
+        return jsonify(success=False, error=_teststepsV2.error), 404
 
     return render_template(
         'partials/compare_versions.jinja2',
-        testcase=_testcase,
+        testcase=_testcase.data,
         left_dropdown_version=left_dropdown_version,
         right_dropdown_version=right_dropdown_version,
-        test_steps_v1=_teststepsV1[1],
-        test_steps_v2=_teststepsV2[1],
+        test_steps_v1=_teststepsV1.data,
+        test_steps_v2=_teststepsV2.data,
     )
 
 

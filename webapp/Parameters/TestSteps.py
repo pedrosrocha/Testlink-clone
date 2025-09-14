@@ -7,67 +7,96 @@ from datetime import datetime
 class TestSteps():
 
     @classmethod
-    def return_step_by_id(cls, step_id):
-        try:
-            step = DatabaseConnector.return_step_by_id(int(step_id))
-            return step,  f"Step{step_id} found"
-        except:
-            return False, f"No step was found for the id {step_id}"
-
-    @classmethod
-    def return_steps_from_test_cases(cls, test_case_id, test_case_version):
-
-        try:
-            steps = DatabaseConnector.return_steps_from_testcase(
-                int(test_case_id),
-                int(test_case_version)
+    def return_step_by_id(cls, step_id) -> DatabaseReturnValueModel:
+        step, err = DatabaseConnector.return_step_by_id(int(step_id))
+        if err:
+            return DatabaseReturnValueModel(
+                executed=False,
+                message=f"Step {step_id} not found",
+                error=err
             )
 
-            return True, steps
-
-        except:
-            return False, f"No steps found for the test case id = {test_case_id} and version = {test_case_version}"
-
-    @classmethod
-    def update_step_info(cls, step_id, actions_data, results_data):
-        try:
-            DatabaseConnector.update_step_data(
-                int(step_id),
-                actions_data,
-                results_data)
-            return True, "step updated"
-        except:
-            return False, f"No steps found for the id = {step_id}"
+        return DatabaseReturnValueModel(
+            executed=True,
+            message=f"Step {step_id} found",
+            data=step
+        )
 
     @classmethod
-    def create_new_step(cls, actions_data, results_data, test_id, version, previous_step_id):
+    def return_steps_from_test_cases(cls, test_case_id, test_case_version) -> DatabaseReturnValueModel:
+
+        steps, err = DatabaseConnector.return_steps_from_testcase(
+            int(test_case_id),
+            int(test_case_version)
+        )
+
+        if (err):
+            return DatabaseReturnValueModel(
+                executed=False,
+                message="It was not possible to read the steps fro the test {test_case_id} in the version {test_case_version}.",
+                error=err
+            )
+
+        return DatabaseReturnValueModel(
+            executed=True,
+            message="Steps for the test {test_case_id} in the version {test_case_version}.",
+            data=steps
+        )
+
+    @classmethod
+    def update_step_info(cls, step_id, actions_data, results_data) -> DatabaseReturnValueModel:
+
+        step_update_error = DatabaseConnector.update_step_data(
+            int(step_id),
+            actions_data,
+            results_data
+        )
+
+        if step_update_error:
+            return DatabaseReturnValueModel(
+                executed=False,
+                message=f"It was not possible to update the step data id = {step_id}",
+                error=step_update_error
+            )
+
+        return DatabaseReturnValueModel(
+            executed=True,
+            message=f"step id = {step_id} update successfuly",
+        )
+
+    @classmethod
+    def create_new_step(cls, actions_data, results_data, test_id, version, previous_step_id) -> DatabaseReturnValueModel:
 
         all_steps = cls.return_steps_from_test_cases(
             int(test_id),
             int(version)
         )
 
-        if (not all_steps[0]):
-            return False, all_steps[1]
+        if (not all_steps.executed):
+            return DatabaseReturnValueModel(
+                executed=False,
+                message=f"It was not possible to read all the steps from the test {test_id} version {version}.",
+                error=all_steps.error
+            )
 
         previous_step_position = 0
 
         # returns the step position of the last step from the tests
-        if (all_steps[1]):
-            previous_step_position = all_steps[1][-1]["step_position"]
+        if (all_steps.data):
+            previous_step_position = all_steps.data[-1]["step_position"]
 
         # Enters if the step added is not the last one
         if (previous_step_id):
-            previous_step_position = cls.return_step_by_id(previous_step_id)[
-                0].step_position
+            previous_step_position = cls.return_step_by_id(
+                previous_step_id).data["step_position"]
 
             cls.update_steps_positions(
-                all_steps[1],
+                all_steps.data,
                 int(previous_step_position)+1,
                 1
             )
 
-        result = DatabaseConnector.create_new_step(
+        new_step_id, err = DatabaseConnector.create_new_step(
             int(version),
             int(test_id),
             actions_data,
@@ -75,10 +104,18 @@ class TestSteps():
             int(previous_step_position)+1
         )
 
-        if (result):
-            return True, "New step added successfully"
+        if (new_step_id):
+            return DatabaseReturnValueModel(
+                executed=True,
+                message=f"New step added.",
+                data=new_step_id
+            )
 
-        return False, "It was not possible to create the new step"
+        return DatabaseReturnValueModel(
+            executed=False,
+            message=f"It was not possible to add the new step.",
+            error=err
+        )
 
     @classmethod
     def update_steps_positions(cls, steps_list: list[dict], specified_step_position: int, increment_value: int):
@@ -91,83 +128,109 @@ class TestSteps():
 
         increment = 0
         for step in steps_list:
-            if (step.step_position >= specified_step_position):
+            if (step["step_position"] >= specified_step_position):
                 increment = increment_value
 
             if (increment):
                 DatabaseConnector.update_step_position(
-                    step.id,
-                    int(step.step_position) + increment
+                    step["id"],
+                    int(step["step_position"]) + increment
                 )
 
     @classmethod
-    def delete_step(cls, step_id, test_id, test_version):
-        deleted_step = cls.return_step_by_id(int(step_id))[0]
+    def delete_step(cls, step_id, test_id, test_version) -> DatabaseReturnValueModel:
+        deleted_step = cls.return_step_by_id(int(step_id))
 
-        if (not deleted_step):
-            return False, f"step {step_id} does not exist"
+        if (not deleted_step.executed):
+            return DatabaseReturnValueModel(
+                executed=False,
+                message="step {step_id} does not exist",
+                error=deleted_step.error
+            )
 
-        result = DatabaseConnector.delete_test_step_from_database(int(step_id))
+        err = DatabaseConnector.delete_test_step_from_database(int(step_id))
         all_steps = cls.return_steps_from_test_cases(
             int(test_id),
             int(test_version)
-        )[1]
+        )
 
-        if (result):
+        if (not err):
             cls.update_steps_positions(
-                all_steps,
-                deleted_step.step_position,
+                all_steps.data,
+                deleted_step.data["step_position"],
                 -1
             )
 
-            return True, f"step {step_id} deleted successfully"
+            return DatabaseReturnValueModel(
+                executed=True,
+                message=f"The step {step_id} was deleted succesfuly.",
+            )
 
-        return False, f"step {step_id} was not deleted"
+        return DatabaseReturnValueModel(
+            executed=False,
+            message=f"The step {step_id} was not deleted.",
+            error=err
+        )
 
     @classmethod
-    def copy_steps_new_version(cls, test_id, current_version, new_version):
+    def copy_steps_new_version(cls, test_id, current_version, new_version) -> DatabaseReturnValueModel:
         steps_to_copy = cls.return_steps_from_test_cases(
             int(test_id),
             current_version
         )
 
-        if (not steps_to_copy[0]):
-            return False, f"test with the id {test_id} does not exist"
+        if (not steps_to_copy.executed):
+            return DatabaseReturnValueModel(
+                executed=False,
+                message=f"It was not possible to read the steps from the test {test_id} version {current_version}.",
+                error=steps_to_copy.error
+            )
 
         step_not_created = False
-        for step in steps_to_copy[1]:
+        for step in steps_to_copy.data:
             steps_created = cls.create_new_step(
-                step.step_action,
-                step.expected_value,
+                step["step_action"],
+                step["expected_value"],
                 int(test_id),
                 int(new_version),
                 False
             )
 
-            if (not steps_created):
+            if (not steps_created.executed):
                 step_not_created = True
 
         if (step_not_created):
-            return False, f"Some steps were not possible to copy"
+            return DatabaseReturnValueModel(
+                executed=False,
+                message=f"Some steps were not possible to copy",
+                error=f"Some steps were not possible to copy"
+            )
 
-        return True, "All steps were copied"
+        return DatabaseReturnValueModel(
+            executed=True,
+            message=f"Alls steps were copied",
+        )
 
     @classmethod
-    def copy_steps(cls, previous_test_id, current_version, new_test_id):
+    def copy_steps(cls, previous_test_id, current_version, new_test_id) -> DatabaseReturnValueModel:
         steps_to_copy = cls.return_steps_from_test_cases(
             int(previous_test_id),
             current_version
         )
 
-        if (not steps_to_copy[0]):
-            return False, f"test with the id {previous_test_id} does not exist"
+        if (not steps_to_copy.executed):
+            return DatabaseReturnValueModel(
+                executed=False,
+                message=f"test with the id {previous_test_id} does not exist",
+                error=steps_to_copy.error,
+            )
 
         step_not_created = False
 
-        for step in steps_to_copy[1]:
+        for step in steps_to_copy.data:
             steps_created = cls.create_new_step(
-                step.step_action,
-                step.expected_value,
+                step["step_action"],
+                step["expected_value"],
                 int(new_test_id),
                 1,
                 False
@@ -177,24 +240,31 @@ class TestSteps():
                 step_not_created = True
 
         if (step_not_created):
-            return False, f"Some steps were not possible to copy"
+            return DatabaseReturnValueModel(
+                executed=False,
+                message=f"some steps were not possible to copy.",
+                error=f"some steps were not possible to copy."
+            )
 
-        return True, "All steps were copied"
+        return DatabaseReturnValueModel(
+            executed=True,
+            message=f"All steps were copied.",
+        )
 
     @classmethod
     def reorder_steps_position(cls, steps_ids_in_order) -> DatabaseReturnValueModel:
         position = 1
         for step in steps_ids_in_order:
-            data_response = DatabaseConnector.update_step_position(
+            error = DatabaseConnector.update_step_position(
                 int(step),
                 position
             )
             position = position + 1
-            if (not data_response):
+            if (error):
                 return DatabaseReturnValueModel(
                     executed=False,
                     message="Position not updated successfully",
-                    error=f"Position not update for the step {step}",
+                    error=f"Position not update for the step {step}.\n error: {error}",
                     data=None
                 )
 

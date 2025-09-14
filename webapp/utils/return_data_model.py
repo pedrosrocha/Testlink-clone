@@ -6,7 +6,7 @@ class DatabaseReturnValueModel(BaseModel):
     executed: bool
     message: str
     error: str = None
-    data: Optional[Union[List[Dict], Dict]] = None
+    data: Optional[Union[List[Dict], Dict, int]] = None
 
 
 """

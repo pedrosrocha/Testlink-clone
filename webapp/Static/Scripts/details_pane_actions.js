@@ -176,6 +176,7 @@ function HandleAddTest(event, parentId) {
                 alert("Backend rejected the creation: " + data.error);
             } else {
                 tree.refresh_node(parentNode);
+                ShowTestCase(data.id)
             }
         })
         .catch(error => {
@@ -188,7 +189,10 @@ function HandleAddTest(event, parentId) {
 
 function ShowTestCase(testcaseId) {
 
-    if (testcaseId.startsWith("c")) testcaseId = testcaseId.replace("c_", "");
+    if ((typeof testcaseId === 'string' || testcaseId instanceof String) && testcaseId.startsWith("c")) {
+        testcaseId = testcaseId.replace("c_", "");
+    }
+
 
     fetch(`/get_testcase_html/${testcaseId}`)
         .then(response => response.text())

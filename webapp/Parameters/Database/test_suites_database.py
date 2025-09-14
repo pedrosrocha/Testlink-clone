@@ -1,6 +1,6 @@
 from sqlalchemy import create_engine, text
-from typing import List
 from webapp.TypeHinting.TypeHint import UserDict
+from typing import Union, Optional, List, Tuple
 from sqlalchemy.exc import SQLAlchemyError
 
 # Format: mysql+pymysql://<username>:<password>@<host>/
@@ -12,47 +12,59 @@ engine = create_engine(
 
 class DatabaseConnector:
     @classmethod
-    def return_all_suites_from_project(cls, projectID) -> list[UserDict]:
-        with engine.connect() as connection:
-            result = connection.execute(text("SELECT * FROM test_suites WHERE project_id = :id"),
-                                        {"id": projectID})
-
-            # this returns the list of users as a list of dictionaries
-            return result.mappings().all()
-
-    @classmethod
-    def return_all_suites_names_ids(cls, projectID: int, parentID: int) -> list[UserDict]:
-        if parentID:
+    def return_all_suites_from_project(cls, projectID) -> Union[Tuple[list[UserDict], str], Tuple[bool, SQLAlchemyError]]:
+        try:
             with engine.connect() as connection:
-                result = connection.execute(text("SELECT id, name FROM test_suites WHERE project_id = :id AND parent_suite_id = :parentID"),
-                                            {"id": projectID,
-                                            "parentID": parentID})
+                result = connection.execute(text("SELECT * FROM test_suites WHERE project_id = :id"),
+                                            {"id": projectID})
 
                 # this returns the list of users as a list of dictionaries
-                return result.mappings().all()
-
-        with engine.connect() as connection:
-            result = connection.execute(text("SELECT id, name FROM test_suites WHERE project_id = :id AND parent_suite_id IS null"),
-                                        {"id": projectID})
-
-            # this returns the list of users as a list of dictionaries
-            return result.mappings().all()
+                return result.mappings().all(), ""
+        except SQLAlchemyError as e:
+            print(f"Database error: {e}")
+            return False, e
 
     @classmethod
-    def delete_suite_from_database(cls, suite_id: int) -> List[dict]:
+    def return_all_suites_names_ids(cls, projectID: int, parentID: int) -> Union[Tuple[list[UserDict], str], Tuple[bool, SQLAlchemyError]]:
+        if parentID:
+            try:
+                with engine.connect() as connection:
+                    result = connection.execute(text("SELECT id, name FROM test_suites WHERE project_id = :id AND parent_suite_id = :parentID"),
+                                                {"id": projectID,
+                                                "parentID": parentID})
+
+                    # this returns the list of users as a list of dictionaries
+                    return result.mappings().all(), ""
+            except SQLAlchemyError as e:
+                print(f"Database error: {e}")
+                return False, e
+
+        with engine.connect() as connection:
+            try:
+                result = connection.execute(text("SELECT id, name FROM test_suites WHERE project_id = :id AND parent_suite_id IS null"),
+                                            {"id": projectID})
+
+                # this returns the list of users as a list of dictionaries
+                return result.mappings().all(), ""
+            except SQLAlchemyError as e:
+                print(f"Database error: {e}")
+                return False, e
+
+    @classmethod
+    def delete_suite_from_database(cls, suite_id: int) -> Union[Tuple[bool, str], Tuple[bool, SQLAlchemyError]]:
         try:
             # engine.begin() commits the transaction automatically. It also rollsback in a case of an error
             with engine.begin() as connection:
                 connection.execute(text("DELETE FROM test_suites WHERE id=:id"),
                                    {"id": suite_id}
                                    )
-            return True
+            return True, ""
         except SQLAlchemyError as e:
             print("Database error:", str(e))
-            return False
+            return False, e
 
     @classmethod
-    def add_suite_to_database(cls, SuiteName: str, Description: str, Creator: str, Project_id: int, ParentID: str) -> List[dict]:
+    def add_suite_to_database(cls, SuiteName: str, Description: str, Creator: str, Project_id: int, ParentID: str) -> Union[Tuple[int, str], Tuple[bool, SQLAlchemyError]]:
         # engine.begin() commits the transaction automatically. It also rollsback in a case of an error
         try:
             with engine.begin() as connection:
@@ -65,38 +77,33 @@ class DatabaseConnector:
                                              "updated_by": Creator}
                                             )
                 # gets the first colomn of the first row (new id)
-                return result.lastrowid
+                return result.lastrowid, ""
         except SQLAlchemyError as e:
             print("Database error:", str(e))
+            return False, e
 
     @classmethod
-    def return_project_by_name(cls, project_name: str) -> UserDict:
-        # FAKE
+    def return_suite_by_id(cls, id: int) -> Union[Tuple[UserDict, str], Tuple[bool, SQLAlchemyError]]:
+        try:
+            with engine.connect() as connection:
+                result = connection.execute(text("SELECT * FROM test_suites WHERE id = :id"),
+                                            {"id": id})
 
-        with engine.connect() as connection:
-            result = connection.execute(text("SELECT * FROM test_suites WHERE name = :name"),
-                                        {"name": project_name})
-
-            return result.mappings().all()[0]
-
-    @classmethod
-    def return_suite_by_id(cls, id: int) -> UserDict:
-        with engine.connect() as connection:
-            result = connection.execute(text("SELECT * FROM test_suites WHERE id = :id"),
-                                        {"id": id})
-
-            return result.mappings().all()[0]
+                return result.mappings().all()[0], ""
+        except SQLAlchemyError as e:
+            print("Database error:", str(e))
+            return False, e
 
     @classmethod
-    def update_suite_data(cls, id: int, updatableItems: str, ItemsValues: UserDict) -> bool:
+    def update_suite_data(cls, id: int, updatableItems: str, ItemsValues: UserDict) -> Optional[SQLAlchemyError]:
         try:
             query = "UPDATE test_suites SET " + updatableItems + " WHERE id = " + id + ";"
             with engine.begin() as connection:
                 connection.execute(text(query), ItemsValues)
 
-            return True
+            return None
 
         except SQLAlchemyError as e:
             print("Database error:", str(e))
 
-        return False
+        return e

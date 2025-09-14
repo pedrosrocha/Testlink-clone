@@ -123,7 +123,10 @@ def EditProject(project_id):
         )
 
         # add later: function to update all the project name in the tests and suites
-        TestSuits.update_root_suite_name(project_id, projectName)
+        command = TestSuits.update_root_suite_name(project_id, projectName)
+
+        if not command.executed:
+            return render_template('404.jinja2', user=current_user)
 
         return render_template('projects_management.jinja2', projects=projects.return_all_projects().data, user=current_user)
     return render_template('404.jinja2', user=current_user)
