@@ -1,11 +1,15 @@
 from .Database.project_database import DatabaseConnector
 from ..utils.return_data_model import DatabaseReturnValueModel
-from typing import Optional
+from cachetools import cached, TTLCache
+
+# cache used for the project list
+projects_cache = TTLCache(maxsize=128, ttl=3600)
 
 
 class projects:
 
     @classmethod
+    @cached(cache=projects_cache)
     def return_all_projects_names(cls) -> DatabaseReturnValueModel:
         """
         Retrieves the names of all projects from the database.
@@ -26,6 +30,7 @@ class projects:
         )
 
     @classmethod
+    @cached(cache=projects_cache)
     def return_all_projects(cls) -> DatabaseReturnValueModel:
         """
         Retrieves all data for all projects from the database.
@@ -54,6 +59,10 @@ class projects:
             int(project_id))
 
         if was_deleted:
+
+            # if the project was successfully deleted, then the cache is cleared to enable the program to read the updated data
+            projects_cache.clear()
+
             return DatabaseReturnValueModel(
                 executed=True,
                 message=f"Project with ID {project_id} deleted successfully."
@@ -98,6 +107,9 @@ class projects:
         )
 
         if was_added:
+            # if the project was successfully added, then the cache is cleared to enable the program to read the updated data
+            projects_cache.clear()
+
             return DatabaseReturnValueModel(
                 executed=True,
                 message=f"Project '{projectName}' added successfully."
@@ -110,6 +122,7 @@ class projects:
             )
 
     @classmethod
+    @cached(cache=projects_cache)
     def return_project_by_name(cls, project_name: str) -> DatabaseReturnValueModel:
         """
         Retrieves a single project from the database by its name.
@@ -134,6 +147,7 @@ class projects:
             )
 
     @classmethod
+    @cached(cache=projects_cache)
     def return_project_by_id(cls, project_id: int) -> DatabaseReturnValueModel:
         """
         Retrieves a single project from the database by its ID.
@@ -172,6 +186,9 @@ class projects:
         )
 
         if was_updated:
+            # if the project was successfully updated, then the cache is cleared to enable the program to read the updated data
+
+            projects_cache.clear()
             return DatabaseReturnValueModel(
                 executed=True,
                 message=f"Project '{name}' updated successfully."
@@ -184,6 +201,7 @@ class projects:
         )
 
     @classmethod
+    @cached(cache=projects_cache)
     def return_oldest_project(cls) -> DatabaseReturnValueModel:
         """
         Retrieves the oldest project from the database (based on creation date).

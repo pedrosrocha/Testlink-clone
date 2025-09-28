@@ -8,7 +8,7 @@ def role_required(*roles):
         @wraps(f)
         def decorated_function(*args, **kwargs):
             if current_user.user_level not in roles:
-                abort(403)
+                abort(403)  # Unauthorized access
             return f(*args, **kwargs)
         return decorated_function
     return wrapper

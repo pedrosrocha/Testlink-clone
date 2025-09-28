@@ -86,9 +86,9 @@ class TestSuits():
         if (UpdatableItems[-1] == ","):
             UpdatableItems = UpdatableItems[:-1]
 
+        ItemsValues["id"] = int(id)
         if (UpdatableItems):
             err = DatabaseConnector.update_suite_data(
-                str(id),
                 UpdatableItems,
                 ItemsValues
             )

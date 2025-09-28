@@ -167,9 +167,13 @@ class TestCases():
         if (UpdatableItems[-1] == ","):
             UpdatableItems = UpdatableItems[:-1]
 
+        ItemsValues["id"] = int(id)
+
         if (UpdatableItems):
             err = DatabaseConnector.update_testcase_data(
-                str(id), UpdatableItems, ItemsValues)
+                UpdatableItems,
+                ItemsValues
+            )
             if err:
                 return DatabaseReturnValueModel(
                     executed=False,

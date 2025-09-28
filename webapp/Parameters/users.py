@@ -2,6 +2,10 @@ from flask_login import UserMixin
 from flask_bcrypt import Bcrypt
 from .Database.user_database import DatabaseConnector
 from ..utils.return_data_model import DatabaseReturnValueModel
+from cachetools import cached, TTLCache
+
+# cache used for the project list
+users_cache = TTLCache(maxsize=128, ttl=3600)
 
 
 class testclone_user_list():
@@ -16,7 +20,7 @@ class testclone_user_list():
                 return DatabaseReturnValueModel(
                     executed=False,
                     message="Not possible to add user.",
-                    error=f"The name {username} is duplicated."
+                    error=f"The name '{username}' is duplicated."
                 )
 
         encrypted_password = self.bcrypt.generate_password_hash(
@@ -24,18 +28,21 @@ class testclone_user_list():
 
         error = DatabaseConnector.add_user(username, encrypted_password, email)
 
-        if not error:
+        if error:
             return DatabaseReturnValueModel(
-                executed=True,
-                message="User added sucessfully",
+                executed=False,
+                message="It was not possible to add user",
+                error=error
             )
 
+        # if the user was successfully deleted, then the cache is cleared to enable the program to read the updated data
+        users_cache.clear()
         return DatabaseReturnValueModel(
-            executed=False,
-            message="It was not possible to add user",
-            error=error
+            executed=True,
+            message="User added sucessfully",
         )
 
+    @cached(cache=users_cache)
     def return_users(self) -> DatabaseReturnValueModel:
         users, err = DatabaseConnector.return_all_users()
 
@@ -82,12 +89,23 @@ class testclone_user_list():
                 error="There must be at least 1 admin user."
             )
 
-        DatabaseConnector.delete_user_from_database(int(user_id))
+        err = DatabaseConnector.delete_user_from_database(int(user_id))
+
+        if err:
+            return DatabaseReturnValueModel(
+                executed=False,
+                message=f"Not possible to delete the user",
+                error=err
+            )
+
+        # if the user was successfully deleted, then the cache is cleared to enable the program to read the updated data
+        users_cache.clear()
         return DatabaseReturnValueModel(
             executed=True,
             message=f"User {user_id} deleted successfuly",
         )
 
+    @cached(cache=users_cache)
     def return_user_by_username(self, username: str) -> DatabaseReturnValueModel:
         user_info, error = DatabaseConnector.return_user_info(username)
         if error:
@@ -102,6 +120,7 @@ class testclone_user_list():
             data=user_info
         )
 
+    @cached(cache=users_cache)
     def get_by_id(self, id) -> DatabaseReturnValueModel:
         user, error = DatabaseConnector.get_user_by_id(int(id))
 
@@ -151,6 +170,9 @@ class testclone_user_list():
                 message=f"Not possible to chnsge the password {username}",
                 error=error
             )
+
+        # if the user was successfully deleted, then the cache is cleared to enable the program to read the updated data
+        users_cache.clear()
         return DatabaseReturnValueModel(
             executed=True,
             message=f"Password for the {username} changed successfuly",
@@ -174,9 +196,11 @@ class testclone_user_list():
         if error:
             return DatabaseReturnValueModel(
                 executed=False,
-                message="Not possible to chnage the level of this user",
+                message="Not possible to change the level of this user",
                 error=error
             )
+        # if the user was successfully deleted, then the cache is cleared to enable the program to read the updated data
+        users_cache.clear()
         return DatabaseReturnValueModel(
             executed=True,
             message="User level changed successfult",

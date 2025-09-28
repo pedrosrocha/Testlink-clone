@@ -739,3 +739,18 @@ def compare_test_versions():
 @login_required
 def get_user_level():
     return jsonify(success=True, user_level=current_user.user_level, message="current user level")
+
+
+@TestSpecification_views.route("/get_step", methods=['GET'])
+@login_required
+def get_step():
+    step_id = request.args.get('step', type=int)
+
+    if step_id is None:
+        return jsonify(success=False, error=f"It wasd not posisble to get the step because no id was sent.")
+
+    command = TestSteps.return_step_by_id(step_id)
+    if not command.executed:
+        return jsonify(success=False, error=f"It wasd not posisble to get the step {id} due to the error: {command.error}")
+
+    return jsonify(success=True, step=command.data)

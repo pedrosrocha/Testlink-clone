@@ -152,7 +152,7 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 
-function showEditor(options) {
+async function showEditor(options) {
 
     const editorTemplate = document.getElementById('editor-template');
     const detailsPane = document.getElementById('details-pane');
@@ -177,9 +177,10 @@ function showEditor(options) {
     // If editing, populate the editor with existing content
     if (!options.referenceElement && options.position != "end") return;
     if (options.position === 'replace') {
-        const content = options.referenceElement.querySelector('.step-content-wrapper');
-        actionsTextarea.value = content.querySelector('.Actions').innerHTML;
-        resultsTextarea.value = content.querySelector('.Results').innerHTML;
+        const step = await get_step(options.referenceElement.dataset.stepId);
+
+        actionsTextarea.value = step.step_action;
+        resultsTextarea.value = step.expected_value;
 
         options.referenceElement.classList.add('d-none');
     }
@@ -259,9 +260,7 @@ function showEditor(options) {
 
     // Handle Save button click
     editorForm.querySelector('.btn-save').addEventListener('click', () => {
-        // const ExistingStep = options.position === 'replace' ? true : false;
 
-        //The replace is used to enlarge the default border size, because the the default one is not visible
         let newActions = tinymce.get(actionsTextarea.id).getContent().replaceAll("<td>", "<td style='border-width: 2px;'>");
         let newResults = tinymce.get(resultsTextarea.id).getContent().replaceAll("<td>", "<td style='border-width: 2px;'>");
 
@@ -365,10 +364,9 @@ function HandleEditStep(stepID, Actions, Results, StepElement) {
         .then(data => {
             if (!data.success) {
                 alert("Not possible to save the step: " + stepID + ". Message: " + data.message);
-            } else { //if success
-                StepElement.querySelector(".Actions").innerHTML = Actions
-                StepElement.querySelector(".Results").innerHTML = Results
             }
+            const testID = document.getElementById("details-pane").dataset.testId;
+            ShowTestCase(testID);
         })
         .catch(err => {
             console.error('Delete error:', err);
@@ -577,3 +575,33 @@ document.addEventListener('DOMContentLoaded', function () {
         contextMenu.classList.remove('show');
     });
 });
+
+
+async function get_step(step_id) {
+    const params = new URLSearchParams();
+    params.append('step', step_id);
+
+    try {
+        const response = await fetch(`/get_step?${params.toString()}`);
+
+        if (!response.ok) {
+            // If the server responded with an error (like 404 or 500)
+            throw new Error(`Server error: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+
+        if (!data.success) {
+            alert("Could not get step info. Message: " + data.error);
+            return null; // Return null on application-level error
+        }
+
+        // This is what the function will return after it's all done
+        return data.step;
+
+
+    } catch (err) {
+        console.error('Fetch error:', err);
+        return null; // Return null on network or other errors
+    }
+}

@@ -40,11 +40,9 @@
     </div>
 </div>
 
-{% with messages = get_flashed_messages() %}
-{% for message in messages %}
-<p class="text-danger">{{ message }}</p>
-{% endfor %}
-{% endwith %}
+{% if error_message %}
+<script> alert("{{ error_message }}"); </script>
+{% endif %}
 
 <script src="{{ url_for('static', filename='Scripts/add_user_from_manager.js') }}"></script>
 

@@ -324,7 +324,6 @@ document.getElementById("details-pane").addEventListener("click", function (even
             this.innerHTML = html;
             if (refresh_test_case) ShowTestCase(clickedid);
         })
-
         .catch(err => console.error(error_message, err));
 
 

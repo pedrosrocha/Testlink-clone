@@ -2,12 +2,20 @@
 from .Database.steps_database import DatabaseConnector
 from ..utils.return_data_model import DatabaseReturnValueModel
 from datetime import datetime
+from typing import Union, Optional
+import json
 
 
 class TestSteps():
 
     @classmethod
     def return_step_by_id(cls, step_id) -> DatabaseReturnValueModel:
+        if step_id is None:
+            return DatabaseReturnValueModel(
+                executed=False,
+                message=f"Not possible to acquire the step for this id.",
+                error="No if was provided."
+            )
         step, err = DatabaseConnector.return_step_by_id(int(step_id))
         if err:
             return DatabaseReturnValueModel(
@@ -33,15 +41,89 @@ class TestSteps():
         if (err):
             return DatabaseReturnValueModel(
                 executed=False,
-                message="It was not possible to read the steps fro the test {test_case_id} in the version {test_case_version}.",
+                message=f"It was not possible to read the steps fro the test {test_case_id} in the version {test_case_version}.",
                 error=err
+            )
+        updated_steps = [dict(step) for step in steps]
+
+        for i in range(len(steps)):
+            updated_steps[i]["step_action"], updated_steps[i]["expected_value"] = cls.find_ghost_step(
+                updated_steps[i]["step_action"],
+                updated_steps[i]["expected_value"]
             )
 
         return DatabaseReturnValueModel(
             executed=True,
-            message="Steps for the test {test_case_id} in the version {test_case_version}.",
-            data=steps
+            message=f"Steps for the test {test_case_id} in the version {test_case_version}.",
+            data=updated_steps
         )
+
+    @classmethod
+    def find_ghost_step(cls, action_text: str, expected_text: str):
+        action_text = action_text.lower()
+        expected_text = expected_text.lower()
+        steps_required = []
+        actions = []
+        expecteds = []
+
+        start_index = action_text.rfind("[ghost]")
+        end_index = action_text.rfind("[/ghost]")
+
+        while ((start_index > -1 and end_index > -1) and (start_index < end_index)):
+            substitute = action_text[start_index:end_index+8]
+            substitute_by = "{" + action_text[start_index+7:end_index] + "}"
+
+            action_text = action_text.replace(substitute, substitute_by)
+            actions.append(substitute_by)
+            steps_required.append(substitute_by)
+
+            start_index = action_text.rfind("[ghost]")
+            end_index = action_text.rfind("[/ghost]")
+
+        start_index = expected_text.rfind("[ghost]")
+        end_index = expected_text.rfind("[/ghost]")
+
+        while ((start_index > -1 and end_index > -1) and (start_index < end_index)):
+            substitute = expected_text[start_index:end_index+8]
+            substitute_by = "{" + expected_text[start_index+7:end_index] + "}"
+
+            expected_text = expected_text.replace(substitute, substitute_by)
+            expecteds.append(substitute_by)
+            if (substitute_by not in steps_required):
+                steps_required.append(substitute_by)
+
+            start_index = expected_text.rfind("[ghost]")
+            end_index = expected_text.rfind("[/ghost]")
+
+        for step in steps_required:
+            try:
+                action, expected = cls.find_step_ghost(**json.loads(step))
+                if step in actions:
+                    action_text = action_text.replace(step, action)
+
+                if step in expecteds:
+                    expected_text = expected_text.replace(step, expected)
+            except json.JSONDecodeError as e:
+                print(
+                    f"\nNot possible to generate ghost step due to a format error.\n {e}")
+
+        return action_text, expected_text
+
+    @classmethod
+    def find_step_ghost(cls, step, testcase, version):
+        step_info, err = DatabaseConnector.return_step_by_info(
+            int(step),
+            int(testcase),
+            int(version)
+        )
+
+        if not step_info:
+            return_data = f"[ghost]'step':{step},'testcase':{testcase},'version':{version}[/ghost]"
+            print(
+                f"Error while reading the step from the test case {testcase}, version {version} and position {step}. error: {err}")
+            return return_data, return_data
+
+        return step_info["step_action"], step_info["expected_value"]
 
     @classmethod
     def update_step_info(cls, step_id, actions_data, results_data) -> DatabaseReturnValueModel:

@@ -87,9 +87,9 @@ class DatabaseConnector:
             return False, e
 
     @classmethod
-    def update_testcase_data(cls, id: int, updatableItems: str, ItemsValues: UserDict) -> Union[bool, str]:
+    def update_testcase_data(cls, updatableItems: str, ItemsValues: UserDict) -> Union[bool, str]:
         try:
-            query = "UPDATE test_cases SET " + updatableItems + " WHERE id = " + id + ";"
+            query = "UPDATE test_cases SET " + updatableItems + " WHERE id = :id;"
             with engine.begin() as connection:
                 connection.execute(text(query), ItemsValues)
 

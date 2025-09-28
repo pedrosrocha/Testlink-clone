@@ -44,10 +44,15 @@ class DatabaseConnector:
     def delete_user_from_database(cls, user_id: int) -> List[dict]:
 
         # engine.begin() commits the transaction automatically. It also rollsback in a case of an error
-        with engine.begin() as connection:
-            connection.execute(text("DELETE FROM users WHERE id=:id"),
-                               {"id": user_id}
-                               )
+        try:
+            with engine.begin() as connection:
+                connection.execute(text("DELETE FROM users WHERE id=:id"),
+                                   {"id": user_id}
+                                   )
+                return False
+        except SQLAlchemyError as e:
+            print(f'Database error: {e}')
+            return e
 
     @classmethod
     def return_user_info(cls, username: str) -> Tuple[Union[Dict, bool], str]:

@@ -120,3 +120,32 @@ class DatabaseConnector:
                 # Here we log the error and re-raise or wrap in custom exception
                 print(f"Database error while retrieving steps: {e}")
                 return e
+
+    @classmethod
+    def return_step_by_info(cls, position: int, testcase_id: int, version: int) -> Union[Tuple[Dict, str], Tuple[bool, str]]:
+        try:
+            with engine.connect() as connection:
+                result = connection.execute(
+                    text("""
+                        SELECT step_action, expected_value
+                        FROM test_steps 
+                        WHERE test_case_version_id = :id 
+                        AND version = :version
+                        AND step_position = :position
+                    """),
+                    {"position": position,
+                     "id": testcase_id,
+                     "version": version
+                     }
+                )
+                result_list = result.mappings().all()
+                if not result_list:
+                    return False, "no step found."
+
+                step = result_list[0]
+                return step, ""
+
+        except SQLAlchemyError as e:
+            # Here we log the error and re-raise or wrap in custom exception
+            print(f"Database error while retrieving steps: {e}")
+            return False, e

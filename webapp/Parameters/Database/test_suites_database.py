@@ -95,9 +95,9 @@ class DatabaseConnector:
             return False, e
 
     @classmethod
-    def update_suite_data(cls, id: int, updatableItems: str, ItemsValues: UserDict) -> Optional[SQLAlchemyError]:
+    def update_suite_data(cls, updatableItems: str, ItemsValues: UserDict) -> Optional[SQLAlchemyError]:
         try:
-            query = "UPDATE test_suites SET " + updatableItems + " WHERE id = " + id + ";"
+            query = "UPDATE test_suites SET " + updatableItems + " WHERE id = :id;"
             with engine.begin() as connection:
                 connection.execute(text(query), ItemsValues)
 
