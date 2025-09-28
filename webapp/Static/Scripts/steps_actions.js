@@ -453,6 +453,13 @@ window.addEventListener("beforeunload", () => {
 
 //context menu handler
 document.addEventListener('DOMContentLoaded', function () {
+    async function copyToClipboard(text) {
+        try {
+            await navigator.clipboard.writeText(text);
+        } catch (err) {
+            console.error('Failed to copy text: ', err);
+        }
+    }
 
     const listContainer = document.getElementById('details-pane');
     const contextMenu = document.getElementById('step-context-menu');
@@ -516,6 +523,13 @@ document.addEventListener('DOMContentLoaded', function () {
                     break;
                 case 'copy':
                     stepid_clipboard = stepItem.dataset.stepId;
+                    break;
+                case 'ghost':
+
+                    const position = stepItem.dataset.stepPosition;
+                    const testcaseID = document.getElementById("details-pane").dataset.testId;
+                    const currentVersion = document.getElementsByClassName("current-version")[0].dataset.currentVersion;
+                    copyToClipboard('[ghost]"Step":' + position + ',"TestCase":' + testcaseID + ',"Version":' + currentVersion + '[/ghost]');
                     break;
                 case 'paste':
 
@@ -605,3 +619,5 @@ async function get_step(step_id) {
         return null; // Return null on network or other errors
     }
 }
+
+

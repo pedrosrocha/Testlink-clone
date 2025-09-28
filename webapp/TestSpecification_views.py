@@ -90,7 +90,7 @@ def get_test_tree_children():
         for case in command.data:
             children.append({
                 'id': f'c_{case["id"]}',
-                'text': case["name"],
+                'text': str(case["id"])+":"+case["name"],
                 'type': "test",
                 'children': False  # Leaf node
             })

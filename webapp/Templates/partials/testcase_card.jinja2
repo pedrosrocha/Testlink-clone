@@ -27,6 +27,7 @@
                     data-bs-toggle="dropdown" aria-expanded="false">
                     <i class="bi bi-clock-history"></i> Version {{ testcase.current_version }}
                 </button>
+                <span class="current-version" data-current-version="{{ testcase.current_version }}"></span>
                 <ul class="dropdown-menu" aria-labelledby="versionDropdown" id="version-list">
                     {% for version in testcase.versions %}
                     <li class="dropdown-item version-option" data-version-id="{{ version }}">
@@ -124,7 +125,7 @@
     <div id="testStepslist" class="list-group">
         {% for step in test_steps %}
         <div class="list-group-item d-flex align-items-center step-item" data-step-id="{{ step.id }}"
-            id="{{ step.id }}">
+            data-step-position="{{ step.step_position }}" id=" {{ step.id }}">
 
             {%if not user.user_level == 'viewer'%}
             <i class="bi bi-grip-vertical me-3"></i>
