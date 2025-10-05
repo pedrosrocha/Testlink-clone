@@ -2,3 +2,4 @@ sandbox.py
 webapp\Parameters\Database\user_database_old_.py
 webapp\app.py
 /webapp/app.py
+/webapp/.env

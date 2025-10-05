@@ -2,11 +2,95 @@
 
 {% block content %}
 
+<link rel="stylesheet" href="{{ url_for('static', filename='Styles/main_page.css') }}">
 
 
+<!-- Main Page Content -->
+<div class="container mt-4">
+    <div class="text-center mb-5">
+        <h1 class="display-5">Welcome, {{username}}!</h1>
+        <p class="lead text-muted">Select an option below to get started.</p>
+    </div>
 
-<h1>Welcome, {{ username }}!</h1>
-<p>You are authenticated.</p>
+    <!-- Card-like Buttons for Navigation -->
+    <div class="row justify-content-center">
+
+        <!-- Test Specification Card -->
+        <div class="col-md-6 col-lg-3 mb-4">
+            <a href="/TestSpecification" class="card h-100 text-center shadow-sm dashboard-card">
+                <div class="card-body d-flex flex-column justify-content-center align-items-center">
+                    <i class="bi bi-diagram-3-fill text-primary mb-3"></i>
+                    <h4 class="card-title">Test Specification</h4>
+                    <p class="card-text small text-muted">Create and manage your test cases.</p>
+                </div>
+            </a>
+        </div>
+
+        <!-- Projects Card -->
+        <div class="col-md-6 col-lg-3 mb-4">
+            <a href="/Projects" class="card h-100 text-center shadow-sm dashboard-card">
+                <div class="card-body d-flex flex-column justify-content-center align-items-center">
+                    <i class="bi bi-kanban-fill text-success mb-3"></i>
+                    <h4 class="card-title">Projects</h4>
+                    <p class="card-text small text-muted">Organize and track your projects.</p>
+                </div>
+            </a>
+        </div>
+
+        <!-- Users Card -->
+        <div class="col-md-6 col-lg-3 mb-4">
+            <a href="/UsersManagement" class="card h-100 text-center shadow-sm dashboard-card">
+                <div class="card-body d-flex flex-column justify-content-center align-items-center">
+                    <i class="bi bi-people-fill text-info mb-3"></i>
+                    <h4 class="card-title">Users</h4>
+                    <p class="card-text small text-muted">Manage user accounts and permissions.</p>
+                </div>
+            </a>
+        </div>
+
+        <!-- Logout Card -->
+        <div class="col-md-6 col-lg-3 mb-4">
+            <a href="/logout" class="card h-100 text-center shadow-sm dashboard-card">
+                <div class="card-body d-flex flex-column justify-content-center align-items-center">
+                    <i class="bi bi-box-arrow-right text-danger mb-3"></i>
+                    <h4 class="card-title">Logout</h4>
+                    <p class="card-text small text-muted">Sign out of your account.</p>
+                </div>
+            </a>
+        </div>
+        <!-- add user Card -->
+        <div class="col-md-6 col-lg-3 mb-4">
+            <a href="/AddUserFromManager" class="card h-100 text-center shadow-sm dashboard-card">
+                <div class="card-body d-flex flex-column justify-content-center align-items-center">
+                    <i class="bi bi-person-fill-add text-success mb-3"></i>
+                    <h4 class="card-title">Add user</h4>
+                    <p class="card-text small text-muted">Create a new user.</p>
+                </div>
+            </a>
+        </div>
+        <!-- add project Card -->
+        <div class="col-md-6 col-lg-3 mb-4">
+            <a href="/AddProject" class="card h-100 text-center shadow-sm dashboard-card">
+                <div class="card-body d-flex flex-column justify-content-center align-items-center">
+                    <i class="bi bi-clipboard-plus text-info mb-3"></i>
+                    <h4 class="card-title">Add project</h4>
+                    <p class="card-text small text-muted">Create a new project.</p>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-6 col-lg-3 mb-4">
+            <a href="{{ url_for('users_views.ResetUserPassword', username=username) }}"
+                class="card h-100 text-center shadow-sm dashboard-card">
+                <div class="card-body d-flex flex-column justify-content-center align-items-center">
+                    <i class="bi bi-key-fill text-danger mb-3"></i>
+                    <h4 class="card-title">Reset Password</h4>
+                    <p class="card-text small text-muted">Creates a new password for you account.</p>
+                </div>
+            </a>
+        </div>
+
+    </div>
+</div>
 
 
 <script src="{{ url_for('static', filename='Scripts/main_page.js') }}"></script>

@@ -1,0 +1,19 @@
+body {
+    padding-top: 80px;
+    background-color: #f8f9fa;
+}
+
+.dashboard-card {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    text-decoration: none;
+    color: inherit;
+}
+
+.dashboard-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .15) !important;
+}
+
+.dashboard-card .card-body i {
+    font-size: 3.5rem;
+}

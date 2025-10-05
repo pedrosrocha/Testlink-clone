@@ -1,7 +1,11 @@
 from flask import Flask
 from flask_login import LoginManager
 from flask_bcrypt import Bcrypt
+from flask_mail import Mail
 from webapp.Parameters.users import testclone_user_list
+from webapp.config import Config
+
+mail = Mail()
 
 
 def create_app():
@@ -9,7 +13,8 @@ def create_app():
 
     app = Flask(__name__)
 
-    app.config['SECRET_KEY'] = '3988a0fec3475ef9bc321523e67f29a1f99d12213eadd1c7d12e70a413099a4c'
+    app.config.from_object(Config)
+    mail.init_app(app)
 
     from .auth_views import auth
     from .projects_views import projects_views

@@ -83,6 +83,22 @@ def UsersManagement():
                 projects=projects.return_all_projects().data,
                 current_project_id=int(session.get('current_project_id'))
             )
+
+        # find current user psoition
+        # remove it from the list
+        # append to the list
+        # revese it
+
+        current_user_pop = {}
+        for user in command.data:
+            if user["username"] == current_user.username:
+                current_user_pop = user
+                break
+
+        command.data.remove(current_user_pop)
+        command.data.append(current_user_pop)
+        command.data.reverse()
+
         return render_template(
             'users_management.jinja2',
             users=command.data,

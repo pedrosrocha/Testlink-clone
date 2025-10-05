@@ -20,7 +20,7 @@ class testclone_user_list():
                 return DatabaseReturnValueModel(
                     executed=False,
                     message="Not possible to add user.",
-                    error=f"The name '{username}' is duplicated."
+                    error=f"The usernmae '{username}' is already in use, pick another username."
                 )
 
         encrypted_password = self.bcrypt.generate_password_hash(
