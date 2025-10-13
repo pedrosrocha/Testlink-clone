@@ -1,11 +1,8 @@
 from flask import Flask
 from flask_login import LoginManager
 from flask_bcrypt import Bcrypt
-from flask_mail import Mail
 from webapp.Parameters.users import testclone_user_list
 from webapp.config import Config
-
-mail = Mail()
 
 
 def create_app():
@@ -14,7 +11,6 @@ def create_app():
     app = Flask(__name__)
 
     app.config.from_object(Config)
-    mail.init_app(app)
 
     from .auth_views import auth
     from .projects_views import projects_views

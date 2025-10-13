@@ -1,14 +1,11 @@
-from sqlalchemy import create_engine, text
+from sqlalchemy import text
 from typing import Union, Optional, List, Dict, Tuple
 from webapp.TypeHinting.TypeHint import UserDict
 from sqlalchemy.exc import SQLAlchemyError
+from webapp.config import DatabaseConfig
 
 
-# Format: mysql+pymysql://<username>:<password>@<host>/
-# ( becomes %28
-# ) becomes %29
-engine = create_engine(
-    "mysql+pymysql://UserPython:root%2812345%29@localhost/testlinkclone")
+engine = DatabaseConfig.DBengine
 
 
 class DatabaseConnector:

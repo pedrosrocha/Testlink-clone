@@ -1,9 +1,9 @@
 from flask import Blueprint, render_template, request, url_for, redirect,  session, abort, current_app
 from flask_login import login_required, current_user
 from webapp.Parameters.projects import projects
-from webapp.Parameters.users import testclone_user_list
 from webapp.utils import url_parser
 from webapp.utils.roles_controllers import role_required
+from flask import flash
 
 
 users_views = Blueprint('users_views', __name__)

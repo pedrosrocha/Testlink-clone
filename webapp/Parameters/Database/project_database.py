@@ -1,13 +1,11 @@
-from sqlalchemy import create_engine, text
+from sqlalchemy import text
 from typing import Union, Optional
 from webapp.TypeHinting.TypeHint import UserDict
 from sqlalchemy.exc import SQLAlchemyError
+from webapp.config import DatabaseConfig
 
-# Format: mysql+pymysql://<username>:<password>@<host>/
-# ( becomes %28
-# ) becomes %29
-engine = create_engine(
-    "mysql+pymysql://UserPython:root%2812345%29@localhost/testlinkclone")
+
+engine = DatabaseConfig.DBengine
 
 
 class DatabaseConnector:
@@ -46,13 +44,14 @@ class DatabaseConnector:
     def add_project_to_database(cls, ProjectName: str, Description: str, Creator: str, StartDate: str, EndDate: str) -> bool:
         try:
             with engine.begin() as connection:
-                connection.execute(text("INSERT INTO projects(name, description, owner_name, start_date, end_date, updated_by) VALUES (:ProjectName, :description, :owner_name, :start_date, :end_date,:updated_by)"),
-                                   {"ProjectName": ProjectName,
-                                    "description": Description,
-                                    "owner_name": Creator,
-                                    "start_date": StartDate,
-                                    "end_date": EndDate,
-                                    "updated_by": Creator})
+                connection.execute(text(
+                    "INSERT INTO projects(name, description, owner_name, start_date, end_date, updated_by) VALUES (:ProjectName, :description, :owner_name, :start_date, :end_date,:updated_by)"),
+                    {"ProjectName": ProjectName,
+                     "description": Description,
+                     "owner_name": Creator,
+                     "start_date": StartDate,
+                     "end_date": EndDate,
+                     "updated_by": Creator})
             return True, ""
         except SQLAlchemyError as e:
             print(f"Database error in add_project_to_database: {e}")
@@ -85,8 +84,9 @@ class DatabaseConnector:
     def update_project_data(cls, project_id: int, name: str, description: str, status: int, user: str) -> bool:
         try:
             with engine.begin() as connection:
-                connection.execute(text("UPDATE projects SET name =:project, status=:status, description=:description, updated_by=:updated_by WHERE id =:project_id;"),
-                                   {
+                connection.execute(text(
+                    "UPDATE projects SET name =:project, status=:status, description=:description, updated_by=:updated_by WHERE id =:project_id;"),
+                    {
                     "status": status,
                     "project": name,
                     "description": description,
