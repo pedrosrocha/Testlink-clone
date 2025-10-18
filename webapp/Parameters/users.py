@@ -1,5 +1,4 @@
 from flask_login import UserMixin
-from flask_bcrypt import Bcrypt
 from .Database.user_database import DatabaseConnector
 from ..utils.return_data_model import DatabaseReturnValueModel
 from cachetools import cached, TTLCache
@@ -130,10 +129,16 @@ class testclone_user_list():
                 message=f"No user found for th id {id}",
                 error=error
             )
+        if not user:
+            return DatabaseReturnValueModel(
+                executed=False,
+                message=f"No user found for th id {id}",
+                error="No user found."
+            )
 
         return DatabaseReturnValueModel(
             executed=True,
-            message=f"No user found for this id",
+            message=f"User found for this id",
             data=user
         )
 

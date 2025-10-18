@@ -1,9 +1,8 @@
 from flask import Blueprint, render_template, request, url_for, redirect,  session, abort, current_app
-from flask_login import login_required, current_user
+from flask_login import login_required, current_user, logout_user
 from webapp.Parameters.projects import projects
 from webapp.utils import url_parser
 from webapp.utils.roles_controllers import role_required
-from flask import flash
 
 
 users_views = Blueprint('users_views', __name__)
@@ -114,6 +113,10 @@ def UsersManagement():
 
     if request.form['action'] == "deletion":
         command = current_app.Users_manipulation.delete_user(user_id)
+        if current_user.id == user_id and command.executed:
+            logout_user()
+            return redirect(url_for('auth.login'))
+
         if not command.executed:
             return render_template(
                 "error_message.jinja2",

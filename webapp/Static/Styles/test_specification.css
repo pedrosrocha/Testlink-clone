@@ -184,3 +184,8 @@ html {
     text-wrap: auto;
     flex-wrap: wrap;
 }
+
+
+td {
+    border-width: 2px;
+}

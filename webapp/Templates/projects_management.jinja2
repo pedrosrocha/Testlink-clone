@@ -26,7 +26,6 @@
             <table class="table table-hover">
                 <thead class="">
                     <tr>
-                        <th>ID</th>
                         <th>Name</th>
                         <th>Status</th>
                         <th>Owner</th>
@@ -42,7 +41,7 @@
                 <tbody>
                     {% for project in projects %}
                     <tr>
-                        <td>{{ project['id'] }}</td>
+                        <td hidden>{{ project['id'] }}</td>
                         <td><a href="{{url_for('projects_views.OpenProject', project_id=project['id'])}}">{{
                                 project['name'] }}</a></td>
                         <td><span class="badge bg-secondary">{{ project['status'] }}</span></td>

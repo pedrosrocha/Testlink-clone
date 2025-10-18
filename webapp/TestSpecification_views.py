@@ -1,12 +1,12 @@
-from flask import Blueprint, render_template, request, url_for, redirect, flash,  session, abort, jsonify
-from flask_login import login_user, logout_user, login_required, current_user
-from webapp.Parameters.users import testclone_user_list, testclone_user
-from webapp.utils import url_parser
+from flask import Blueprint, render_template, request,  session, abort, jsonify, current_app
+from flask_login import login_required, current_user
 from webapp.utils.roles_controllers import role_required
 from webapp.Parameters.projects import projects
 from webapp.Parameters.TestSuites import TestSuits
 from webapp.Parameters.TestCases import TestCases
 from webapp.Parameters.TestSteps import TestSteps
+from webapp.Parameters.FileHandler import files
+
 
 TestSpecification_views = Blueprint('TestSpecification_views', __name__)
 
@@ -754,3 +754,23 @@ def get_step():
         return jsonify(success=False, error=f"It wasd not posisble to get the step {id} due to the error: {command.error}")
 
     return jsonify(success=True, step=command.data)
+
+
+@login_required
+@TestSpecification_views.route('/upload_image', methods=['POST'])
+def upload_image():
+    if 'file' not in request.files:
+        return jsonify(success=False, error='No file part in the request'), 400
+
+    file = request.files['file']
+
+    if file.filename == '':
+        return jsonify(success=False, error='No selected file'), 400
+
+    command = files.savefile(file, current_app.root_path)
+
+    if command.executed:
+        file_url = f'/static/uploads/{file.filename}'
+        return jsonify({'location': file_url})
+
+    return jsonify(success=False, error=command.error), 500

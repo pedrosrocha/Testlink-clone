@@ -60,8 +60,6 @@ class TestSteps():
 
     @classmethod
     def find_ghost_step(cls, action_text: str, expected_text: str):
-        action_text = action_text.lower()
-        expected_text = expected_text.lower()
         steps_required = []
         actions = []
         expecteds = []

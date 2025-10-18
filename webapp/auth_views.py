@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, url_for, redirect, flash,  session, current_app
 from flask_login import login_user, logout_user, login_required, current_user
-from webapp.Parameters.users import testclone_user_list, testclone_user
+from webapp.Parameters.users import testclone_user
 from webapp.Parameters.projects import projects
 from webapp.utils import url_parser
 
@@ -39,7 +39,7 @@ def login():
 @auth.route('/', methods=['GET'])
 # The user is directly redirected to the login page if the session is not opened, if the session is opened, the user is redirected to the main page
 def index():
-    if current_user.is_authenticated:
+    if current_user and current_user.is_authenticated:
         return redirect(url_for("auth.MainPage"))
     return redirect(url_for("auth.login"))
 

@@ -202,7 +202,7 @@ async function showEditor(options) {
         plugins: [
             'advlist', 'autolink', 'link', 'lists', 'charmap', 'preview',
             'searchreplace', 'wordcount', 'visualblocks', 'visualchars', 'code', 'fullscreen',
-            'insertdatetime', 'table', 'help', 'autoresize'
+            'insertdatetime', 'table', 'help', 'autoresize', 'image code'
         ],
         toolbar: 'undo redo | bold italic | alignleft aligncenter alignright alignjustify | forecolor backcolor',
         menu: {
@@ -218,7 +218,7 @@ async function showEditor(options) {
         link_default_target: '_blank',
         autoresize_bottom_margin: 10,
         max_height: 500,
-        min_height: 100,
+        min_height: 300,
         table_border_widths: [
             { title: 'small', value: '2px' },
             { title: 'medium', value: '3px' },
@@ -232,7 +232,10 @@ async function showEditor(options) {
             { title: '4px', value: '5px' },
             { title: '5px', value: '6px' }
         ],
-
+        images_upload_url: '/upload_image',
+        automatic_uploads: true,
+        images_upload_credentials: true,
+        image_title: true
     };
 
     tinymce.init({
@@ -261,8 +264,8 @@ async function showEditor(options) {
     // Handle Save button click
     editorForm.querySelector('.btn-save').addEventListener('click', () => {
 
-        let newActions = tinymce.get(actionsTextarea.id).getContent().replaceAll("<td>", "<td style='border-width: 2px;'>");
-        let newResults = tinymce.get(resultsTextarea.id).getContent().replaceAll("<td>", "<td style='border-width: 2px;'>");
+        let newActions = tinymce.get(actionsTextarea.id).getContent(); //.replaceAll("<td>", "<td style='border-width: 2px;'>");
+        let newResults = tinymce.get(resultsTextarea.id).getContent(); //.replaceAll("<td>", "<td style='border-width: 2px;'>");
 
         //closes the tinymce
         editorForm.querySelector('.btn-cancel').click();
@@ -529,7 +532,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     const position = stepItem.dataset.stepPosition;
                     const testcaseID = document.getElementById("details-pane").dataset.testId;
                     const currentVersion = document.getElementsByClassName("current-version")[0].dataset.currentVersion;
-                    copyToClipboard('[ghost]"Step":' + position + ',"TestCase":' + testcaseID + ',"Version":' + currentVersion + '[/ghost]');
+                    copyToClipboard('[ghost]"step":' + position + ',"testcase":' + testcaseID + ',"version":' + currentVersion + '[/ghost]');
                     break;
                 case 'paste':
 
