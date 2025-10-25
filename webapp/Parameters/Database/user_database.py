@@ -60,7 +60,11 @@ class DatabaseConnector:
 
                 # this returns the list of users as a dictionary
                 DictFromUser = result.mappings().first()
-                return DictFromUser, ""
+
+                if DictFromUser:
+                    return DictFromUser, ""
+                 
+                return None, "No user found"
         except SQLAlchemyError as e:
             print(f"Database error: {e}")
             return False, e

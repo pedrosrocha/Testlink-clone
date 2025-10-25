@@ -83,10 +83,6 @@ def UsersManagement():
                 current_project_id=int(session.get('current_project_id'))
             )
 
-        # find current user psoition
-        # remove it from the list
-        # append to the list
-        # revese it
 
         current_user_pop = {}
         for user in command.data:

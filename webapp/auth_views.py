@@ -17,7 +17,8 @@ def login():
     username = request.form['username']
     password = request.form['password']
 
-    if current_app.Users_manipulation.is_user_valid(username, password):
+    valid_user = current_app.Users_manipulation.is_user_valid(username, password)
+    if valid_user.executed:
         user = current_app.Users_manipulation.return_user_by_username(
             username)
         login_user(testclone_user.from_dict(user.data))
@@ -33,7 +34,7 @@ def login():
         return redirect(next_page or url_for('auth.MainPage'))
 
     flash('Invalid credentials')
-    return render_template('login.jinja2', user=None), 401
+    return render_template('login.jinja2', user=None), 200
 
 
 @auth.route('/', methods=['GET'])
