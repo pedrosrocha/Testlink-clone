@@ -1,6 +1,7 @@
 # TestClone
-
 A web application for managing software testing projects, including test specifications, test suites, and test cases, inspired by the famous [TestLink](https://testlink.org/) with a spin on its looks and a few added funcitonalities.
+
+![Demonstração do Teste de Força Bruta contra o Login](readme_assets/testclone/1018.gif)
 
 ## Core Technologies Used
 
