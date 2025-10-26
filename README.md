@@ -1,7 +1,22 @@
 # TestClone
 A web application for managing software testing projects, including test specifications, test suites, and test cases, inspired by the famous [TestLink](https://testlink.org/) with a spin on its looks and a few added funcitonalities.
 
-![Demonstração do Teste de Força Bruta contra o Login](readme_assets/testclone/1018.gif)
+
+
+![Testclone demo](readme_assets/testclone/1018.gif)
+
+<p align="center">
+  <a href="https://youtu.be/3uxx_gammqI" target="_blank" rel="noopener">
+    <img src="https://img.youtube.com/vi/3uxx_gammqI/hqdefault.jpg" alt="Watch on YouTube" style="max-width:100%;width:700px;">
+  </a>
+</p>
+
+<!-- 2) HTML if you want to control width/height (useful to limit large GIFs) -->
+<p align="center">
+  <img src="readme_assets/testclone/1018.gif" alt="Testclone demo" width="700" />
+</p>
+
+
 
 ## Core Technologies Used
 
