@@ -3,7 +3,7 @@
 {% block content %}
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-<link rel="stylesheet" href="{{ url_for('static', filename='Styles/add_user.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='styles/add_user.css') }}">
 
 
 <div class="container">
@@ -65,7 +65,7 @@
     </div>
 </div>
 
-<script src="{{ url_for('static', filename='Scripts/add_user.js') }}"></script>
+<script src="{{ url_for('static', filename='scripts/add_user.js') }}"></script>
 
 {% if error_message %}
 <script> alert("{{ error_message }}"); </script>
