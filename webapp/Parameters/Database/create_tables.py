@@ -23,7 +23,9 @@ def create_tables(database_connection_path):
 
     DBengine = create_engine(database_connection_path)
 
-    with open('create_tables.sql', 'r') as f:
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    sql_file_path = os.path.join(script_dir, 'create_tables.sql')
+    with open(sql_file_path, 'r') as f:
         sql_commands = f.read()
 
     try:

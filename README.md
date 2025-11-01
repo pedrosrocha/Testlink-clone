@@ -67,14 +67,22 @@ A web application for managing software testing projects, including test specifi
     ```
 
 3.  **Configure Environment:**
-    Create a `.env` file in the root directory and add the following variables:
-    ```
+    Create a `.env` file in the root directory and add the following variables. Update them with your local database configuration:
+    ```env
     SECRET_KEY=your_super_secret_key
-    DATABASE_KEY=mysql+pymysql://user:password@host/database_name
+    DATABASE_HOST=localhost
+    DATABASE_USER=your_db_user
+    DATABASE_PASSWORD=your_db_password
+    DATABASE_NAME=testclone
+    DATABASE_PORT=3306
+    DATABASE_KEY=mysql+pymysql://
     ```
 
 4.  **Initialize Database:**
-    Run the script to create the necessary database tables.
+    Run the script to create the database and tables. This script will also populate the database with initial data, including a default administrator account:
+    *   **Username:** `admin user`
+    *   **Password:** `admin`
+
     ```bash
     pipenv run python -m webapp.Parameters.Database.create_tables
     ```
