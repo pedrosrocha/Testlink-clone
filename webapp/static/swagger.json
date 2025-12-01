@@ -1,0 +1,568 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "description": "API for Test Specification features in Testclone",
+        "version": "1.0.0",
+        "title": "Testclone - Test Specification API",
+        "license": {
+            "name": "MIT",
+            "url": "https://opensource.org/licenses/MIT"
+        }
+    },
+    "paths": {
+        "/get_test_tree_root": {
+            "get": {
+                "tags": [
+                    "Test Tree"
+                ],
+                "summary": "Get the root of the test tree",
+                "responses": {
+                    "200": {
+                        "description": "A list of root test suites",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Node"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    }
+                }
+            }
+        },
+        "/get_test_tree_children": {
+            "get": {
+                "tags": [
+                    "Test Tree"
+                ],
+                "summary": "Get children of a specific node in the test tree",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "query",
+                        "required": true,
+                        "description": "The ID of the node to get children for.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A list of child nodes (suites and test cases)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Node"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    }
+                }
+            }
+        },
+        "/delete_node": {
+            "post": {
+                "tags": [
+                    "Test Tree"
+                ],
+                "summary": "Delete a node (suite or test case) from the tree",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "id": {
+                                        "type": "string",
+                                        "example": "c_123"
+                                    },
+                                    "type": {
+                                        "type": "string",
+                                        "enum": [
+                                            "suite",
+                                            "test"
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "$ref": "#/components/responses/Success"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Error"
+                    }
+                }
+            }
+        },
+        "/rename_node": {
+            "post": {
+                "tags": [
+                    "Test Tree"
+                ],
+                "summary": "Rename a node (suite or test case)",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "id": {
+                                        "type": "string",
+                                        "example": "c_123"
+                                    },
+                                    "new_name": {
+                                        "type": "string",
+                                        "example": "New Node Name"
+                                    },
+                                    "type": {
+                                        "type": "string",
+                                        "enum": [
+                                            "suite",
+                                            "test"
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "$ref": "#/components/responses/Success"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Error"
+                    }
+                }
+            }
+        },
+        "/add_test_case": {
+            "post": {
+                "tags": [
+                    "Test Case"
+                ],
+                "summary": "Add a new test case",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/NewTestCase"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "$ref": "#/components/responses/CreationSuccess"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Error"
+                    }
+                }
+            }
+        },
+        "/add_suite": {
+            "post": {
+                "tags": [
+                    "Test Suite"
+                ],
+                "summary": "Add a new test suite",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/NewTestSuite"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "$ref": "#/components/responses/CreationSuccess"
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    }
+                }
+            }
+        },
+        "/update_test_case": {
+            "post": {
+                "tags": [
+                    "Test Case"
+                ],
+                "summary": "Update an existing test case",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateTestCase"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "$ref": "#/components/responses/Success"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Error"
+                    }
+                }
+            }
+        },
+        "/update_suite": {
+            "post": {
+                "tags": [
+                    "Test Suite"
+                ],
+                "summary": "Update an existing test suite",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Updated Suite Name"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Updated description."
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "$ref": "#/components/responses/Success"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Error"
+                    }
+                }
+            }
+        },
+        "/upload_image": {
+            "post": {
+                "tags": [
+                    "Utilities"
+                ],
+                "summary": "Upload an image for test steps",
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "file": {
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "File uploaded successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "location": {
+                                            "type": "string",
+                                            "example": "/static/uploads/image.png"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Error"
+                    }
+                }
+            }
+        },
+        "/add_project": {
+            "post": {
+                "tags": [
+                    "Add project"
+                ],
+                "summary": "Add a new project",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/NewTestSuite"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "$ref": "#/components/responses/CreationSuccess"
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "Node": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "example": "c_123"
+                    },
+                    "text": {
+                        "type": "string",
+                        "example": "123:My Test Case"
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "suite",
+                            "test"
+                        ]
+                    },
+                    "children": {
+                        "type": "boolean"
+                    }
+                }
+            },
+            "NewTestCase": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "example": "New Test Case"
+                    },
+                    "parent_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "Detailed description."
+                    },
+                    "precondition": {
+                        "type": "string",
+                        "example": "System is on."
+                    },
+                    "expected_results": {
+                        "type": "string",
+                        "example": "Success message appears."
+                    },
+                    "status": {
+                        "type": "string",
+                        "example": "Draft"
+                    },
+                    "priority": {
+                        "type": "string",
+                        "example": "High"
+                    }
+                }
+            },
+            "UpdateTestCase": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "example": "c_123"
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "Updated Test Case Name"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "preconditions": {
+                        "type": "string"
+                    },
+                    "expected_results": {
+                        "type": "string"
+                    },
+                    "priority": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "string"
+                    }
+                }
+            },
+            "NewTestSuite": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "example": "New Suite"
+                    },
+                    "parent_id": {
+                        "type": "integer",
+                        "nullable": true,
+                        "example": 1
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "Suite description."
+                    }
+                }
+            },
+            "NewProject": {
+                "type": "object",
+                "properties": {
+                    "project_name": {
+                        "type": "string",
+                        "example": "New Project"
+                    },
+                    "start_date": {
+                        "type": "integer",
+                        "nullable": true,
+                        "example": 1
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "Suite description."
+                    }
+                }
+            },
+            "SuccessResponse": {
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "message": {
+                        "type": "string"
+                    }
+                }
+            },
+            "CreationSuccessResponse": {
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "integer"
+                    }
+                }
+            },
+            "ErrorResponse": {
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean",
+                        "example": false
+                    },
+                    "error": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "responses": {
+            "Success": {
+                "description": "Operation was successful",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/SuccessResponse"
+                        }
+                    }
+                }
+            },
+            "CreationSuccess": {
+                "description": "Resource was created successfully",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/CreationSuccessResponse"
+                        }
+                    }
+                }
+            },
+            "NotFound": {
+                "description": "The specified resource was not found",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "BadRequest": {
+                "description": "The request was malformed or invalid",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "Error": {
+                "description": "An unexpected server-side error occurred",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

@@ -1,10 +1,20 @@
 # 🧪TestClone
-A web application for managing software testing projects, including test specifications, test suites, and test cases, inspired by the famous [TestLink](https://testlink.org/) with a spin on its looks and a few added funcitonalities.
-
 
 <p align="center">
   <img src="readme_assets/testclone/1018.gif" alt="Testclone" width="800" />
 </p>
+
+A web application for managing software testing projects, including test specifications, test suites, and test cases, inspired by the famous [TestLink](https://testlink.org/) with a spin on its looks and a few added funcitonalities.
+
+[Live demo](https://tesclone.onrender.com/): \
+username: **editor user** \
+password: **editor**
+
+The database deploy was made using [aiven](https://aiven.io/) and the flask deploy was made on [render](https://render.com/). Both free tier, so it may take a few seconds to fully load the apllication. 
+
+
+for admin privilegies send me an email at **pedro.vic13133@gmail.com** or reach me on [linkedin](https://linkedin.com/in/pedrovicrocha)
+
 
 
 
