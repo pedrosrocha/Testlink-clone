@@ -54,14 +54,15 @@ def OpenProject(project_id):
     if request.method == 'GET':
         command = projects.return_project_by_id(project_id)
         if (not command.executed):
-            return render_template(
-                '404.jinja2',
-                message=f"error while reading the projects. error{command.error}",
-                projects=projects.return_all_projects().data,
-                current_project_id=int(
-                    session.get('current_project_id')
-                )
-            ), 404
+           # return render_template(
+           #    '404.jinja2',
+           #    message=f"No project found. error{command.error}",
+           #    projects=projects.return_all_projects().data,
+           #    current_project_id=int(
+           #        session.get('current_project_id')
+           #    )
+           # ), 404
+            abort(404)
 
         return render_template(
             'open_project.jinja2',
@@ -186,7 +187,7 @@ def AddProject():
                         project.data['id'],
                         current_user.username)
 
-    return redirect(url_for('projects_views.ProjectManagement'))
+    return redirect(url_for('projects_views.ProjectManagement')), 302
 
 
 @projects_views.route('/SelectProject', methods=['POST'])

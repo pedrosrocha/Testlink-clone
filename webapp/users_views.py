@@ -83,7 +83,6 @@ def UsersManagement():
                 current_project_id=int(session.get('current_project_id'))
             )
 
-
         current_user_pop = {}
         for user in command.data:
             if user["username"] == current_user.username:
@@ -94,12 +93,15 @@ def UsersManagement():
         command.data.append(current_user_pop)
         command.data.reverse()
 
+        curr_project = session.get('current_project_id')
+        if not curr_project:
+            curr_project = projects.return_all_projects().data[0]["id"]
         return render_template(
             'users_management.jinja2',
             users=command.data,
             user=current_user,
             projects=projects.return_all_projects().data,
-            current_project_id=int(session.get('current_project_id'))
+            current_project_id=int(curr_project)
         )
 
     # if it is a POST

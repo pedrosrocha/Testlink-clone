@@ -155,8 +155,9 @@ class projects:
         project_data_as_row, database_error = DatabaseConnector.return_project_by_id(
             int(project_id))
 
-        project_data = [dict(project_data_as_row)]
-        if project_data:
+        if project_data_as_row:
+            project_data = [dict(project_data_as_row)]
+
             return DatabaseReturnValueModel(
                 executed=True,
                 message=f"Project with ID {project_id} found.",

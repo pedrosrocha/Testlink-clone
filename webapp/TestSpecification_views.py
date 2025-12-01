@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request,  session, abort, jsonify, current_app
+from flask import Blueprint, render_template, request,  session, abort, jsonify, current_app, send_from_directory
 from flask_login import login_required, current_user
 from webapp.utils.roles_controllers import role_required
 from webapp.Parameters.projects import projects
@@ -33,9 +33,15 @@ def TestSpecification():
 
 
 @TestSpecification_views.route('/get_test_tree_root')
+@login_required
 def get_test_tree_root():
 
     _current_project_id = session.get('current_project_id')
+    if (not _current_project_id):
+        _current_project_id = int(
+            projects.return_oldest_project().data["id"])
+
+        session["current_project_id"] = int(_current_project_id)
 
     command = TestSuits.return_testsuits_from_project(
         _current_project_id,
@@ -56,51 +62,58 @@ def get_test_tree_root():
 
 
 @TestSpecification_views.route('/get_test_tree_children')
+@login_required
 def get_test_tree_children():
     node_id = request.args.get('id')  # Node id returned from jstree
 
+    _current_project_id = session.get('current_project_id')
+    if (not _current_project_id):
+        _current_project_id = int(
+            projects.return_oldest_project().data["id"])
+        session["current_project_id"] = int(_current_project_id)
+
     children = []
 
-    if node_id:
-        suite_id = int(node_id)
+    if not node_id:
+        return jsonify(success=False, message="No id provided", error=command.error), 404
 
-        _current_project_id = session.get('current_project_id')
+    suite_id = int(node_id)
 
-        command = TestSuits.return_testsuits_from_project(
-            _current_project_id,
-            suite_id
-        )
+    command = TestSuits.return_testsuits_from_project(
+        _current_project_id,
+        suite_id
+    )
 
-        if not command.executed:
-            return jsonify(success=False, message="Error while reading the suites", error=command.error), 404
+    if not command.executed:
+        return jsonify(success=False, message="Error while reading the suites", error=command.error), 404
 
-        for suite in command.data:
-            children.append({
-                'id': suite["id"],
-                'text': suite["name"],
-                'type': "suite",
-                'children': True  # This is what makes the jstrre lazy loading possible
-            })
+    for suite in command.data:
+        children.append({
+            'id': suite["id"],
+            'text': suite["name"],
+            'type': "suite",
+            'children': True  # This is what makes the jstrre lazy loading possible
+        })
 
-        command = TestCases.return_testcases_from_project(suite_id)
+    command = TestCases.return_testcases_from_project(suite_id)
 
-        if not command.executed:
-            abort(404)
+    if not command.executed:
+        abort(404)
 
-        for case in command.data:
-            children.append({
-                'id': f'c_{case["id"]}',
-                'text': str(case["id"])+":"+case["name"],
-                'type': "test",
-                'children': False  # Leaf node
-            })
+    for case in command.data:
+        children.append({
+            'id': f'c_{case["id"]}',
+            'text': str(case["id"])+":"+case["name"],
+            'type': "test",
+            'children': False  # Leaf node
+        })
 
     return jsonify(children)
 
 
 @TestSpecification_views.route('/delete_node', methods=['POST'])
-@role_required('admin', 'editor')
 @login_required
+@role_required('admin', 'editor')
 def delete_node():
     data = request.get_json()
     id = data.get('id')
@@ -123,8 +136,8 @@ def delete_node():
 
 
 @TestSpecification_views.route('/rename_node', methods=['POST'])
-@role_required('admin', 'editor')
 @login_required
+@role_required('admin', 'editor')
 def rename_node():
     data = request.get_json()
     id = data.get('id')
@@ -156,8 +169,8 @@ def rename_node():
 
 
 @TestSpecification_views.route('/add_test_case', methods=['POST'])
-@role_required('admin', 'editor')
 @login_required
+@role_required('admin', 'editor')
 def add_test_case():
     data = request.get_json()
     node_name = data.get('name')
@@ -188,8 +201,8 @@ def add_test_case():
 
 
 @TestSpecification_views.route('/add_suite', methods=['POST'])
-@role_required('admin', 'editor')
 @login_required
+@role_required('admin', 'editor')
 def add_suite():
     data = request.get_json()
     node_name = data.get('name')
@@ -197,6 +210,11 @@ def add_suite():
     description = data.get('description') if data.get('description') else ""
 
     _current_project_id = session.get('current_project_id')
+    if (not _current_project_id):
+        _current_project_id = int(
+            projects.return_oldest_project().data["id"])
+        session["current_project_id"] = int(_current_project_id)
+
     current_user.username
     command = TestSuits.add_suite(
         node_name,
@@ -212,8 +230,8 @@ def add_suite():
 
 
 @TestSpecification_views.route('/paste_test_case', methods=['POST'])
-@role_required('admin', 'editor')
 @login_required
+@role_required('admin', 'editor')
 def paste_test_case():
     data = request.get_json()
     test_case_id = data.get('test_id')
@@ -247,12 +265,19 @@ def paste_test_case():
 
 
 @TestSpecification_views.route('/paste_suite', methods=['POST'])
-@role_required('admin', 'editor')
 @login_required
+@role_required('admin', 'editor')
 def paste_suite():
     data = request.get_json()
     suite_id = data.get('suite_id')              # root suite being copied
     parent_id = data.get('parent_id')            # new parent node
+
+    _current_project_id = session.get('current_project_id')
+    if (not _current_project_id):
+        _current_project_id = int(
+            projects.return_oldest_project().data["id"])
+        session["current_project_id"] = int(_current_project_id)
+
     # flat list of all child nodes (suites & tests)
     children = data.get("children")
 
@@ -264,7 +289,7 @@ def paste_suite():
         parent_id,
         suite_id,
         current_user.username,
-        session.get('current_project_id')
+        _current_project_id
     )
 
     if not copied_suite_command.executed:
@@ -303,7 +328,7 @@ def paste_suite():
                 new_parent_id,
                 old_id,
                 current_user.username,
-                session.get('current_project_id')
+                _current_project_id
             )
 
             if not command_suite.executed:
@@ -315,18 +340,22 @@ def paste_suite():
 
 
 @TestSpecification_views.route('/move_suite', methods=['POST'])
-@role_required('admin', 'editor')
 @login_required
+@role_required('admin', 'editor')
 def move_suite():
     data = request.get_json()
     suite_id = data.get('node_id')
     parent_id = data.get('parent_id')            # new parent node
-    project = session.get('current_project_id')
+    _current_project_id = session.get('current_project_id')
+    if (not _current_project_id):
+        _current_project_id = int(
+            projects.return_oldest_project().data["id"])
+        session["current_project_id"] = int(_current_project_id)
 
     command = TestSuits.update_suite_data(
         suite_id,
         None,
-        project,
+        _current_project_id,
         None,
         parent_id
     )
@@ -338,8 +367,8 @@ def move_suite():
 
 
 @TestSpecification_views.route('/move_test', methods=['POST'])
-@role_required('admin', 'editor')
 @login_required
+@role_required('admin', 'editor')
 def move_test():
     data = request.get_json()
 
@@ -367,6 +396,7 @@ def move_test():
 
 
 @TestSpecification_views.route('/get_testcase_html/<int:testcase_id>', methods=['GET'])
+@login_required
 def get_testcase_html(testcase_id):
     testcase_command = TestCases.return_testcase_by_id(testcase_id)
     if not testcase_command.executed:
@@ -390,6 +420,7 @@ def get_testcase_html(testcase_id):
 
 
 @TestSpecification_views.route('/get_suite_html/<int:suite_id>', methods=['GET'])
+@login_required
 def get_suite_html(suite_id):
     command = TestSuits.return_suite_by_id(suite_id)
 
@@ -404,15 +435,15 @@ def get_suite_html(suite_id):
 
 
 @TestSpecification_views.route("/new_test_case_form", methods=['GET'])
-@role_required('admin', 'editor')
 @login_required
+@role_required('admin', 'editor')
 def new_test_case_form():
     return render_template('partials/add_new_test_case.html')
 
 
 @TestSpecification_views.route("/edit_suite", methods=['POST'])
-@role_required('admin', 'editor')
 @login_required
+@role_required('admin', 'editor')
 def edit_suite():
     data = request.get_json()
     suite_id = data.get('id')
@@ -424,8 +455,8 @@ def edit_suite():
 
 
 @TestSpecification_views.route("/edit_test_case", methods=['POST'])
-@role_required('admin', 'editor')
 @login_required
+@role_required('admin', 'editor')
 def edit_test_case():
     data = request.get_json()
     test_id = data.get('id')
@@ -440,15 +471,15 @@ def edit_test_case():
 
 
 @TestSpecification_views.route("/new_suite_form", methods=['GET'])
-@role_required('admin', 'editor')
 @login_required
+@role_required('admin', 'editor')
 def new_suite_form():
     return render_template('partials/add_new_suite.html')
 
 
 @TestSpecification_views.route("/update_test_case", methods=['POST'])
-@role_required('admin', 'editor')
 @login_required
+@role_required('admin', 'editor')
 def update_test_case():
     data = request.get_json()
     id = data.get('id')[2:]
@@ -477,8 +508,8 @@ def update_test_case():
 
 
 @TestSpecification_views.route("/update_suite", methods=['POST'])
-@role_required('admin', 'editor')
 @login_required
+@role_required('admin', 'editor')
 def update_suite():
     data = request.get_json()
     id = data.get('id')
@@ -500,8 +531,8 @@ def update_suite():
 
 
 @TestSpecification_views.route("/new_test_case_version", methods=['POST'])
-@role_required('admin', 'editor')
 @login_required
+@role_required('admin', 'editor')
 def new_test_case_version():
     data = request.get_json()
     id = data.get('id')[2:]
@@ -528,6 +559,7 @@ def new_test_case_version():
 
 @TestSpecification_views.route("/update_test_case_version", methods=['POST'])
 @login_required
+@role_required('admin', 'editor')
 def update_test_case_version():
     data = request.get_json()
     id = data.get('id')
@@ -544,8 +576,8 @@ def update_test_case_version():
 
 
 @TestSpecification_views.route("/delete_testcase_version", methods=['POST'])
-@role_required('admin', 'editor')
 @login_required
+@role_required('admin', 'editor')
 def delete_testcase_version():
     data = request.get_json()
     id = data.get('id')[2:]
@@ -558,8 +590,8 @@ def delete_testcase_version():
 
 
 @TestSpecification_views.route("/save_step_data", methods=['POST'])
-@role_required('editor', 'admin', 'editor')
 @login_required
+@role_required('editor', 'admin')
 def save_step_data():
     data = request.get_json()
     step_id = data.get('id')
@@ -579,8 +611,8 @@ def save_step_data():
 
 
 @TestSpecification_views.route("/new_step", methods=['POST'])
-@role_required('editor', 'admin', 'editor')
 @login_required
+@role_required('editor', 'admin')
 def new_step():
     data = request.get_json()
     test_id = data.get('test_id')
@@ -608,8 +640,8 @@ def new_step():
 
 
 @TestSpecification_views.route("/delete_step", methods=['POST'])
-@role_required('editor', 'admin', 'editor')
 @login_required
+@role_required('editor', 'admin')
 def delete_step():
     data = request.get_json()
     step_id = data.get('step_id')
@@ -626,8 +658,8 @@ def delete_step():
 
 
 @TestSpecification_views.route("/set_edit_mode", methods=['POST'])
-@role_required('editor', 'admin', 'editor')
 @login_required
+@role_required('editor', 'admin')
 def set_edit_mode():
     data = request.get_json()
     edit_mode = data.get('edit_mode')
@@ -637,6 +669,7 @@ def set_edit_mode():
 
 
 @TestSpecification_views.route("/get_edit_mode", methods=['GET'])
+@login_required
 def get_edit_mode():
 
     current_user.editing_steps
@@ -645,8 +678,8 @@ def get_edit_mode():
 
 
 @TestSpecification_views.route("/reorder_steps", methods=['POST'])
-@role_required('editor', 'admin', 'editor')
 @login_required
+@role_required('editor', 'admin')
 def reorder_steps():
     data = request.get_json()
     test_case_id = data.get('id')
@@ -661,8 +694,8 @@ def reorder_steps():
 
 
 @TestSpecification_views.route("/copy_step", methods=['POST'])
-@role_required('editor', 'admin', 'editor')
 @login_required
+@role_required('editor', 'admin')
 def copy_step():
     data = request.get_json()
 
@@ -693,6 +726,7 @@ def copy_step():
 
 @TestSpecification_views.route("/compare_test_versions", methods=['POST'])
 @login_required
+@role_required('editor', 'admin')
 def compare_test_versions():
     data = request.get_json()
     test_id = data.get("id")[2:]
@@ -756,8 +790,9 @@ def get_step():
     return jsonify(success=True, step=command.data)
 
 
-@login_required
 @TestSpecification_views.route('/upload_image', methods=['POST'])
+@login_required
+@role_required('editor', 'admin')
 def upload_image():
     if 'file' not in request.files:
         return jsonify(success=False, error='No file part in the request'), 400
