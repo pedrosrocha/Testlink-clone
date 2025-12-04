@@ -17,13 +17,14 @@ def ProjectManagement():
         if (not command.executed):
             return f"error while reading the projects. error{command.error}"
 
+        current_project = int(session.get('current_project_id')) if session.get(
+            'current_project_id') else projects.return_all_projects.data[0].id
+
         return render_template(
             'projects_management.jinja2',
             projects=command.data,
             user=current_user,
-            current_project_id=int(
-                session.get('current_project_id')
-            )
+            current_project_id=current_project
         )
 
     # if it is a POST
