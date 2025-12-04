@@ -1,4 +1,4 @@
-from flask import Flask, send_from_directory
+from flask import Flask
 from flask_login import LoginManager
 from flask_bcrypt import Bcrypt
 from webapp.Parameters.users import testclone_user_list

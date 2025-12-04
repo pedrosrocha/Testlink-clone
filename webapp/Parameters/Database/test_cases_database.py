@@ -95,5 +95,4 @@ class DatabaseConnector:
 
         except SQLAlchemyError as e:
             print("Database error:", str(e))
-
-        return e
+            return e

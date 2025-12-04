@@ -75,7 +75,7 @@ def get_test_tree_children():
     children = []
 
     if not node_id:
-        return jsonify(success=False, message="No id provided", error=command.error), 404
+        return jsonify(success=False, message="No id provided.", error="no id provided."), 404
 
     suite_id = int(node_id)
 

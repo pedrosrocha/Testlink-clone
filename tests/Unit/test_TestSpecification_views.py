@@ -81,7 +81,7 @@ def app():
     app.register_blueprint(Users_views_bp)
     app.register_blueprint(projects_bp)
 
-    with patch('webapp.TestSpecification_views.projects') as mock_projects, patch('webapp.TestSpecification_views.TestSuits') as mock_test_suits, patch('webapp.TestSpecification_views.TestCases') as mock_test_cases, patch('webapp.TestSpecification_views.TestSteps') as mock_test_steps:
+    with patch('webapp.TestSpecification_views.projects') as mock_projects, patch('webapp.TestSpecification_views.TestSuits') as mock_test_suits, patch('webapp.TestSpecification_views.TestCases') as mock_test_cases:
 
         mock_projects.return_all_projects.return_value = MockCommand(
             executed=True, data=[{'id': 1, 'name': 'Project 1'}])
