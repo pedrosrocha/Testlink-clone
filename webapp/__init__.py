@@ -17,7 +17,6 @@ def create_app():
     from .projects_views import projects_views
     from .users_views import users_views
     from .TestSpecification_views import TestSpecification_views
-    from .swagger_view import swagger_view
 
     app.register_blueprint(auth, url_prefix='/')
     app.register_blueprint(projects_views, url_prefix='/')
