@@ -8,6 +8,7 @@ flask = "*"
 flask-swagger-ui = "*"
 pytest = "*"
 ruff = "*"
+exceptiongroup = "*"
 
 [dev-packages]
 
