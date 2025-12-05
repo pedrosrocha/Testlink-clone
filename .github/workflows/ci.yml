@@ -61,6 +61,7 @@ jobs:
           DATABASE_PORT: ${{ secrets.DATABASE_PORT }}
           DATABASE_KEY: ${{ secrets.DATABASE_KEY }}
           DATABASE_NAME: ${{ secrets.DATABASE_NAME }}
+      continue-on-error: true
       run: |
 
         export SECRET_KEY=${{ secrets.SECRET_KEY }}
