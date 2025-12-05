@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.10", "3.11"]
+        python-version: ["3.10", "3.11", "3.13"]
 
     steps:
     - uses: actions/checkout@v4
@@ -32,11 +32,10 @@ jobs:
         pip install pipenv
         
         # Install dependencies from Pipfile.lock (including dev packages)
-        pipenv install --dev --skip-lock
+        pipenv install --dev --python ${{ matrix.python-version }}
 
     - name: Lint with ruff
       run: |
-        pipenv install ruff
         pipenv run ruff check . --fix
 
     - name: Run ruff and fix issues
