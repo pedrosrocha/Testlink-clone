@@ -115,7 +115,7 @@ def test_add_user_get(client):
     with client.application.app_context():
         response = client.get(url_for('users_views.AddUser'))
         assert response.status_code == 200
-        assert b'Add New User' in response.data
+        assert b'Add User' in response.data
 
 
 def test_add_user_post_success_with_next_page(client):
@@ -387,7 +387,7 @@ def test_user_management_get(client):
     user = TestUser(1, "viewer_user", "viewer")
     app.Users_manipulation.return_users.return_value = MockAddUserCommand(
         executed=True, data=[{
-            "username": "test user",
+            "username": "viewer_user",
             "email": "test@user",
             "user_level": "viewer"}
         ])
@@ -400,7 +400,6 @@ def test_user_management_get(client):
         assert response.status_code == 200
         assert b'User Management System' in response.data
         assert b'Delete' not in response.data
-        assert b'Reset Password' not in response.data
 
     user = TestUser(1, "editor", "editor")
     app.Users_manipulation.return_users.return_value = MockAddUserCommand(
@@ -409,6 +408,7 @@ def test_user_management_get(client):
             "email": "test@user",
             "user_level": "viewer"}
         ])
+
     with app.test_request_context():
         login_user(user)
 

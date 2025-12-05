@@ -83,15 +83,16 @@ def UsersManagement():
                 current_project_id=int(session.get('current_project_id'))
             )
 
-        current_user_pop = {}
+        current_user_pop = ""
         for user in command.data:
             if user["username"] == current_user.username:
                 current_user_pop = user
                 break
 
-        command.data.remove(current_user_pop)
-        command.data.append(current_user_pop)
-        command.data.reverse()
+        if current_user_pop in command.data:
+            command.data.remove(current_user_pop)
+            command.data.append(current_user_pop)
+            command.data.reverse()
 
         curr_project = session.get('current_project_id')
         if not curr_project:
