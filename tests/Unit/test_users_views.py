@@ -31,7 +31,7 @@ class MockAddUserCommand:
 @pytest.fixture
 def app():
     """Create and configure a new app instance for each test."""
-    app = Flask(__name__, template_folder='../../webapp/Templates')
+    app = Flask(__name__, template_folder='../../webapp/templates')
     app.config['SECRET_KEY'] = 'testing'
     app.config['SERVER_NAME'] = 'localhost'
     app.config['TESTING'] = True
