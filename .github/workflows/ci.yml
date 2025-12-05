@@ -71,4 +71,4 @@ jobs:
         export DATABASE_KEY=${{ secrets.DATABASE_KEY }}
         export DATABASE_NAME=${{ secrets.DATABASE_NAME }}
 
-        pipenv pytest
+        pipenv run pytest
