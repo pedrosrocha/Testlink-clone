@@ -9,6 +9,8 @@ flask-swagger-ui = "*"
 pytest = "*"
 ruff = "*"
 exceptiongroup = "*"
+flask-login = "*"
+sqlalchemy = "*"
 
 [dev-packages]
 

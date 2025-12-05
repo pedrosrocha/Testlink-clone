@@ -32,9 +32,10 @@ jobs:
         pip install pipenv
         
         # Install dependencies from Pipfile.lock (including dev packages)
+        pipenv lock --clear
         pipenv install --dev --python ${{ matrix.python-version }}
 
-    # pipenv lock --clear
+        
     # pipenv install --dev --ignore-pipfile
 
     - name: Lint with ruff
