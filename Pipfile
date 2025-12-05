@@ -6,6 +6,8 @@ name = "pypi"
 [packages]
 flask = "*"
 flask-swagger-ui = "*"
+pytest = "*"
+ruff = "*"
 
 [dev-packages]
 

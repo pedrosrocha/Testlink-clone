@@ -23,14 +23,21 @@ jobs:
       uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Install dependencies
+
+    # 2. Install Pipenv and project dependencies
+    - name: Install Pipenv and dependencies
       run: |
+        # Install Pipenv globally on the runner
         python -m pip install --upgrade pip
-        pip install -r requirements.txt
+        pip install pipenv
+        
+        # Install dependencies from Pipfile.lock (including dev packages)
+        pipenv install --dev --skip-lock
+
     - name: Lint with ruff
       run: |
-        pip install ruff
-        ruff check . --fix
+        pipenv install ruff
+        pipenv run ruff check . --fix
 
     - name: Run ruff and fix issues
       run: ruff check . --fix
@@ -44,6 +51,25 @@ jobs:
         git add .
         git diff --
     - name: Test with pytest
+      env:
+          # Application Secrets
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
+          
+          # Database Secrets
+          DATABASE_HOST: ${{ secrets.DATABASE_HOST }}
+          DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
+          DATABASE_USER: ${{ secrets.DATABASE_USER }}
+          DATABASE_PORT: ${{ secrets.DATABASE_PORT }}
+          DATABASE_KEY: ${{ secrets.DATABASE_KEY }}
+          DATABASE_NAME: ${{ secrets.DATABASE_NAME }}
       run: |
-        pip install pytest
-        pytest
+
+        export SECRET_KEY=${{ secrets.SECRET_KEY }}
+        export DATABASE_HOST=${{ secrets.DATABASE_HOST }}
+        export DATABASE_PASSWORD=${{ secrets.DATABASE_PASSWORD }}
+        export DATABASE_USER=${{ secrets.DATABASE_USER }}
+        export DATABASE_PORT=${{ secrets.DATABASE_PORT }}
+        export DATABASE_KEY=${{ secrets.DATABASE_KEY }}
+        export DATABASE_NAME=${{ secrets.DATABASE_NAME }}
+
+        pipenv pytest
