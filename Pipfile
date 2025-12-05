@@ -12,6 +12,7 @@ exceptiongroup = "*"
 flask-login = "*"
 sqlalchemy = "*"
 flask-bcrypt = "*"
+dotenv = "*"
 
 [dev-packages]
 
