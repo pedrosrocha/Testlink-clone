@@ -33,7 +33,7 @@ jobs:
         
         # Install dependencies from Pipfile.lock (including dev packages)
         pipenv lock --clear
-        pipenv install --dev --python ${{ matrix.python-version }}
+        pipenv install --dev --python ${{ matrix.python-version }} --ignore-pipfile
 
         
     # pipenv install --dev --ignore-pipfile
