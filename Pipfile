@@ -11,6 +11,7 @@ ruff = "*"
 exceptiongroup = "*"
 flask-login = "*"
 sqlalchemy = "*"
+flask-bcrypt = "*"
 
 [dev-packages]
 
