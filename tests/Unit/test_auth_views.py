@@ -6,6 +6,7 @@ from webapp.auth_views import auth
 from webapp.Parameters.users import testclone_user
 from flask_login import UserMixin
 
+
 # Mock User class for testing
 
 
@@ -61,6 +62,10 @@ def app():
     def UsersManagement():
         return "Users Management "
 
+    @Users_views_bp.route("/ResetUserPassword")
+    def ResetUserPassword():
+        return "ResetUserPassword"
+
     @login_manager.user_loader
     def load_user(user_id):
         if user_id == "1":
@@ -77,7 +82,6 @@ def app():
     app.Users_manipulation = MagicMock()
 
     mock_projects = MagicMock()
-    # Because the view imports projects directly, we need to patch it
     patcher = patch('webapp.auth_views.projects', mock_projects)
     patcher.start()
 
@@ -107,7 +111,9 @@ def test_login_get(client):
 def test_login_post_success(client):
     """Test successful login."""
     app = client.application
-    app.Users_manipulation.is_user_valid.return_value = True
+    app.Users_manipulation.is_user_valid.return_value = MockCommand(
+        executed=True)
+
     user_data = {"id": 1, "username": "testuser", "user_level": "admin"}
     app.Users_manipulation.return_user_by_username.return_value = MockCommand(
         executed=True, data=user_data)
@@ -128,7 +134,8 @@ def test_login_post_success(client):
 def test_login_post_success_with_next(client):
     """Test successful login with a safe next URL."""
     app = client.application
-    app.Users_manipulation.is_user_valid.return_value = True
+    app.Users_manipulation.is_user_valid.return_value = MockCommand(
+        executed=True)
     user_data = {"id": 1, "username": "testuser", "user_level": "admin"}
     app.Users_manipulation.return_user_by_username.return_value = MockCommand(
         executed=True, data=user_data)
@@ -146,7 +153,8 @@ def test_login_post_success_with_next(client):
 def test_login_post_success_with_unsafe_next(client):
     """Test successful login with an unsafe next URL."""
     app = client.application
-    app.Users_manipulation.is_user_valid.return_value = True
+    app.Users_manipulation.is_user_valid.return_value = MockCommand(
+        executed=True)
     user_data = {"id": 1, "username": "testuser", "user_level": "admin"}
     app.Users_manipulation.return_user_by_username.return_value = MockCommand(
         executed=True, data=user_data)
@@ -165,7 +173,8 @@ def test_login_post_success_with_unsafe_next(client):
 def test_login_post_failure(client):
     """Test failed login."""
     app = client.application
-    app.Users_manipulation.is_user_valid.return_value = False
+    app.Users_manipulation.is_user_valid.return_value = MockCommand(
+        executed=False)
 
     with app.app_context():
         response = client.post(url_for('auth.login'), data={
@@ -244,6 +253,8 @@ def test_main_page_get(mock_projects, client):
     mock_projects.return_all_projects.return_value = MockCommand(
         executed=True, data=[{'id': 1, 'name': 'Project 1'}]
     )
+
+    # current_user.username
 
     with app.test_request_context():
         login_user(TestUser(1, "testuser", "admin"))
