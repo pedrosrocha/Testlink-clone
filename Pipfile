@@ -34,6 +34,7 @@ typing-inspection = "*"
 typing_extensions = "*" 
 cryptography = "*"
 ruff = "*"
+pytest = "*"
 
 [dev-packages]
 pytest = "*"

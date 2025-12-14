@@ -38,6 +38,7 @@ jobs:
       run: |
         echo "Waiting for database..."
         sleep 30
+        docker exec -it testclone-database mysqladmin ping -u ${{ secrets.DATABASE_USER }} --password=${{ secrets.DATABASE_PASSWORD }}
     
     - name: Host diagnostics
       run: |
