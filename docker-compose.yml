@@ -1,8 +1,10 @@
-version: '3.8' 
-
 services:
   webapp:
     # --- BUILD CONFIGURATION ---
+    deploy:
+      resources:
+        limits:
+          memory: 4096m
     build:
       context: . 
       dockerfile: Dockerfile 
