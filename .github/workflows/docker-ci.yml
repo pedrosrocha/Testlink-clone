@@ -23,8 +23,11 @@ jobs:
         echo "DATABASE_NAME=${{ secrets.DATABASE_NAME }}" >> .env
         echo "DATABASE_ROOT_PASSWORD=${{ secrets.DATABASE_ROOT_PASSWORD }}" >> .env
 
+    - name: Set up Docker Buildx (Usually included, but good to be explicit)
+      uses: docker/setup-buildx-action@v3
+
     - name: Build and start services
-      run: docker-compose up -d --build
+      run: docker compose up -d --build
 
     - name: Wait for database to be ready
       run: |
