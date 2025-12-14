@@ -11,7 +11,8 @@ RUN pip install pipenv
 COPY Pipfile Pipfile.lock ./
 
 # Install dependencies from Pipfile.lock
-RUN pipenv install --system --deploy --ignore-pipfile
+# RUN pipenv install --system --deploy --ignore-pipfile
+RUN pip install -r <(pipenv lock --requirements)
 
 # Copy the rest of the application's code to the container
 COPY . .
