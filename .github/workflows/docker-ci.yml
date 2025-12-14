@@ -23,8 +23,11 @@ jobs:
 
     - name: Prepare .env for database service
       run: |
-        echo "DATABASE_USER=${{ secrets.DATABASE_USER }}" >> .env
+        echo "DATABASE_KEY=${{ secrets.DATABASE_KEY }}" >> .env
+        echo "DATABASE_HOST=${{ secrets.DATABASE_HOST }}" >> .env
         echo "DATABASE_PASSWORD=${{ secrets.DATABASE_PASSWORD }}" >> .env
+        echo "DATABASE_USER=${{ secrets.DATABASE_USER }}" >> .env
+        echo "DATABASE_PORT=${{ secrets.DATABASE_PORT }}" >> .env
         echo "DATABASE_NAME=${{ secrets.DATABASE_NAME }}" >> .env
         echo "DATABASE_ROOT_PASSWORD=${{ secrets.DATABASE_ROOT_PASSWORD }}" >> .env
     
