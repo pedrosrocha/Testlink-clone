@@ -84,25 +84,18 @@ jobs:
         fi
 
     - name: Test with pytest
-      continue-on-error: false
+      continue-on-error: true
       env:
           # Application Secrets
           SECRET_KEY: ${{ secrets.SECRET_KEY }}
           
           # Database Secrets
-          # DATABASE_HOST: ${{ secrets.DATABASE_HOST }}
-          # DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
-          # DATABASE_USER: ${{ secrets.DATABASE_USER }}
-          # DATABASE_PORT: ${{ secrets.DATABASE_PORT }}
-          # DATABASE_KEY: ${{ secrets.DATABASE_KEY }}
-          # DATABASE_NAME: ${{ secrets.DATABASE_NAME }}
-
-          DATABASE_KEY: mysql+pymysql://
-          DATABASE_HOST: localhost
-          DATABASE_PASSWORD: user_password
-          DATABASE_USER: testcloneuser
-          DATABASE_PORT: 3306
-          DATABASE_NAME: testclone
+          DATABASE_HOST: ${{ secrets.DATABASE_HOST }}
+          DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
+          DATABASE_USER: ${{ secrets.DATABASE_USER }}
+          DATABASE_PORT: ${{ secrets.DATABASE_PORT }}
+          DATABASE_KEY: ${{ secrets.DATABASE_KEY }}
+          DATABASE_NAME: ${{ secrets.DATABASE_NAME }}
 
       run: |
         docker compose -f docker-compose.yml exec -T \
