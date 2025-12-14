@@ -52,11 +52,11 @@ jobs:
 
 
     - name: Lint with ruff
-      continue-on-error: true
+      continue-on-error: false
       run: docker compose -f docker-compose.yml exec -T webapp pipenv run ruff check .
 
     - name: Test with pytest
-      continue-on-error: true
+      continue-on-error: false
       env:
           # Application Secrets
           SECRET_KEY: ${{ secrets.SECRET_KEY }}
