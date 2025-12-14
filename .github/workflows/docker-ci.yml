@@ -53,7 +53,8 @@ jobs:
 
     - name: Lint with ruff
       continue-on-error: false
-      run: docker compose -f docker-compose.yml exec -T webapp pipenv run ruff check .
+      run: docker compose -f docker-compose.yml exec -T webapp sh -c "ruff check ." 
+      # run: docker compose -f docker-compose.yml exec -T webapp pipenv run ruff check .
 
     - name: Test with pytest
       continue-on-error: false
@@ -77,4 +78,4 @@ jobs:
           -e DATABASE_PORT \
           -e DATABASE_KEY \
           -e DATABASE_NAME \
-          webapp pipenv run pytest
+          webapp sh -c pytest
