@@ -68,6 +68,18 @@ jobs:
       run: docker compose -f docker-compose.yml exec -T webapp sh -c "ruff check ." 
       # run: docker compose -f docker-compose.yml exec -T webapp pipenv run ruff check .
 
+    - name: Securely validate environment variables are loading
+      run: |
+        echo "Validating secrets load: Host=${{ secrets.DATABASE_HOST }} User=${{ secrets.DATABASE_USER }} Port=${{ secrets.DATABASE_PORT }}"
+        
+        # This will securely check the password without printing its full value:
+        if [ -n "${{ secrets.DATABASE_PASSWORD }}" ]; then
+          echo "DATABASE_PASSWORD is set (masked)."
+        else
+          echo "ERROR: DATABASE_PASSWORD is NOT set!"
+          exit 1
+        fi
+
     - name: Test with pytest
       continue-on-error: false
       env:
