@@ -33,6 +33,7 @@ pydantic_core = "*"
 typing-inspection = "*"
 typing_extensions = "*" 
 cryptography = "*"
+ruff = "*"
 
 [dev-packages]
 pytest = "*"
