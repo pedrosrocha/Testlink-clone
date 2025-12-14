@@ -78,4 +78,4 @@ jobs:
           -e DATABASE_PORT \
           -e DATABASE_KEY \
           -e DATABASE_NAME \
-          webapp sh -c pytest
+          webapp sh -c "pytest"
