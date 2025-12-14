@@ -45,10 +45,10 @@ jobs:
         cat /proc/pressure/cpu || true
         systemctl status --no-pager || true
 
-    - name: Install Python development dependencies
-    # Run your command with system monitoring
-      run: |
-        docker compose -f docker-compose.yml exec -T webapp pipenv install --dev
+#    - name: Install Python development dependencies
+#    # Run your command with system monitoring
+#      run: |
+#        docker compose -f docker-compose.yml exec -T webapp pipenv install --dev
 
 
     - name: Lint with ruff
