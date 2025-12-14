@@ -12,9 +12,14 @@ permissions:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
-
+    timeout-minutes: 30
     steps:
     - uses: actions/checkout@v4
+    - name: Set memory limits
+      run: |
+          # Monitor memory more aggressively
+          echo "Setting up memory monitoring..."
+          ulimit -v 6000000  # Limit virtual memory
 
     - name: Prepare .env for database service
       run: |
@@ -33,9 +38,26 @@ jobs:
       run: |
         echo "Waiting for database..."
         sleep 30
+    
+    - name: Host diagnostics
+      run: |
+        cat /proc/pressure/memory || true
+        cat /proc/pressure/cpu || true
+        systemctl status --no-pager || true
 
     - name: Install Python development dependencies
-      run: docker compose -f docker-compose.yml exec -T webapp pipenv install --dev
+    # Run your command with system monitoring
+      run: |
+        (
+          while true; do
+            echo "$(date): $(free -m | grep Mem:)"
+            sleep 5
+          done
+        ) &
+        MONITOR_PID=$!
+        docker compose -f docker-compose.yml exec -T webapp pipenv install --dev
+        kill $MONITOR_PID
+
 
     - name: Lint with ruff
       continue-on-error: true
