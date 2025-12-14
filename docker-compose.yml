@@ -7,10 +7,6 @@ services:
       context: . 
       dockerfile: Dockerfile 
     
-    # Explicitly links the service to the .env file located in the subdirectory.
-    env_file:
-      - webapp/.env
-    
     container_name: testclone-webapp 
     restart: "always"
     
