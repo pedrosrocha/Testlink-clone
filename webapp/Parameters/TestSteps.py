@@ -1,8 +1,6 @@
 
 from .Database.steps_database import DatabaseConnector
 from ..utils.return_data_model import DatabaseReturnValueModel
-from datetime import datetime
-from typing import Union, Optional
 import json
 
 
@@ -13,7 +11,7 @@ class TestSteps():
         if step_id is None:
             return DatabaseReturnValueModel(
                 executed=False,
-                message=f"Not possible to acquire the step for this id.",
+                message="Not possible to acquire the step for this id.",
                 error="No if was provided."
             )
         step, err = DatabaseConnector.return_step_by_id(int(step_id))
@@ -187,13 +185,13 @@ class TestSteps():
         if (new_step_id):
             return DatabaseReturnValueModel(
                 executed=True,
-                message=f"New step added.",
+                message="New step added.",
                 data=new_step_id
             )
 
         return DatabaseReturnValueModel(
             executed=False,
-            message=f"It was not possible to add the new step.",
+            message="It was not possible to add the new step.",
             error=err
         )
 
@@ -282,13 +280,13 @@ class TestSteps():
         if (step_not_created):
             return DatabaseReturnValueModel(
                 executed=False,
-                message=f"Some steps were not possible to copy",
-                error=f"Some steps were not possible to copy"
+                message="Some steps were not possible to copy",
+                error="Some steps were not possible to copy"
             )
 
         return DatabaseReturnValueModel(
             executed=True,
-            message=f"Alls steps were copied",
+            message="Alls steps were copied",
         )
 
     @classmethod
@@ -322,13 +320,13 @@ class TestSteps():
         if (step_not_created):
             return DatabaseReturnValueModel(
                 executed=False,
-                message=f"some steps were not possible to copy.",
-                error=f"some steps were not possible to copy."
+                message="some steps were not possible to copy.",
+                error="some steps were not possible to copy."
             )
 
         return DatabaseReturnValueModel(
             executed=True,
-            message=f"All steps were copied.",
+            message="All steps were copied.",
         )
 
     @classmethod

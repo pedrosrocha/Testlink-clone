@@ -1,7 +1,7 @@
 
 import pytest
-from flask import Flask, url_for, session, Blueprint, jsonify
-from unittest.mock import Mock, MagicMock, patch
+from flask import Flask, url_for, Blueprint
+from unittest.mock import patch
 from flask_login import LoginManager, login_user
 from webapp.TestSpecification_views import TestSpecification_views
 from flask_login import UserMixin

@@ -85,7 +85,7 @@ class projects:
         if not existing_projects_result.executed:
             return DatabaseReturnValueModel(
                 executed=False,
-                message=f"It was not possible to read all the projects names.",
+                message="It was not possible to read all the projects names.",
                 error=existing_projects_result.error
             )
 

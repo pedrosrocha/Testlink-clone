@@ -31,7 +31,7 @@ class TestCases():
 
         return DatabaseReturnValueModel(
             executed=False,
-            message=f"Invalid test case dictionary.",
+            message="Invalid test case dictionary.",
             error=f"the test dictionary was empty or invalid:\n {testDict}"
         )
 

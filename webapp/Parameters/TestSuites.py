@@ -21,13 +21,13 @@ class TestSuits():
         if new_test_id:
             return DatabaseReturnValueModel(
                 executed=True,
-                message=f"suite added.",
+                message="suite added.",
                 data=new_test_id
             )
 
         return DatabaseReturnValueModel(
             executed=False,
-            message=f"suite was not added.",
+            message="suite was not added.",
             error=err
         )
 
@@ -46,7 +46,7 @@ class TestSuits():
 
             return DatabaseReturnValueModel(
                 executed=True,
-                message=f"List of projects for the the id read.",
+                message="List of projects for the the id read.",
                 data=suits_list)
 
         suits_list, error = DatabaseConnector.return_all_suites_names_ids(
@@ -61,7 +61,7 @@ class TestSuits():
 
         return DatabaseReturnValueModel(
             executed=True,
-            message=f"List of projects for the the id read.",
+            message="List of projects for the the id read.",
             data=suits_list)
 
     @classmethod
@@ -141,7 +141,7 @@ class TestSuits():
 
         return DatabaseReturnValueModel(
             executed=True,
-            message=f"suite found",
+            message="suite found",
             data=suite
         )
 
@@ -163,7 +163,7 @@ class TestSuits():
         if not copied_suite:
             return DatabaseReturnValueModel(
                 executed=False,
-                message=f"It was not possible to copy the suites.",
+                message="It was not possible to copy the suites.",
                 error=err
             )
 
@@ -204,7 +204,7 @@ class TestSuits():
         if not root_suite:
             return DatabaseReturnValueModel(
                 executed=False,
-                message=f"It was not possible to update the root suite",
+                message="It was not possible to update the root suite",
                 error=err
             )
 
@@ -213,11 +213,11 @@ class TestSuits():
         if (not command.executed):
             return DatabaseReturnValueModel(
                 executed=False,
-                message=f"It was not possible to update the root suite",
+                message="It was not possible to update the root suite",
                 error=command.error
             )
 
         return DatabaseReturnValueModel(
             executed=True,
-            message=f"Root name updated successfuly",
+            message="Root name updated successfuly",
         )

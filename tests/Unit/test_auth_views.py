@@ -1,9 +1,8 @@
 import pytest
-from flask import Flask, url_for, session, Blueprint
-from unittest.mock import Mock, MagicMock, patch
-from flask_login import LoginManager, login_user, current_user
+from flask import Flask, url_for, Blueprint
+from unittest.mock import MagicMock, patch
+from flask_login import LoginManager, login_user
 from webapp.auth_views import auth
-from webapp.Parameters.users import testclone_user
 from flask_login import UserMixin
 
 

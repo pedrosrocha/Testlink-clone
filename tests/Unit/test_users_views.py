@@ -1,10 +1,8 @@
 import pytest
-from flask import Flask, url_for, session, Blueprint
+from flask import Flask, url_for, Blueprint
 from unittest.mock import Mock, MagicMock, patch
 from flask_login import LoginManager, login_user
 from webapp.users_views import users_views
-from webapp.Parameters.users import testclone_user
-import pdb
 from flask_login import UserMixin
 
 # Mock the return object of the add_user command

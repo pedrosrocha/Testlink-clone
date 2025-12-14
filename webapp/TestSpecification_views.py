@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request,  session, abort, jsonify, current_app, send_from_directory
+from flask import Blueprint, render_template, request,  session, abort, jsonify, current_app
 from flask_login import login_required, current_user
 from webapp.utils.roles_controllers import role_required
 from webapp.Parameters.projects import projects
@@ -781,7 +781,7 @@ def get_step():
     step_id = request.args.get('step', type=int)
 
     if step_id is None:
-        return jsonify(success=False, error=f"It wasd not posisble to get the step because no id was sent.")
+        return jsonify(success=False, error="It wasd not posisble to get the step because no id was sent.")
 
     command = TestSteps.return_step_by_id(step_id)
     if not command.executed:

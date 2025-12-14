@@ -19,12 +19,12 @@ class files:
             file.save(file_path)
             return DatabaseReturnValueModel(
                 executed=True,
-                message=f"File saved successfully.",
+                message="File saved successfully.",
             )
 
         except Exception as e:
             return DatabaseReturnValueModel(
                 executed=False,
-                message=f"It was not possible to save the file.",
+                message="It was not possible to save the file.",
                 error=e
             )

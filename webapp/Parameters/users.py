@@ -77,14 +77,14 @@ class testclone_user_list():
         if err:
             return DatabaseReturnValueModel(
                 executed=False,
-                message=f"Not possible to delete the user",
+                message="Not possible to delete the user",
                 error="No admin users found."
             )
 
         if user['user_level'] == 'admin' and len(admins_users) < 2:
             return DatabaseReturnValueModel(
                 executed=False,
-                message=f"Not possible to delete the user",
+                message="Not possible to delete the user",
                 error="There must be at least 1 admin user."
             )
 
@@ -93,7 +93,7 @@ class testclone_user_list():
         if err:
             return DatabaseReturnValueModel(
                 executed=False,
-                message=f"Not possible to delete the user",
+                message="Not possible to delete the user",
                 error=err
             )
 
@@ -138,7 +138,7 @@ class testclone_user_list():
 
         return DatabaseReturnValueModel(
             executed=True,
-            message=f"User found for this id",
+            message="User found for this id",
             data=user
         )
 
