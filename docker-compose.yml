@@ -1,0 +1,73 @@
+version: '3.8' 
+
+# --------------------------------------------------------------------------------------
+# SERVICES: Defines the individual containers (services) that make up your application.
+# --------------------------------------------------------------------------------------
+services:
+  webapp:
+    # --- BUILD CONFIGURATION ---
+    build:
+      context: . 
+      dockerfile: Dockerfile 
+    
+    # Explicitly links the service to the .env file located in the subdirectory.
+    env_file:
+      - webapp/.env
+    
+    container_name: testclone-webapp 
+    restart: "always"
+    
+    # --- ENVIRONMENT VARIABLES ---
+    environment:
+      DATABASE_HOST: database 
+    
+    # --- PORT MAPPING ---
+    ports:
+      - "8080:5000"
+      
+    # Ensures the 'database' container is started successfully before attempting to start 'webapp'.
+    depends_on:
+      - database
+      
+    networks:
+      - testclone-net
+
+  # 2. MySQL Database Service (The Data Store)
+  database:
+    # --- IMAGE CONFIGURATION ---
+    image: mysql:8.0 # Specifies the official MySQL image to pull.
+      
+    container_name: testclone-database 
+    restart: "unless-stopped" # Policy for restarting: restart unless explicitly stopped by the user.
+    
+    # --- ENVIRONMENT VARIABLES ---
+    environment:
+      MYSQL_USER: ${DATABASE_USER}        # Sets up the application user account.
+      MYSQL_PASSWORD: ${DATABASE_PASSWORD}  # Sets the password for the application user.
+      MYSQL_DATABASE: ${DATABASE_NAME}    # Creates the initial database with this name.
+      MYSQL_ROOT_PASSWORD: ${DATABASE_ROOT_PASSWORD} # Sets the root user password (MUST be set).
+
+      TEST_VAR: "VariableRead"
+
+    # --- DATA PERSISTENCE ---
+    volumes:
+      - testclone_db_data:/var/lib/mysql
+      
+    # --- PORT MAPPING ---
+    ports:
+      - "3307:3306" 
+      
+    # Explicitly connects the container to the defined custom network.
+    networks:
+      - testclone-net
+
+# VOLUMES: Defines data storage volumes managed by Docker.
+volumes:
+  testclone_db_data: 
+
+# NETWORKS: Defines custom networks for service isolation and DNS resolution.
+networks:
+  testclone-net:
+    # Uses the default 'bridge' driver for basic communication between services.
+    driver: bridge
+

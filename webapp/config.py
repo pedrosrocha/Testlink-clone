@@ -20,5 +20,4 @@ class DatabaseConfig:
     database_name = os.getenv("DATABASE_NAME")
 
     database_connection_path = f"{tag}{user}:{password}@{host}:{port}/{database_name}"
-    print(database_connection_path)
     DBengine = create_engine(database_connection_path)

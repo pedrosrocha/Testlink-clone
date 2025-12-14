@@ -1,0 +1,63 @@
+name: Docker CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Prepare .env for database service
+      run: |
+        echo "DATABASE_USER=${{ secrets.DATABASE_USER }}" >> .env
+        echo "DATABASE_PASSWORD=${{ secrets.DATABASE_PASSWORD }}" >> .env
+        echo "DATABASE_NAME=${{ secrets.DATABASE_NAME }}" >> .env
+        echo "DATABASE_ROOT_PASSWORD=${{ secrets.DATABASE_ROOT_PASSWORD }}" >> .env
+
+    - name: Build and start services
+      run: docker-compose up -d --build
+
+    - name: Wait for database to be ready
+      run: |
+        echo "Waiting for database..."
+        sleep 30
+
+    - name: Install Python development dependencies
+      run: docker-compose exec -T webapp pipenv install --dev
+
+    - name: Lint with ruff
+      continue-on-error: true
+      run: docker-compose exec -T webapp pipenv run ruff check .
+
+    - name: Test with pytest
+      continue-on-error: true
+      env:
+          # Application Secrets
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
+          
+          # Database Secrets
+          DATABASE_HOST: database
+          DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
+          DATABASE_USER: ${{ secrets.DATABASE_USER }}
+          DATABASE_PORT: 3306
+          DATABASE_KEY: ${{ secrets.DATABASE_KEY }}
+          DATABASE_NAME: ${{ secrets.DATABASE_NAME }}
+      run: |
+        docker-compose exec -T \
+          -e SECRET_KEY \
+          -e DATABASE_HOST \
+          -e DATABASE_PASSWORD \
+          -e DATABASE_USER \
+          -e DATABASE_PORT \
+          -e DATABASE_KEY \
+          -e DATABASE_NAME \
+          webapp pipenv run pytest

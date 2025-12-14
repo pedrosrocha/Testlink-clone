@@ -1,0 +1,8 @@
+# Ignore the entire MySQL directory if it's unintentionally in the context
+mysql/
+
+# Ignore common files that should never be copied into an image
+venv/
+*.pyc
+__pycache__/
+.git/

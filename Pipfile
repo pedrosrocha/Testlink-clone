@@ -32,6 +32,7 @@ greenlet = "*"
 pydantic_core = "*"
 typing-inspection = "*"
 typing_extensions = "*" 
+cryptography = "*"
 
 [dev-packages]
 pytest = "*"
