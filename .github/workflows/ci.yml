@@ -37,10 +37,7 @@ jobs:
     - name: Lint with ruff
       run: |
         pipenv run ruff check . --fix
-
-    - name: Run ruff and fix issues
-      run: ruff check . --fix
-      continue-on-error: true      
+  
 
     - name: Commit changes
       if: always()                
