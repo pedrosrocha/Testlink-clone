@@ -4,3 +4,16 @@ webapp\app.py
 /webapp/app.py
 /webapp/.env
 mysql
+
+# Playwright
+node_modules/
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/
+.env
+/webapp/*.env
+/webapp/test.env
+/webapp/local.env
+
