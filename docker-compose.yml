@@ -18,7 +18,7 @@ services:
     
     # --- PORT MAPPING ---
     ports:
-      - "8080:5000"
+      - "8081:5000"
       
     # Ensures the 'database' container is started successfully before attempting to start 'webapp'.
     depends_on:
