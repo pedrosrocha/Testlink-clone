@@ -8,8 +8,8 @@ WORKDIR /app
 RUN pip install pipenv
 
 COPY Pipfile Pipfile.lock ./
-RUN pipenv install --system --deploy 
-# RUN pipenv install --system --deploy --ignore-pipfile
+#RUN pipenv install --system --deploy 
+RUN pipenv install --system --skip-lock
 
 # Copy the rest of the application's code to the container
 COPY . .
