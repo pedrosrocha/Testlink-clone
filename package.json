@@ -1,0 +1,25 @@
+{
+  "name": "testlink-clone",
+  "version": "1.0.0",
+  "description": "<p align=\"center\">\r   <img src=\"readme_assets/testclone/1018.gif\" alt=\"Testclone\" width=\"800\" />\r </p>",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pedrosrocha/Testlink-clone.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/pedrosrocha/Testlink-clone/issues"
+  },
+  "homepage": "https://github.com/pedrosrocha/Testlink-clone#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.57.0",
+    "@types/node": "^25.0.6"
+  }
+}
