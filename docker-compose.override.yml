@@ -4,3 +4,6 @@ services:
   webapp:
     env_file:
       - webapp/.env
+  database:
+    env_file:
+      - webapp/.env
